@@ -1,5 +1,7 @@
 package Home;
 
+import General.Deck;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -7,8 +9,11 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class Home extends JFrame {
@@ -17,6 +22,11 @@ public class Home extends JFrame {
     private JTextField searchBar;
     private JPanel homePanel;
     private JPopupMenu createDeckMenu;
+    ArrayList<Deck> decks;
+    int deckX = 0, deckY = 0;
+    int opX = 132, opY = 20;
+    int progX = 19, progY = 152;
+    int rowCtr = 0, colCtr = 0;
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Home::new);
@@ -28,6 +38,7 @@ public class Home extends JFrame {
         setSize(1280, 720);
         setLocationRelativeTo(null);
         setResizable(false);
+        decks = new ArrayList<>();
 
         addGUI();
         setVisible(true);
@@ -60,28 +71,125 @@ public class Home extends JFrame {
         // add GUI components to panel
         addButtons(homePanel);
         addSearchBar(homePanel);
+        addDecks(homePanel);
 
         setContentPane(homePanel);
+    }
+
+    private void addDecks(JPanel homePanel) {
+        ImageIcon yellowDeck = loadImage("/resources/home/yellow-card.png");
+        ImageIcon blueDeck = loadImage("/resources/home/blue-card.png");
+        ImageIcon brightYellowDeck = loadImage("/resources/home/brightyellow-card.png");
+        ImageIcon greenDeck = loadImage("/resources/home/green-card.png");
+        ImageIcon pinkDeck = loadImage("/resources/home/pink-card.png");
+
+        ImageIcon dOptions = loadImage("/resources/home/options.png");
+
+        JPanel deckContainer = new JPanel(null);
+        deckContainer.setBounds(105,220,1055,407);
+        deckContainer.setOpaque(false);
+
+        // for TESTING only
+        decks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
+        decks.add(new Deck("Hello gggg world", 45,321,"pink"));
+        decks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
+        decks.add(new Deck("Hello world", 20,12,"green"));
+        decks.add(new Deck("Hello jfjdfb world", 332,5,"yellow"));
+        decks.add(new Deck("Hfgcco world", 123,123,"blue"));
+
+        // display deckCont with details
+        for(Deck d : decks) {
+            JLabel deckCont;
+            switch (d.getColor()) {
+                case "blue" -> deckCont = new JLabel(blueDeck);
+                case "green" -> deckCont = new JLabel(greenDeck);
+                case "bright yellow" -> deckCont = new JLabel(brightYellowDeck);
+                case "pink" -> deckCont = new JLabel(pinkDeck);
+                default -> deckCont = new JLabel(yellowDeck);
+            }
+
+            // deck options button -> popup menu
+            JButton deckOptions = new JButton(dOptions);
+            styleButton(deckOptions);
+            deckOptions.setBounds(opX,opY,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckContainer.add(deckOptions);
+
+            // deck progress bar -> accessed cards / total
+            JProgressBar deckProgress = new JProgressBar(SwingConstants.HORIZONTAL,0, d.getSize());
+            deckProgress.setValue(d.getLastAccessed());
+            deckProgress.setBounds(progX,progY,85,14);
+            deckProgress.setBorderPainted(false);
+            deckProgress.setForeground(new Color(244,175,171));
+            deckProgress.setBackground(new Color(255,253,250));
+            deckContainer.add(deckProgress);
+
+            // deck container layout
+            deckCont.setLayout(null);
+            deckCont.setBounds(deckX, deckY, yellowDeck.getIconWidth(), yellowDeck.getIconHeight());
+            deckContainer.add(deckCont);
+
+            JLabel deckTitle = new JLabel();
+            JLabel deckSize = new JLabel(String.valueOf(d.getSize()));
+
+            // deck details placement
+            deckSize.setFont(loadCustomFont("semibold",12));
+            deckTitle.setFont(loadCustomFont("semibold", 22));
+            String titleText = d.getTitle();
+            deckTitle.setText(
+                    "<html><body style='width:128px; word-wrap: break-word; overflow-wrap: break-word;'>" + titleText
+                            + "</body></html>"
+            );
+            deckTitle.setBounds(19, 5, 130, 100);
+            deckSize.setBounds(118,149,50,20);
+            deckSize.setText(d.getLastAccessed()+"/"+d.getSize());
+            deckTitle.setForeground(Color.BLACK);
+            deckSize.setForeground(new Color(153,153,153));
+
+            deckCont.add(deckTitle);
+            deckCont.add(deckSize);
+
+            // add next deckCont
+            deckX += 221;
+            opX += 221;
+            progX += 221;
+            colCtr++;
+
+            // if current decks in row are 5, add new row
+            if(colCtr > 4) {
+                rowCtr++;
+                deckY += 217;
+                opY += 217;
+                progY += 217;
+                colCtr = 0;
+                deckX = 0;
+                progX = 19;
+                opX = 132;
+            }
+
+        }
+
+
+        homePanel.add(deckContainer);
     }
 
     private void addSearchBar(JPanel panel) {
         ImageIcon sb = loadImage("/resources/home/search.png");
 
         JLabel searchBarImage = new JLabel(sb);
-        searchBarImage.setBounds(321,51,sb.getIconWidth(),sb.getIconHeight());
+        searchBarImage.setBounds(321,47,sb.getIconWidth(),sb.getIconHeight());
         searchBarImage.setLayout(null);
 
         searchBar = new JTextField("Search decks");
         searchBar.setBorder(null);
         searchBar.setOpaque(false);
         searchBar.setForeground(new Color(153,153,153));
-        searchBar.setBounds(375,62,387,24);
+        searchBar.setBounds(375,58,387,24);
         searchBar.setFont(loadCustomFont("medium",22));
         searchBar.setLayout(null);
 
-        searchBar.addFocusListener(new java.awt.event.FocusAdapter() {
+        searchBar.addFocusListener(new FocusAdapter() {
             @Override
-            public void focusGained(java.awt.event.FocusEvent e) {
+            public void focusGained(FocusEvent e) {
                 if (searchBar.getText().equals("Search decks")) {
                     searchBar.setText("");
                     searchBar.setForeground(Color.BLACK);
@@ -89,7 +197,7 @@ public class Home extends JFrame {
             }
 
             @Override
-            public void focusLost(java.awt.event.FocusEvent e) {
+            public void focusLost(FocusEvent e) {
                 if (searchBar.getText().isEmpty()) {
                     searchBar.setForeground(new Color(153,153,153));
                     searchBar.setText("Search decks");
@@ -119,6 +227,13 @@ public class Home extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 openPopupMenu(panel);
+            }
+        });
+
+        loadDeck.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
             }
         });
     }
