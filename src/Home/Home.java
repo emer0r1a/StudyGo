@@ -6,10 +6,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -245,13 +247,13 @@ public class Home extends JFrame {
     private void addButtons(JPanel panel) {
         ImageIcon cd = loadImage("/resources/home/create-deck-btn.png");
         createDeck = new JButton(cd);
-        createDeck.setBounds(840, 51, cd.getIconWidth(), cd.getIconHeight());
+        createDeck.setBounds(840, 47, cd.getIconWidth(), cd.getIconHeight());
         styleButton(createDeck);
         panel.add(createDeck);
 
         ImageIcon ld = loadImage("/resources/home/load-deck-btn.png");
         loadDeck = new JButton(ld);
-        loadDeck.setBounds(1042, 51, ld.getIconWidth(), ld.getIconHeight());
+        loadDeck.setBounds(1042, 47, ld.getIconWidth(), ld.getIconHeight());
         styleButton(loadDeck);
         panel.add(loadDeck);
 
@@ -294,7 +296,148 @@ public class Home extends JFrame {
         importFileItem.setBorder(new EmptyBorder(10, 10, 10, 10));
         createDeckMenu.add(importFileItem);
 
-        createDeckMenu.show(panel,840,113);
+        importFileItem.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                importFile();
+            }
+        });
+
+        createDeckMenu.show(panel,840,109);
+    }
+
+    private void importFile() {
+        JFileChooser chooseFile = new JFileChooser();
+
+        // filter to .txt or .csv files only
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "Text and CSV Files (*.txt, *.csv)","txt","csv"
+        );
+        chooseFile.setFileFilter(filter);
+
+        int open = chooseFile.showOpenDialog(null);
+        chooseFile.setAcceptAllFileFilterUsed(false);
+
+        // if file has valid format -> load deck from file
+        if(open == JFileChooser.APPROVE_OPTION) {
+            loadDeckFromFile(chooseFile.getSelectedFile().getAbsolutePath());
+        }
+    }
+
+    private void successAddDeckPanel(JPanel panel) {
+        ImageIcon successBg = loadImage("/resources/home/success-opening-file.png");
+        ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
+        ImageIcon greenOKBtn = loadImage("/resources/home/green-ok-btn.png");
+
+        JPanel successPanel = new JPanel(null);
+        successPanel.setBounds(0,0,panel.getWidth(),panel.getHeight());
+
+        JButton closeDialog = new JButton(closeBtn);
+        closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
+        styleButton(closeDialog);
+        successPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.remove(successPanel);
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JButton okDialog = new JButton(greenOKBtn);
+        okDialog.setBounds(587,387,greenOKBtn.getIconWidth(),greenOKBtn.getIconHeight());
+        styleButton(okDialog);
+        successPanel.add(okDialog);
+
+        okDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.remove(successPanel);
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JLabel errorDialog = new JLabel(successBg);
+        errorDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        successPanel.add(errorDialog);
+        successPanel.setOpaque(false);
+
+        panel.add(successPanel);
+        panel.setComponentZOrder(successPanel,0);
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    private void errorFilePanel(JPanel panel) {
+        ImageIcon errorBg = loadImage("/resources/home/error-opening-file.png");
+        ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
+        ImageIcon grayOKBtn = loadImage("/resources/home/gray-ok-btn.png");
+
+        JPanel errorPanel = new JPanel(null);
+        errorPanel.setBounds(0,0,panel.getWidth(),panel.getHeight());
+
+        JButton closeDialog = new JButton(closeBtn);
+        closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
+        styleButton(closeDialog);
+        errorPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.remove(errorPanel);
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JButton okDialog = new JButton(grayOKBtn);
+        okDialog.setBounds(587,387,grayOKBtn.getIconWidth(),grayOKBtn.getIconHeight());
+        styleButton(okDialog);
+        errorPanel.add(okDialog);
+
+        okDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                panel.remove(errorPanel);
+                panel.revalidate();
+                panel.repaint();
+            }
+        });
+
+        JLabel errorDialog = new JLabel(errorBg);
+        errorDialog.setBounds(0,0,panel.getWidth(),panel.getHeight());
+        errorPanel.add(errorDialog);
+        errorPanel.setOpaque(false);
+
+        panel.add(errorPanel);
+        panel.setComponentZOrder(errorPanel,0);
+        panel.revalidate();
+        panel.repaint();
+    }
+
+    private void loadDeckFromFile(String path) {
+        BufferedReader br;
+        try {
+            br = new BufferedReader(new FileReader(path));
+            String line;
+
+            // TODO: set subject of deck
+            while((line = br.readLine()) != null) {
+                String[] lines = line.split(",");
+                if(Integer.parseInt(lines[1]) > Integer.parseInt(lines[2]))
+                    throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
+                decks.add(new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]));
+            }
+
+            successAddDeckPanel(homePanel);
+            br.close();
+        } catch (IOException | RuntimeException e) {
+            errorFilePanel(homePanel);
+            throw new RuntimeException(e);
+        }
     }
 
     private void styleButton(JButton btn) {
