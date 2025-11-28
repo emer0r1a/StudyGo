@@ -22,6 +22,7 @@ public class Home extends JFrame {
     private JTextField searchBar;
     private JPanel homePanel;
     private JPopupMenu createDeckMenu;
+    private JPopupMenu optionsMenu;
     ArrayList<Deck> decks;
     int deckX = 0, deckY = 0;
     int opX = 132, opY = 20;
@@ -112,6 +113,34 @@ public class Home extends JFrame {
             JButton deckOptions = new JButton(dOptions);
             styleButton(deckOptions);
             deckOptions.setBounds(opX,opY,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckOptions.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    optionsMenu = new JPopupMenu();
+                    optionsMenu.setPopupSize(91,70);
+                    optionsMenu.setFont(loadCustomFont("medium",12));
+                    optionsMenu.setBackground(new Color(255,253,250));
+                    optionsMenu.setOpaque(true);
+                    Border customBorder = BorderFactory.createLineBorder(new Color(153, 153, 153), 1);
+                    optionsMenu.setBorder(customBorder);
+
+                    ImageIcon ei = loadImage("/resources/home/edit.png");
+                    JMenuItem editItem = new JMenuItem(ei);
+                    editItem.setBorderPainted(false);
+                    editItem.setBackground(new Color(255,253,250));
+                    editItem.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    optionsMenu.add(editItem);
+
+                    ImageIcon dd = loadImage("/resources/home/delete.png");
+                    JMenuItem deleteItem = new JMenuItem(dd);
+                    deleteItem.setBackground(new Color(255,253,250));
+                    deleteItem.setBorderPainted(false);
+                    deleteItem.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    optionsMenu.add(deleteItem);
+
+                    optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
+                }
+            });
             deckContainer.add(deckOptions);
 
             // deck progress bar -> accessed cards / total
