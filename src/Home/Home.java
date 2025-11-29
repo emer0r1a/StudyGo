@@ -162,7 +162,14 @@ public class Home extends JFrame {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             decks.remove(d);
-                            addDecks(decks);
+                            recentDecks.remove(d);
+
+                            if(decks == recentDecks) {
+                                addDecks(recentDecks);
+                            } else if(decks == resultDeck) {
+                                addDecks(resultDeck);
+                            }
+
                             deckContainer.revalidate();
                             deckContainer.repaint();
                         }
