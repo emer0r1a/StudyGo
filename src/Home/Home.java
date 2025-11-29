@@ -1,5 +1,6 @@
 package Home;
 
+import General.Card;
 import General.Deck;
 
 import javax.imageio.ImageIO;
@@ -24,6 +25,7 @@ public class Home extends JFrame {
     private JPanel deckContainer = new JPanel(null);
     private ImageIcon yellowDeck, blueDeck, brightYellowDeck, greenDeck, pinkDeck, dOptions;
     ArrayList<Deck> recentDecks;
+    ArrayList<Card> recentCards;
     int deckX = 0, deckY = 0;
     int opX = 132, opY = 20;
     int progX = 19, progY = 152;
@@ -93,7 +95,6 @@ public class Home extends JFrame {
     }
 
     private void addDecks(JPanel homePanel) {
-        System.out.println("Add deck called");
         yellowDeck = loadImage("/resources/home/yellow-card.png");
         blueDeck = loadImage("/resources/home/blue-card.png");
         brightYellowDeck = loadImage("/resources/home/brightyellow-card.png");
@@ -312,7 +313,7 @@ public class Home extends JFrame {
 
         // filter to .txt or .csv files only
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                "Text and CSV Files (*.txt, *.csv)","txt","csv"
+                "Text and TSV Files (*.txt, *.tsv)","txt","tsv"
         );
         chooseFile.setFileFilter(filter);
 
@@ -426,15 +427,20 @@ public class Home extends JFrame {
             String line;
 
             // TODO: set subject of deck
-            while((line = br.readLine()) != null) {
-                String[] lines = line.split(",");
+            if((line = br.readLine()) != null) {
+                String[] lines = line.split("\t");
                 if(Integer.parseInt(lines[2]) > Integer.parseInt(lines[1]))
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
 
                 Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
 
                 recentDecks.addFirst(d);
+            }
 
+            // load cards from deck
+            while((line = br.readLine()) != null) {
+                String[] qa = line.split("\t");
+                recentCards.add(new Card(qa[0], qa[1]));
             }
 
             // reset deck position
