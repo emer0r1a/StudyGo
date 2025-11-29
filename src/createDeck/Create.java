@@ -22,7 +22,6 @@ public class Create extends JFrame {
     private Font fontRegular;
     private Font fontBold;
 
-    private final String PATH_FONT_BOLD    = "/resources/fonts/Gabarito-Bold.ttf";
     private final String IMG_PATH_PREFIX   = "/createRes/";
 
     private final MainDashboard mainDash;
@@ -120,6 +119,7 @@ public class Create extends JFrame {
             } else {
                 fontRegular = new Font("SansSerif", Font.PLAIN, 16);
             }
+            String PATH_FONT_BOLD = "/resources/fonts/Gabarito-Bold.ttf";
             InputStream isBold = getClass().getResourceAsStream(PATH_FONT_BOLD);
             if (isBold != null) {
                 fontBold = Font.createFont(Font.TRUETYPE_FONT, isBold).deriveFont(16f);
@@ -174,7 +174,7 @@ public class Create extends JFrame {
     }
 
 
-    //CUSTOM COMPONENT: SHADOW BUTTON (Supports Icons)
+    // SHADOW BUTTON (Supports Icons)
 
     class ShadowButton extends JButton {
         private Color bgColor;
@@ -409,7 +409,7 @@ public class Create extends JFrame {
             btnClear.addActionListener(e -> clearInputs());
             add(btnClear);
 
-            // Counter
+            // Cards Counter
             counterLabel = new JLabel("0/0", SwingConstants.CENTER);
             counterLabel.setFont(fontRegular.deriveFont(18f));
 
