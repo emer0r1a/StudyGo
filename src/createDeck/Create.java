@@ -596,34 +596,24 @@ public class Create extends panelUtilities {
             modal.setOpaque(false);
             add(modal);
 
-            JLabel icon = new JLabel() {
-                @Override
-                protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
-                    int w = 24; int h = 30;
-                    int arc = 6;
-                    Color green = new Color(76, 175, 80);
+            JLabel icon = new JLabel();
+            URL iconUrl = getClass().getResource(IMG_PATH_PREFIX + "library_add_check.png");
+            if (iconUrl != null) {
+                ImageIcon imgIcon = new ImageIcon(iconUrl);
 
-                    g2.setColor(green);
-                    g2.setStroke(new BasicStroke(3));
-                    g2.drawRoundRect(2, 2, w, h, arc, arc);
-
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(10, 10, w, h, arc, arc);
-                    g2.setColor(green);
-                    g2.drawRoundRect(10, 10, w, h, arc, arc);
-
-                    g2.setColor(green);
-                    g2.setStroke(new BasicStroke(3));
-                    g2.drawLine(16, 24, 20, 29);
-                    g2.drawLine(20, 29, 28, 17);
-                }
-            };
+                Image img = imgIcon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
+                icon.setIcon(new ImageIcon(img));
+            } else {
+                // Fallback text if image isn't found
+                icon.setText("✓");
+                icon.setFont(new Font("SansSerif", Font.BOLD, 40));
+                icon.setForeground(new Color(76, 175, 80));
+                icon.setHorizontalAlignment(SwingConstants.CENTER);
+            }
             icon.setBounds(135, 20, 60, 60);
             modal.add(icon);
+
 
             JButton btnX = new JButton() {
                 @Override protected void paintComponent(Graphics g) {
