@@ -374,15 +374,13 @@ public class Home extends panelUtilities {
     }
 
     private void addButtons() {
-        ImageIcon cd = loadImage("/resources/home/create-deck-btn.png");
-        createDeck = new JButton(cd);
-        createDeck.setBounds(840, 47, cd.getIconWidth(), cd.getIconHeight());
+        ImageIcon cd = loadImage("/resources/home/plus-icon.png");
+        createDeck = new panelUtilities.ShadowButton("Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
         styleButton(createDeck);
         homePanel.add(createDeck);
 
-        ImageIcon ld = loadImage("/resources/home/load-deck-btn.png");
-        loadDeck = new JButton(ld);
-        loadDeck.setBounds(1042, 47, ld.getIconWidth(), ld.getIconHeight());
+        ImageIcon ld = loadImage("/resources/home/cards_stack.png");
+        loadDeck = new panelUtilities.ShadowButton("Load Deck", 1042, 47, 182, 50,new Color(143, 230, 139),ld, "bold", 20f);
         styleButton(loadDeck);
         homePanel.add(loadDeck);
 
