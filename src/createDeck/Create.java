@@ -203,17 +203,17 @@ public class Create extends panelUtilities {
             int maxShadowHeight = 5;
             int yOffset = isPressed ? maxShadowHeight : 0;
 
-            // 1. Draw Shadow
+            // Shadow
             if (!isPressed) {
                 g2.setColor(shadowColor);
                 g2.fillRoundRect(0, maxShadowHeight, getWidth(), getHeight() - maxShadowHeight, arc, arc);
             }
 
-            // 2. Draw Body
+            // Body
             g2.setColor(bgColor);
             g2.fillRoundRect(0, yOffset, getWidth(), getHeight() - maxShadowHeight, arc, arc);
 
-            // 3. Calculate Layout for Icon + Text
+            // Calculate Layout for Icon + Text
             FontMetrics fm = g2.getFontMetrics();
             int textW = fm.stringWidth(getText());
             int iconW = (iconType != 0) ? 20 : 0; // Space for icon if exists
@@ -248,7 +248,7 @@ public class Create extends panelUtilities {
                 g2.setColor(Color.WHITE); // Reset
             }
 
-            // 5. Draw Text
+            //  Draw Text
             g2.drawString(getText(), startX + iconW + gap, textY);
 
             g2.dispose();
@@ -356,12 +356,9 @@ public class Create extends panelUtilities {
             add(createCardPanel("Front", 45, true));
             add(createCardPanel("Back", 575, false));
 
-            // Plus Button
-            JButton btnAdd = createImageButton();
-            if (btnAdd == null) {
-                btnAdd = new JButton("+");
-                btnAdd.setBounds(1100, 308, 50, 50);
-            }
+
+// ADD CARD BUTTON
+            JButton btnAdd = createImageButton("plus.png", 1100, 270);
             btnAdd.addActionListener(e -> {
                 saveCurrentInputToMemory();
                 cards.add(new FlashcardData("", ""));
@@ -369,6 +366,20 @@ public class Create extends panelUtilities {
                 updateUIFromData();
             });
             add(btnAdd);
+
+// DELETE CARD BUTTON
+            JButton btnDelete = createImageButton("delete.png", 1100, 343);
+            btnDelete.addActionListener(e -> {
+                if (cards.size() > 1) {
+                    cards.remove(currentIndex);
+                    if (currentIndex >= cards.size()) currentIndex = cards.size() - 1;
+                } else {
+                    // If it's the last card, just clear the text
+                    if (!cards.isEmpty()) cards.set(0, new FlashcardData("", ""));
+                }
+                updateUIFromData();
+            });
+            add(btnDelete);
 
             // Bottom Buttons
             int btnY = 560;
@@ -487,20 +498,23 @@ public class Create extends panelUtilities {
             return new ShadowButton(alt, x, y, 60, 45, new Color(144, 238, 144), 0);
         }
 
-        private JButton createImageButton() {
-            URL url = getClass().getResource(IMG_PATH_PREFIX + "plus.png");
+        // Helper to create clean image buttons (Plus, Minus, etc.)
+        private JButton createImageButton(String name, int x, int y) {
+            URL url = getClass().getResource(IMG_PATH_PREFIX + name);
+            JButton b = new JButton();
             if (url != null) {
                 Image img = new ImageIcon(url).getImage();
                 ImageIcon icon = new ImageIcon(img.getScaledInstance(50, 50, Image.SCALE_SMOOTH));
-                JButton b = new JButton(icon);
-                b.setBounds(1100, 308, 50, 50);
-                b.setContentAreaFilled(false);
-                b.setBorderPainted(false);
-                b.setFocusPainted(false);
-                b.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                return b;
+                b.setIcon(icon);
+            } else {
+                b.setText("?");
             }
-            return null;
+            b.setBounds(x, y, 50, 50);
+            b.setContentAreaFilled(false); // Removes red/grey background
+            b.setBorderPainted(false);     // Removes border
+            b.setFocusPainted(false);
+            b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            return b;
         }
 
         private JLabel createLabel(String txt, int x, int y) {
