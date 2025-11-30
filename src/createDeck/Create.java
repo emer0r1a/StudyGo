@@ -87,7 +87,6 @@ public class Create extends panelUtilities {
     public void hideSuccessScreen() {
         successView.setVisible(false);
         saveDeckToFile();
-        cards.add(new FlashcardData("", ""));
         currentIndex = cards.size() - 1;
         mainDash.updateUIFromData();
         mainDash.setDiscardMode(false);
@@ -332,8 +331,6 @@ public class Create extends panelUtilities {
         private final Image panelBg;
         private final Color PANEL_COLOR = new Color(0xFF, 0xFD, 0xFA);
 
-        private boolean isDiscardMode = false;
-
         public MainDashboard() {
             setLayout(null);
             setOpaque(false);
@@ -419,7 +416,6 @@ public class Create extends panelUtilities {
         }
 
         public void setDiscardMode(boolean active) {
-            this.isDiscardMode = active;
             frontArea.setVisible(!active);
             backArea.setVisible(!active);
 
