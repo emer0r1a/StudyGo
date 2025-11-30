@@ -6,6 +6,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 public class LOADDECK extends JFrame {
 
@@ -18,7 +21,7 @@ public class LOADDECK extends JFrame {
     private String deckTitle;
 
     // --- UI COMPONENTS ---
-    private JLabel textInside;
+    private JTextPane textInside;
     private JLabel currentCount;
     private RoundedProgressBar progressBar;
     private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
@@ -36,10 +39,10 @@ public class LOADDECK extends JFrame {
         setLayout(null);
 
         // --- DATA LOADING ---
-        loadData();
+        loadData(); //diri i read ug iadd sa array ang mga contents sa file
 
         // --- BACKGROUND PANEL ---
-        ImageIcon originalBg = new ImageIcon(getClass().getResource("resources/bg.png"));
+        ImageIcon originalBg = new ImageIcon(getClass().getResource("resources/bg.png")); //mao ni ang rectangle sa luyo
         int bgWidth = 1185;
         int bgHeight = 631;
         int x = (1280 - bgWidth) / 2;
@@ -50,7 +53,7 @@ public class LOADDECK extends JFrame {
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
         // --- HEADER (Title & Close/Settings) ---
-        JLabel titleLabel = new JLabel(deckTitle);
+        JLabel titleLabel = new JLabel(deckTitle);//dapat first line sa kada file kay ang deck title
         titleLabel.setForeground(Color.BLACK);
         titleLabel.setFont(getCustomFont(33.33f));
         titleLabel.setBounds(526, 40, 400, 45);
@@ -61,7 +64,7 @@ public class LOADDECK extends JFrame {
         btnSettings.setHdIcon(settingsIcon.getImage(), 31, 31);
         btnSettings.setBounds(1105, 35, 41, 41);
 
-        ImageIcon closeIcon = new ImageIcon(getClass().getResource("resources/close.png"));
+        ImageIcon closeIcon = new ImageIcon(getClass().getResource("resources/close.png")); //basta i click ni kay mo terminate ang system/app(idk what to call it)
         RoundedButton btnClose = new RoundedButton("", 10);
         btnClose.setBackground(Color.decode("#E68B8C"));
         btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
@@ -73,19 +76,19 @@ public class LOADDECK extends JFrame {
         progressBar.setValue(0);
         progressBar.setBounds(320, 100, 548, 17);
 
-        JPanel counterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        JPanel counterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));//mura siyag div sa html, serves as a container sa count ug totalCount para next to each other and no space
         counterPanel.setOpaque(false);
         counterPanel.setBounds(320, 115, 227, 50);
 
-        currentCount = new JLabel("1");
+        currentCount = new JLabel("1");//default
         currentCount.setForeground(Color.decode("#79ADDC"));
         currentCount.setFont(getCustomFont(33.33f));
 
-        JLabel totalCount = new JLabel("/" + question.size());
+        JLabel totalCount = new JLabel("/" + question.size());//total questions
         totalCount.setForeground(Color.decode("#9FA1A6"));
         totalCount.setFont(getCustomFont(22f));
 
-        counterPanel.add(currentCount);
+        counterPanel.add(currentCount);//gi group para tapad sila
         counterPanel.add(totalCount);
 
         // --- CARD AREA ---
@@ -94,19 +97,37 @@ public class LOADDECK extends JFrame {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
-        CardPanel stack = new CardPanel("resources/stack.png");
+        CardPanel stack = new CardPanel("resources/stack.png");//design sa luyo
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
-        StyledCardPanel myCard = new StyledCardPanel();
+        StyledCardPanel myCard = new StyledCardPanel();//ang card itself
         myCard.setBounds(cardX + 40, cardY + 45, 548, 388);
 
-        textInside = new JLabel("Loading...");
-        textInside.setBounds(0, 0, 548, 388);
-        textInside.setHorizontalAlignment(SwingConstants.CENTER);
-        textInside.setFont(getCustomFont(25f));
-        myCard.add(textInside);
+        JPanel textContainer = new JPanel(new GridBagLayout());
+        textContainer.setBounds(20, 10, 508, 360); // Fill the card space
+        textContainer.setOpaque(false);
 
-        // --- FOOTER BUTTONS ---
+        textInside = new JTextPane();
+        textInside.setFont(getCustomFont(25f));
+        textInside.setEditable(false);
+        textInside.setOpaque(false); // Transparent background
+
+        StyledDocument doc = textInside.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        textInside.setParagraphAttributes(center, false);
+
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        textContainer.add(textInside, gbc);
+
+        myCard.add(textContainer);
 
         // 1. Previous Icon
         btnPreviousIcon = new RoundedButton("", 15);
@@ -215,7 +236,7 @@ public class LOADDECK extends JFrame {
         while ((line = br.readLine()) != null) {
             if (line.trim().isEmpty()) continue;
 
-            String[] value = line.split("   ");
+            String[] value = line.split("\t");
             if (value.length >= 2) {
                 question.add(value[0]);
                 answer.add(value[1]);
@@ -238,9 +259,14 @@ public class LOADDECK extends JFrame {
 
         // 1. Update Text
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
-        textInside.setText("<html><center>" + content + "</center></html>");
+        textInside.setText(content);
 
+        StyledDocument doc = textInside.getStyledDocument();
+        SimpleAttributeSet center = new SimpleAttributeSet();
+        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), center, false);
         // 2. Update Icon
+
         if (isShowingQuestion) {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility_off.png")).getImage(), 26, 26);
         } else {
@@ -275,7 +301,6 @@ public class LOADDECK extends JFrame {
     }
 }
 
-// --- CUSTOM COMPONENT CLASSES (Unchanged) ---
 
 class ImagePanel extends JPanel {
     private Image img;
