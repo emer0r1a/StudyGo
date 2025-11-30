@@ -33,6 +33,7 @@ public class Home extends panelUtilities {
     int progX = 19, progY = 152;
     int rowCtr = 0, colCtr = 0;
     private StudyGo mainFrame;
+    private JPanel emptyDeckPanel, noResultPanel;
 
     public Home(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
@@ -83,6 +84,12 @@ public class Home extends panelUtilities {
         homePanel.setLayout(null);
         homePanel.setBounds(0,0,1280,720);
 
+
+        // create 'no decks' panel if empty
+        showEmptyDeck();
+        // create 'no results' panel if no decks found
+        showNoResult();
+
         // add GUI components to panel
         addButtons();
         addSearchBar();
@@ -99,6 +106,52 @@ public class Home extends panelUtilities {
             }
         });
     }
+
+    private void showEmptyDeck() {
+        ImageIcon emptyDecks = loadImage("/resources/home/empty-deck.png");
+        emptyDeckPanel = new JPanel(null);
+        emptyDeckPanel.setOpaque(false);
+        emptyDeckPanel.setBounds(401,215,emptyDecks.getIconWidth(),emptyDecks.getIconHeight());
+        JLabel edPane = new JLabel(emptyDecks);
+        edPane.setBounds(0,0,emptyDecks.getIconWidth(),emptyDecks.getIconHeight());
+        edPane.setOpaque(false);
+        emptyDeckPanel.add(edPane);
+
+        homePanel.add(emptyDeckPanel);
+
+        emptyDeckPanel.setVisible(false);
+    }
+
+    private void showNoResult() {
+        ImageIcon nr = loadImage("/resources/home/no-results.png");
+        noResultPanel = new JPanel(null);
+        noResultPanel.setOpaque(false);
+        noResultPanel.setBounds(444,242,nr.getIconWidth(),nr.getIconHeight());
+        JLabel nrPane = new JLabel(nr);
+        nrPane.setBounds(0,0,nr.getIconWidth(),nr.getIconHeight());
+        nrPane.setOpaque(false);
+        noResultPanel.add(nrPane);
+
+        homePanel.add(noResultPanel);
+
+        noResultPanel.setVisible(false);
+    }
+
+    private void updateEmptyState(ArrayList<Deck> decks, String searchTxt) {
+        boolean isPlaceholder = searchBar.getForeground().equals(new Color(153,153,153));
+        boolean isSearching = !searchTxt.isEmpty() && !isPlaceholder;
+
+        if (isSearching) {
+            noResultPanel.setVisible(decks.isEmpty());
+            emptyDeckPanel.setVisible(false);
+        }
+
+        else {
+            emptyDeckPanel.setVisible(recentDecks.isEmpty());
+            noResultPanel.setVisible(false);
+        }
+    }
+
 
     private void addDecks(ArrayList<Deck> decks) {
         deckContainer.removeAll();
@@ -230,6 +283,8 @@ public class Home extends panelUtilities {
 
         }
 
+        updateEmptyState(decks, searchBar.getText().trim().toLowerCase());
+
         deckContainer.revalidate();
         deckContainer.repaint();
     }
@@ -311,6 +366,8 @@ public class Home extends panelUtilities {
             }
             addDecks(resultDeck);
         }
+
+        updateEmptyState(resultDeck, searchTxt);
 
         deckContainer.revalidate();
         deckContainer.repaint();
@@ -509,7 +566,7 @@ public class Home extends panelUtilities {
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
 
                 Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
-                if(Boolean.parseBoolean(lines[4])) d.setSubject(lines[4]);
+                if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) d.setSubject(lines[4]);
 
                 recentDecks.addFirst(d);
             }
