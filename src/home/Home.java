@@ -40,14 +40,7 @@ public class Home extends panelUtilities {
 
         recentDecks = new ArrayList<>();
         resultDeck = new ArrayList<>();
-
-        // for TESTING only
-//        recentDecks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
-//        recentDecks.add(new Deck("Hello gggg world", 45,321,"pink"));
-//        recentDecks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
-//        decks.add(new Deck("Hello world", 20,12,"green"));
-//        decks.add(new Deck("Hello jfjdfb world", 332,5,"yellow"));
-//        decks.add(new Deck("Hfgcco world", 123,123,"blue"));
+        recentCards = new ArrayList<>();
 
         addGUI();
 
