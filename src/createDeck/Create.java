@@ -18,9 +18,11 @@ import java.util.ArrayList;
 
 public class Create extends panelUtilities {
 
-    // --- DATA ---
+    // Data
+
     public static ArrayList<FlashcardData> cards = new ArrayList<>();
     public static int currentIndex = 0;
+
     private final String FILE_NAME = "my_flashcards.txt";
     private StudyGo mainFrame;
     private RoundedTextField titleField, subjectField;
@@ -31,6 +33,7 @@ public class Create extends panelUtilities {
     private final MainDashboard mainDash;
     private final DiscardPopup discardView;
     private final SuccessPopup successView;
+    private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
 
     public Create(StudyGo mainFrame) {
@@ -38,13 +41,21 @@ public class Create extends panelUtilities {
         createPanel = new JPanel(null);
         loadCustomFont("bold", 16f);
 
+
+        cards.clear();
+        currentIndex = 0;
+
         loadDeckFromFile();
+
+        //  at least one card to prevent IndexOutOfBounds
+        if (cards.isEmpty()) {
+            cards.add(new FlashcardData("", ""));
+        }
 
         //  FRAME SETUP
         createPanel.setBackground(new Color(230, 240, 245));
 
         // LAYERED PANE SETUP
-        // --- GUI LAYERS ---
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setBounds(0, 0, 1280, 720);
         createPanel.add(layeredPane);
@@ -54,23 +65,31 @@ public class Create extends panelUtilities {
         mainDash.setBounds(36, 43, 1193, 633);
         layeredPane.add(mainDash, Integer.valueOf(0));
 
-        // DISCARD BUTTON POPUP
+        // DISCARD POPUP
         discardView = new DiscardPopup();
         discardView.setBounds(0, 0, 1280, 720);
         discardView.setVisible(false);
         layeredPane.add(discardView, Integer.valueOf(1));
 
-        // SAVE BUTTON POPUP
+        // SUCCESS POPUP
         successView = new SuccessPopup();
         successView.setBounds(0, 0, 1280, 720);
         successView.setVisible(false);
         layeredPane.add(successView, Integer.valueOf(2));
+
+        // DELETE POPUP
+        deleteView = new DeletePopup();
+        deleteView.setBounds(0, 0, 1280, 720);
+        deleteView.setVisible(false);
+        layeredPane.add(deleteView, Integer.valueOf(3));
 
         // Initialize UI
         mainDash.updateUIFromData();
     }
 
     // --- LOGIC METHODS ---
+
+    // Discard Logic
     public void showDiscardScreen() {
         discardView.setVisible(true);
         mainDash.setDiscardMode(true);
@@ -81,6 +100,22 @@ public class Create extends panelUtilities {
         mainDash.setDiscardMode(false);
     }
 
+    public void performDiscard() {
+        // Safe remove logic
+        if (currentIndex < cards.size()) {
+            cards.remove(currentIndex);
+            // Adjust index if we removed the last card
+            if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
+            // If list is empty, add a blank one
+            if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
+        }
+
+        mainDash.clearInputs();
+        hideDiscardScreen();
+        mainFrame.showHomePanel();
+    }
+
+    // Success/Save Logic
     public void showSuccessScreen() {
         mainDash.saveCurrentInputToMemory();
         successView.setVisible(true);
@@ -92,10 +127,12 @@ public class Create extends panelUtilities {
 
         String title = titleField.getText();
         String subject = subjectField.getText();
+        if(title.contains("REQUIRED")) title = "Untitled Deck"; // Fallback
 
         // Convert FlashcardData to Card objects
         ArrayList<Card> deckCards = new ArrayList<>();
         for (FlashcardData fd : cards) {
+            // Only add if at least one side has text
             if (!fd.isEmpty()) {
                 deckCards.add(new Card(fd.front, fd.back));
             }
@@ -109,23 +146,38 @@ public class Create extends panelUtilities {
 
         mainFrame.addDeckToHome(newDeck);
 
-        currentIndex = cards.size() - 1;
+        // Reset for next time
+        cards.clear();
+        cards.add(new FlashcardData("", ""));
+        currentIndex = 0;
+
         mainDash.updateUIFromData();
         mainDash.setDiscardMode(false);
 
         mainFrame.showHomePanel();
     }
 
-    public void performDiscard() {
-        if (currentIndex < cards.size()) {
-            cards.remove(currentIndex);
-            if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
-            if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
-        }
+    // Delete Logic
+    public void showDeleteScreen() {
+        // Don't show popup if it's the only empty card
+        if (cards.size() == 1 && cards.get(0).isEmpty()) return;
+        deleteView.setVisible(true);
+    }
 
-        mainDash.clearInputs();
-        hideDiscardScreen();
-        mainFrame.showHomePanel();
+    public void hideDeleteScreen() {
+        deleteView.setVisible(false);
+    }
+
+    public void performDeleteCard() {
+        if (cards.size() > 1) {
+            cards.remove(currentIndex);
+            if (currentIndex >= cards.size()) currentIndex = cards.size() - 1;
+        } else {
+            // If it's the last card, just clear the text
+            if (!cards.isEmpty()) cards.set(0, new FlashcardData("", ""));
+        }
+        mainDash.updateUIFromData();
+        hideDeleteScreen();
     }
 
     public JPanel getPanel() {
@@ -154,6 +206,11 @@ public class Create extends panelUtilities {
                 String[] parts = line.split("\\|");
                 if (parts.length >= 2)
                     cards.add(new FlashcardData(parts[0].replace("<br>", "\n"), parts[1].replace("<br>", "\n")));
+                else {
+                    parts = line.split("\t");
+                    if (parts.length >= 2)
+                        cards.add(new FlashcardData(parts[0].replace("<br>", "\n"), parts[1].replace("<br>", "\n")));
+                }
             }
         } catch (IOException e) { e.printStackTrace(); }
     }
@@ -161,7 +218,9 @@ public class Create extends panelUtilities {
     public static class FlashcardData {
         String front, back;
         public FlashcardData(String f, String b) { front = f; back = b; }
-        public boolean isEmpty() { return front.trim().isEmpty() && back.trim().isEmpty(); }
+        public boolean isEmpty() {
+            return (front == null || front.trim().isEmpty()) && (back == null || back.trim().isEmpty());
+        }
     }
 
     // Custom Text Field
@@ -193,25 +252,6 @@ public class Create extends panelUtilities {
                     repaint();
                 }
             });
-
-//            if(!ph.isEmpty()) {
-//                addFocusListener(new FocusAdapter() {
-//                    public void focusGained(FocusEvent e) {
-//                        if (getText().equals(placeholder)) {
-//                            setText("");
-//                            setForeground(Color.BLACK);
-//                        }
-//                    }
-//
-//                    public void focusLost(FocusEvent e) {
-//                        if (getText().isEmpty()) {
-//                            setText(placeholder);
-//                            setForeground(Color.RED);
-//                        }
-//                    }
-//                });
-//            }
-
         }
 
         @Override
@@ -244,11 +284,9 @@ public class Create extends panelUtilities {
     // Main Dashboard
     class MainDashboard extends JPanel {
         private final JLabel counterLabel;
-
         private final ShadowButton btnClear;
         private final ShadowButton btnDiscard;
         private final ShadowButton btnSave;
-
         private final Image panelBg;
         private final Color PANEL_COLOR = new Color(0xFF, 0xFD, 0xFA);
 
@@ -270,7 +308,6 @@ public class Create extends panelUtilities {
                     if (titleField.getText().isEmpty()) { titleField.setText("Deck Title REQUIRED*"); titleField.setForeground(Color.RED); }
                 }
             });
-
             add(titleField);
 
             add(createLabel("SUBJECT (OPTIONAL)", 580, 50));
@@ -281,30 +318,20 @@ public class Create extends panelUtilities {
             add(createCardPanel("Front", 45, true));
             add(createCardPanel("Back", 575, false));
 
-
-          // Add Card Button
+            // Add Card Button
             JButton btnAdd = createImageButton("plus.png", 1100, 270);
             btnAdd.addActionListener(e -> {
-                if (!cards.isEmpty()) {
-                    saveCurrentInputToMemory();
-                }
+                saveCurrentInputToMemory(); // Save text before adding
                 cards.add(new FlashcardData("", ""));
-                currentIndex = cards.size() - 1;
+                currentIndex = cards.size() - 1; // Move to new card
                 updateUIFromData();
             });
             add(btnAdd);
 
-            // Delete Card Button
+            // Delete Card Button (UPDATED to use Popup)
             JButton btnDelete = createImageButton("delete.png", 1100, 343);
             btnDelete.addActionListener(e -> {
-                if (cards.size() > 1) {
-                    cards.remove(currentIndex);
-                    if (currentIndex >= cards.size()) currentIndex = cards.size() - 1;
-                } else {
-                    // If it's the last card, just clear the text
-                    if (!cards.isEmpty()) cards.set(0, new FlashcardData("", ""));
-                }
-                updateUIFromData();
+                showDeleteScreen();
             });
             add(btnDelete);
 
@@ -318,9 +345,8 @@ public class Create extends panelUtilities {
             add(btnClear);
 
             // Counter
-            counterLabel = new JLabel("0/0", SwingConstants.CENTER);
+            counterLabel = new JLabel("1/1", SwingConstants.CENTER);
             counterLabel.setFont(loadCustomFont("regular", 18f));
-
             counterLabel.setBounds(510, 570, 100, 30);
             add(counterLabel);
 
@@ -328,25 +354,20 @@ public class Create extends panelUtilities {
             int navX = 430;
             addNavButton(createNavButton("backward-btn.png", navX-30, btnY, "<<"), 0);
             addNavButton(createNavButton("prev-btn.png", navX + 40, btnY, "<"), 1);
-
-            // Note: Gap for counter is here
             addNavButton(createNavButton("next-btn.png", navX + 160, btnY, ">"), 2);
             addNavButton(createNavButton("forward-btn.png", navX + 230, btnY, ">>"), 3);
 
-            // Discard (Reddish) - Icon Type 1
+            // Discard
             btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), 1);
             btnDiscard.addActionListener(e -> showDiscardScreen());
             add(btnDiscard);
 
-            // Save (Blueish) - Icon Type 2
+            // Save
             btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), 2);
-            btnSave.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if(!titleField.getVisibleRect().isEmpty()
-                        && !frontArea.getText().isEmpty() && !backArea.getText().isEmpty())
-                            showSuccessScreen();
-                }
+            btnSave.addActionListener(e -> {
+                if(!titleField.getVisibleRect().isEmpty()
+                        && !titleField.getText().contains("REQUIRED"))
+                    showSuccessScreen();
             });
             add(btnSave);
         }
@@ -362,13 +383,6 @@ public class Create extends panelUtilities {
         public void setDiscardMode(boolean active) {
             frontArea.setVisible(!active);
             backArea.setVisible(!active);
-
-            btnClear.setText("Clear");
-            btnClear.setBgColor(new Color(170, 170, 170));
-            btnClear.setShadowColor(new Color(130, 130, 130));
-            btnDiscard.setText("Discard");
-            btnSave.setText("Save");
-
             repaint();
         }
 
@@ -376,7 +390,6 @@ public class Create extends panelUtilities {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
             if (panelBg != null) {
                 g2.drawImage(panelBg, 0, 0, getWidth(), getHeight(), this);
             } else {
@@ -385,39 +398,43 @@ public class Create extends panelUtilities {
             }
         }
 
+
         void saveCurrentInputToMemory() {
-            if (currentIndex < cards.size()) {
+            if (!cards.isEmpty() && currentIndex >= 0 && currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
                 c.front = frontArea.getText();
                 c.back = backArea.getText();
             }
         }
+
         void updateUIFromData() {
             if (cards.isEmpty()) {
                 frontArea.setText("");
                 backArea.setText("");
                 counterLabel.setText("0/0");
-            } else if (currentIndex < cards.size()) {
+            } else if (currentIndex < cards.size() && currentIndex >= 0) {
                 FlashcardData c = cards.get(currentIndex);
                 frontArea.setText(c.front);
                 backArea.setText(c.back);
-
-                if (cards.isEmpty() && c.isEmpty()) {
-                    counterLabel.setText("0/0");
-                } else {
-                    counterLabel.setText((currentIndex + 1) + "/" + cards.size());
-                }
+                counterLabel.setText((currentIndex + 1) + "/" + cards.size());
             } else {
+                currentIndex = 0;
                 counterLabel.setText("0/0");
             }
         }
+
+
         private void navigate(int index) {
             saveCurrentInputToMemory();
+            if (cards.isEmpty()) return;
+
             if (index < 0) index = 0;
             if (index >= cards.size()) index = cards.size() - 1;
+
             currentIndex = index;
             updateUIFromData();
         }
+
         private void clearInputs() {
             titleField.setText("Deck Title REQUIRED*");
             titleField.setForeground(Color.RED);
@@ -427,11 +444,9 @@ public class Create extends panelUtilities {
         }
 
         private ShadowButton createNavButton(String imgName, int x, int y, String alt) {
-            // Light Green Navigation Buttons
             return new ShadowButton(alt, x, y, 60, 45, new Color(144, 238, 144), 0);
         }
 
-        // Helper to create clean image buttons (Plus, Minus, etc.)
         private JButton createImageButton(String name, int x, int y) {
             URL url = getClass().getResource(IMG_PATH_PREFIX + name);
             JButton b = new JButton();
@@ -443,8 +458,8 @@ public class Create extends panelUtilities {
                 b.setText("?");
             }
             b.setBounds(x, y, 50, 50);
-            b.setContentAreaFilled(false); // Removes red/grey background
-            b.setBorderPainted(false);     // Removes border
+            b.setContentAreaFilled(false);
+            b.setBorderPainted(false);
             b.setFocusPainted(false);
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
             return b;
@@ -463,16 +478,12 @@ public class Create extends panelUtilities {
                 @Override protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
                     int arc = 45;
                     int shadowOffset = 8;
-
                     g2.setColor(new Color(160, 160, 160));
                     g2.fillRoundRect(5, 5+shadowOffset, 510 -10, 368 -10-shadowOffset, arc, arc);
-
                     g2.setColor(Color.WHITE);
                     g2.fillRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
-
                     g2.setColor(new Color(200, 200, 200));
                     g2.setStroke(new BasicStroke(3));
                     g2.drawRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
@@ -480,113 +491,143 @@ public class Create extends panelUtilities {
             };
             p.setOpaque(false);
             p.setBounds(x, 150, 510, 368);
-
             JLabel l = new JLabel(title);
             l.setFont(loadCustomFont("bold",20f));
             l.setForeground(new Color(150, 150, 150));
             l.setBounds(30, 25, 200, 30);
             p.add(l);
-
             JTextArea ta = new JTextArea();
             ta.setOpaque(false);
             ta.setFont(loadCustomFont("regular",22f));
             ta.setLineWrap(true);
             ta.setWrapStyleWord(true);
             ta.setBounds(30, 75, 510 -70, 368 -100);
-
             if(isFront) frontArea = ta; else backArea = ta;
             p.add(ta);
             return p;
         }
     }
 
-    // Discard Popup
-    class DiscardPopup extends JPanel {
+    // --- POPUPS ---
 
+    class DiscardPopup extends JPanel {
         public DiscardPopup() {
             setLayout(null);
             setOpaque(false);
             addMouseListener(new MouseAdapter() {});
-
             JPanel modal = getJPanel();
             add(modal);
-
             JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
             lbl.setFont(loadCustomFont("extrabold",20f));
             lbl.setForeground(Color.BLACK);
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setBounds(20, 30, 380, 80);
             modal.add(lbl);
-
             ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(230, 130, 130), 0);
             btnYes.setSmooth(true);
             btnYes.addActionListener(e -> performDiscard());
             modal.add(btnYes);
-
             ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(144, 238, 144), 0);
             btnNo.setSmooth(true);
             btnNo.addActionListener(e -> hideDiscardScreen());
             modal.add(btnNo);
         }
-
         private JPanel getJPanel() {
             JPanel modal = new JPanel(null) {
-                @Override
-                protected void paintComponent(Graphics g) {
+                @Override protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                    int w = getWidth();
-                    int h = getHeight();
-                    int arc = 40;
-
+                    int w = getWidth(); int h = getHeight(); int arc = 40;
                     g2.setColor(new Color(0,0,0, 30));
                     g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-
                     g2.setColor(Color.WHITE);
                     g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-
                     g2.setColor(new Color(200, 200, 200));
                     g2.setStroke(new BasicStroke(1));
                     g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
                 }
             };
-
             modal.setBounds(430, 250, 420, 250);
             modal.setOpaque(false);
             return modal;
         }
-
-        @Override
-        protected void paintComponent(Graphics g) {
+        @Override protected void paintComponent(Graphics g) {
             g.setColor(new Color(0, 0, 0, 50));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
 
-    // Save Popup
+    class DeletePopup extends JPanel {
+        public DeletePopup() {
+            setLayout(null);
+            setOpaque(false);
+            addMouseListener(new MouseAdapter() {});
+            JPanel modal = getJPanel();
+            add(modal);
+
+            JLabel lbl = new JLabel("<html><center>Are you sure you want to<br>delete this card?</center></html>");
+            lbl.setFont(loadCustomFont("extrabold", 20f));
+            lbl.setForeground(Color.BLACK);
+            lbl.setHorizontalAlignment(SwingConstants.CENTER);
+            lbl.setBounds(20, 30, 380, 80);
+            modal.add(lbl);
+
+            // YES Button
+            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(144, 238, 144), 0);
+            btnYes.setSmooth(true);
+            btnYes.addActionListener(e -> performDeleteCard());
+            modal.add(btnYes);
+
+            // NO Button
+            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(230, 130, 130), 0);
+            btnNo.setSmooth(true);
+            btnNo.addActionListener(e -> hideDeleteScreen());
+            modal.add(btnNo);
+        }
+
+        private JPanel getJPanel() {
+            JPanel modal = new JPanel(null) {
+                @Override protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g;
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    int w = getWidth(); int h = getHeight(); int arc = 40;
+
+                    g2.setColor(new Color(0, 0, 0, 30));
+                    g2.fillRoundRect(5, 8, w - 10, h - 15, arc, arc);
+
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(5, 5, w - 10, h - 15, arc, arc);
+
+                    g2.setColor(new Color(200, 200, 200));
+                    g2.setStroke(new BasicStroke(1));
+                    g2.drawRoundRect(5, 5, w - 10, h - 15, arc, arc);
+                }
+            };
+            modal.setBounds(430, 250, 420, 250);
+            modal.setOpaque(false);
+            return modal;
+        }
+
+        @Override protected void paintComponent(Graphics g) {
+            g.setColor(new Color(0, 0, 0, 50));
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+
     class SuccessPopup extends JPanel {
         public SuccessPopup() {
             setLayout(null);
             setOpaque(false);
             addMouseListener(new MouseAdapter() {});
-
             JPanel modal = new JPanel(null) {
-                @Override
-                protected void paintComponent(Graphics g) {
+                @Override protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                    int w = getWidth();
-                    int h = getHeight();
-                    int arc = 30;
-
+                    int w = getWidth(); int h = getHeight(); int arc = 30;
                     g2.setColor(new Color(0,0,0,30));
                     g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-
                     g2.setColor(Color.WHITE);
                     g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-
                     g2.setColor(new Color(200, 200, 200));
                     g2.setStroke(new BasicStroke(1));
                     g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
@@ -596,33 +637,27 @@ public class Create extends panelUtilities {
             modal.setOpaque(false);
             add(modal);
 
-
             JLabel icon = new JLabel();
             URL iconUrl = getClass().getResource(IMG_PATH_PREFIX + "library_add_check.png");
             if (iconUrl != null) {
                 ImageIcon imgIcon = new ImageIcon(iconUrl);
-
-                Image img = imgIcon.getImage().getScaledInstance(35, 35, Image.SCALE_SMOOTH);
+                Image img = imgIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
                 icon.setIcon(new ImageIcon(img));
             } else {
-                // Fallback text if image isn't found
                 icon.setText("✓");
                 icon.setFont(new Font("SansSerif", Font.BOLD, 40));
                 icon.setForeground(new Color(76, 175, 80));
                 icon.setHorizontalAlignment(SwingConstants.CENTER);
             }
-            icon.setBounds(135, 20, 60, 60);
+            icon.setBounds(140, 30, 40, 40);
             modal.add(icon);
-
 
             JButton btnX = new JButton() {
                 @Override protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
                     g2.setColor(new Color(235, 120, 120));
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-
                     g2.setColor(Color.WHITE);
                     g2.setStroke(new BasicStroke(2));
                     int p = 8;
@@ -649,9 +684,7 @@ public class Create extends panelUtilities {
             btnOk.addActionListener(e -> hideSuccessScreen());
             modal.add(btnOk);
         }
-
-        @Override
-        protected void paintComponent(Graphics g) {
+        @Override protected void paintComponent(Graphics g) {
             g.setColor(new Color(0, 0, 0, 50));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
