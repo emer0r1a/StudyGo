@@ -259,7 +259,7 @@ public class Create extends panelUtilities {
             this.maxChars = limit;
 
             setBounds(x, y, w, h);
-            setFont(loadCustomFont("regular", 16f));
+            setFont(loadCustomFont("semibold", 16f));
             setOpaque(false);
             setBorder(new EmptyBorder(0, 10, 0, 45));
 
@@ -562,7 +562,7 @@ public class Create extends panelUtilities {
             add(modal);
 
             JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
-            lbl.setFont(loadCustomFont("bold",20f));
+            lbl.setFont(loadCustomFont("extrabold",20f));
             lbl.setForeground(Color.BLACK);
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setBounds(20, 30, 380, 80);
@@ -699,7 +699,7 @@ public class Create extends panelUtilities {
             modal.add(btnX);
 
             JLabel lbl = new JLabel("Deck added successfully.");
-            lbl.setFont(loadCustomFont("bold",19f));
+            lbl.setFont(loadCustomFont("extrabold",19f));
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setBounds(10, 80, 300, 40);
             modal.add(lbl);
