@@ -1,9 +1,10 @@
-package Home;
+package home;
 
-import General.Card;
-import General.Deck;
+import general.Card;
+import general.Deck;
+import general.StudyGo;
+import general.panelUtilities;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -12,12 +13,10 @@ import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Objects;
 
-public class Home extends JFrame {
+public class Home extends panelUtilities {
     private JButton createDeck;
     private JButton loadDeck;
     private JTextField searchBar;
@@ -33,32 +32,29 @@ public class Home extends JFrame {
     int opX = 132, opY = 20;
     int progX = 19, progY = 152;
     int rowCtr = 0, colCtr = 0;
+    private StudyGo mainFrame;
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(Home::new);
-    }
+    public Home(StudyGo mainFrame) {
+        this.mainFrame = mainFrame;
 
-    public Home() {
-        super("StudyGo");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1280, 720);
-        setLocationRelativeTo(null);
-        setResizable(false);
         recentDecks = new ArrayList<>();
         resultDeck = new ArrayList<>();
 
         // for TESTING only
-        recentDecks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
-        recentDecks.add(new Deck("Hello gggg world", 45,321,"pink"));
-        recentDecks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
+//        recentDecks.add(new Deck("Hello wo231rld", 20,12,"yellow"));
+//        recentDecks.add(new Deck("Hello gggg world", 45,321,"pink"));
+//        recentDecks.add(new Deck("Hell3e wdcc world", 20,122,"yellow"));
 //        decks.add(new Deck("Hello world", 20,12,"green"));
 //        decks.add(new Deck("Hello jfjdfb world", 332,5,"yellow"));
 //        decks.add(new Deck("Hfgcco world", 123,123,"blue"));
 
         addGUI();
-        setVisible(true);
 
         SwingUtilities.invokeLater(() -> homePanel.requestFocusInWindow());
+    }
+
+    public JPanel getPanel() {
+        return homePanel;
     }
 
     private void addGUI() {
@@ -83,7 +79,9 @@ public class Home extends JFrame {
                 }
             }
         };
-        homePanel.setPreferredSize(new Dimension(getWidth(), getHeight()));
+        homePanel.setPreferredSize(new Dimension(1280, 720));
+        homePanel.setLayout(null);
+        homePanel.setBounds(0,0,1280,720);
 
         // add GUI components to panel
         addButtons();
@@ -93,8 +91,6 @@ public class Home extends JFrame {
         deckContainer.setBounds(105,220,1055,407);
         deckContainer.setOpaque(false);
         homePanel.add(deckContainer);
-
-        setContentPane(homePanel);
 
         homePanel.addMouseListener(new MouseAdapter() {
             @Override
@@ -379,6 +375,13 @@ public class Home extends JFrame {
             }
         });
 
+        newDeckItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainFrame.showCreatePanel();
+            }
+        });
+
         createDeckMenu.show(homePanel,840,109);
     }
 
@@ -543,41 +546,6 @@ public class Home extends JFrame {
         btn.setBorderPainted(false);
         btn.setContentAreaFilled(false);
         btn.setFocusPainted(false);
-    }
-
-    public ImageIcon loadImage(String ImagePath) {
-        BufferedImage image;
-        try {
-            image = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream(ImagePath)));
-        } catch (IOException e) {
-            throw new RuntimeException("Image not found: " + ImagePath, e);
-        }
-        return new ImageIcon(image);
-    }
-
-    public Font loadCustomFont(String weight, float size) {
-        String fontFile = switch (weight.toLowerCase()) {
-            case "medium" -> "/resources/fonts/Gabarito-Medium.ttf";
-            case "semibold", "semi-bold" -> "/resources/fonts/Gabarito-SemiBold.ttf";
-            case "bold" -> "/resources/fonts/Gabarito-Bold.ttf";
-            case "extrabold", "extra-bold" -> "/resources/fonts/Gabarito-ExtraBold.ttf";
-            default -> "/resources/fonts/Gabarito-Regular.ttf";
-        };
-
-        try {
-            Font font = Font.createFont(
-                    Font.TRUETYPE_FONT,
-                    Objects.requireNonNull(getClass().getResourceAsStream(fontFile))
-            ).deriveFont(size);
-
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(font);
-
-            return font;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new Font("SansSerif", Font.PLAIN, (int) size);
-        }
     }
 
 }

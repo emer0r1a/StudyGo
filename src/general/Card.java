@@ -1,4 +1,4 @@
-package General;
+package general;
 
 public class Card {
     String question;
