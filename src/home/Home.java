@@ -315,6 +315,13 @@ public class Home extends panelUtilities {
             }
         });
 
+        searchBarImage.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                searchBar.requestFocusInWindow();
+            }
+        });
+
         searchBar.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
