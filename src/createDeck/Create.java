@@ -1,5 +1,8 @@
 package createDeck;
 
+import general.StudyGo;
+import general.panelUtilities;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.AttributeSet;
@@ -11,45 +14,38 @@ import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class Create extends JFrame {
+public class Create extends panelUtilities {
 
     // --- DATA ---
     public static ArrayList<FlashcardData> cards = new ArrayList<>();
     public static int currentIndex = 0;
     private final String FILE_NAME = "my_flashcards.txt";
+    private StudyGo mainFrame;
+    private RoundedTextField titleField, subjectField;
 
-    // --- RESOURCES ---
-    private Font fontRegular;
-    private Font fontBold;
-
-    private final String PATH_FONT_BOLD    = "/resources/fonts/Gabarito-Bold.ttf";
-    private final String IMG_PATH_PREFIX   = "/createRes/";
+    private final String IMG_PATH_PREFIX   = "/resources/createDeck/";
 
     private final MainDashboard mainDash;
     private final DiscardPopup discardView;
     private final SuccessPopup successView;
+    private JPanel createPanel;
 
-    public Create() {
-        loadFonts();
+    public Create(StudyGo mainFrame) {
+        this.mainFrame = mainFrame;
+        createPanel = new JPanel(null);
+        loadCustomFont("bold", 16f);
 
         loadDeckFromFile();
         if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
 
-        setTitle("StudyGo");
-
         //  FRAME SETUP
-        setSize(1280, 750);
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        setLayout(null);
-        getContentPane().setBackground(new Color(230, 240, 245));
+        createPanel.setBackground(new Color(230, 240, 245));
 
         // LAYERED PANE SETUP
         // --- GUI LAYERS ---
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setBounds(0, 0, 1280, 750);
-        add(layeredPane);
+        createPanel.add(layeredPane);
 
         // Main Dashboard
         mainDash = new MainDashboard();
@@ -103,42 +99,13 @@ public class Create extends JFrame {
             if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
             if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
         }
-        mainDash.updateUIFromData();
-        saveDeckToFile();
+        mainDash.clearInputs();
         hideDiscardScreen();
+        mainFrame.showHomePanel();
     }
 
-    // --- RESOURCE LOADING ---
-    private void loadFonts() {
-        try {
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            String PATH_FONT_REGULAR = "/resources/fonts/Gabarito-Regular.ttf";
-            InputStream isReg = getClass().getResourceAsStream(PATH_FONT_REGULAR);
-            if (isReg != null) {
-                fontRegular = Font.createFont(Font.TRUETYPE_FONT, isReg).deriveFont(16f);
-                ge.registerFont(fontRegular);
-            } else {
-                fontRegular = new Font("SansSerif", Font.PLAIN, 16);
-            }
-            InputStream isBold = getClass().getResourceAsStream(PATH_FONT_BOLD);
-            if (isBold != null) {
-                fontBold = Font.createFont(Font.TRUETYPE_FONT, isBold).deriveFont(16f);
-                ge.registerFont(fontBold);
-            } else {
-                fontBold = new Font("SansSerif", Font.BOLD, 16);
-            }
-        } catch (Exception e) {
-            fontRegular = new Font("SansSerif", Font.PLAIN, 16);
-            fontBold = new Font("SansSerif", Font.BOLD, 16);
-        }
-    }
-
-    private Image loadImageGlobal() {
-        URL imgURL = getClass().getResource(IMG_PATH_PREFIX + "recent-panel.png");
-        if (imgURL != null) {
-            return new ImageIcon(imgURL).getImage();
-        }
-        return null;
+    public JPanel getPanel() {
+        return createPanel;
     }
 
     // --- FILE IO ---
@@ -148,7 +115,7 @@ public class Create extends JFrame {
                 if (card.front.trim().isEmpty() && card.back.trim().isEmpty()) continue;
                 String f = card.front.replace("\n", "<br>");
                 String b = card.back.replace("\n", "<br>");
-                writer.write(f + "|" + b);
+                writer.write(f + "\t" + b);
                 writer.newLine();
             }
         } catch (IOException e) { e.printStackTrace(); }
@@ -191,7 +158,7 @@ public class Create extends JFrame {
             this.iconType = iconType;
 
             setBounds(x, y, w, h);
-            setFont(fontBold.deriveFont(16f));
+            setFont(loadCustomFont("bold", 16f));
             setForeground(Color.WHITE);
             setContentAreaFilled(false);
             setBorderPainted(false);
@@ -292,7 +259,7 @@ public class Create extends JFrame {
             this.maxChars = limit;
 
             setBounds(x, y, w, h);
-            setFont(fontRegular.deriveFont(16f));
+            setFont(loadCustomFont("regular", 16f));
             setOpaque(false);
             setBorder(new EmptyBorder(0, 10, 0, 45));
 
@@ -342,7 +309,7 @@ public class Create extends JFrame {
             String counter = currentLen + "/" + maxChars;
 
             g2.setColor(Color.GRAY);
-            g2.setFont(fontBold.deriveFont(12f));
+            g2.setFont(loadCustomFont("bold",12f));
             FontMetrics fm = g2.getFontMetrics();
             int cx = getWidth() - fm.stringWidth(counter) - 10;
             int cy = (getHeight() + fm.getAscent()) / 2 - 2;
@@ -371,15 +338,15 @@ public class Create extends JFrame {
             setLayout(null);
             setOpaque(false);
 
-            panelBg = loadImageGlobal();
+            panelBg = loadImage(IMG_PATH_PREFIX + "recent-panel.png").getImage();
 
             // Inputs
             add(createLabel("DECK TITLE", 50, 50));
-            RoundedTextField titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
+            titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
             add(titleField);
 
             add(createLabel("SUBJECT (OPTIONAL)", 580, 50));
-            RoundedTextField subjectField = new RoundedTextField("", 580, 80, 499, 50, 20);
+            subjectField = new RoundedTextField("", 580, 80, 499, 50, 20);
             add(subjectField);
 
             // Flashcards
@@ -411,7 +378,7 @@ public class Create extends JFrame {
 
             // Counter
             counterLabel = new JLabel("0/0", SwingConstants.CENTER);
-            counterLabel.setFont(fontRegular.deriveFont(18f));
+            counterLabel.setFont(loadCustomFont("regular", 18f));
 
             counterLabel.setBounds(510, 570, 100, 30);
             add(counterLabel);
@@ -432,7 +399,14 @@ public class Create extends JFrame {
 
             // Save (Blueish) - Icon Type 2
             btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), 2);
-            btnSave.addActionListener(e -> showSuccessScreen());
+            btnSave.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if(!titleField.getVisibleRect().isEmpty()
+                        && !frontArea.getText().isEmpty() && !backArea.getText().isEmpty())
+                            showSuccessScreen();
+                }
+            });
             add(btnSave);
         }
 
@@ -449,18 +423,12 @@ public class Create extends JFrame {
             frontArea.setVisible(!active);
             backArea.setVisible(!active);
 
-            if (active) {
-                btnClear.setText("Clear Card");
-                btnClear.setBgColor(new Color(205, 220, 145));
-                btnDiscard.setText("Discard Deck");
-                btnSave.setText("Save Deck");
-            } else {
-                btnClear.setText("Clear");
-                btnClear.setBgColor(new Color(170, 170, 170));
-                btnClear.setShadowColor(new Color(130, 130, 130));
-                btnDiscard.setText("Discard");
-                btnSave.setText("Save");
-            }
+            btnClear.setText("Clear");
+            btnClear.setBgColor(new Color(170, 170, 170));
+            btnClear.setShadowColor(new Color(130, 130, 130));
+            btnDiscard.setText("Discard");
+            btnSave.setText("Save");
+
             repaint();
         }
 
@@ -505,7 +473,11 @@ public class Create extends JFrame {
             currentIndex = index;
             updateUIFromData();
         }
-        private void clearInputs() { frontArea.setText(""); backArea.setText(""); }
+        private void clearInputs() {
+            titleField.setText("");
+            subjectField.setText("");
+            frontArea.setText("");
+            backArea.setText(""); }
 
         private ShadowButton createNavButton(String imgName, int x, int y, String alt) {
             // Light Green Navigation Buttons
@@ -530,7 +502,7 @@ public class Create extends JFrame {
 
         private JLabel createLabel(String txt, int x, int y) {
             JLabel l = new JLabel(txt);
-            l.setFont(fontBold.deriveFont(18f));
+            l.setFont(loadCustomFont("bold",18f));
             l.setForeground(new Color(60, 60, 60));
             l.setBounds(x, y, 300, 30);
             return l;
@@ -542,43 +514,32 @@ public class Create extends JFrame {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                    if (isDiscardMode) {
-                        int arc = 0;
+                    int arc = 45;
+                    int shadowOffset = 8;
 
-                        g2.setColor(new Color(0, 0, 0, 30));
-                        g2.fillRoundRect(5, 8, 510 -10, 368 -10, arc, arc);
+                    g2.setColor(new Color(160, 160, 160));
+                    g2.fillRoundRect(5, 5+shadowOffset, 510 -10, 368 -10-shadowOffset, arc, arc);
 
-                        g2.setColor(Color.WHITE);
-                        g2.fillRoundRect(10, 0, 510 -10, 368 -10, arc, arc);
-                    }
-                    else {
-                        int arc = 45;
-                        int shadowOffset = 8;
+                    g2.setColor(Color.WHITE);
+                    g2.fillRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
 
-                        g2.setColor(new Color(160, 160, 160));
-                        g2.fillRoundRect(5, 5+shadowOffset, 510 -10, 368 -10-shadowOffset, arc, arc);
-
-                        g2.setColor(Color.WHITE);
-                        g2.fillRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
-
-                        g2.setColor(new Color(200, 200, 200));
-                        g2.setStroke(new BasicStroke(3));
-                        g2.drawRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
-                    }
+                    g2.setColor(new Color(200, 200, 200));
+                    g2.setStroke(new BasicStroke(3));
+                    g2.drawRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
                 }
             };
             p.setOpaque(false);
             p.setBounds(x, 150, 510, 368);
 
             JLabel l = new JLabel(title);
-            l.setFont(fontBold.deriveFont(20f));
+            l.setFont(loadCustomFont("bold",20f));
             l.setForeground(new Color(150, 150, 150));
             l.setBounds(30, 25, 200, 30);
             p.add(l);
 
             JTextArea ta = new JTextArea();
             ta.setOpaque(false);
-            ta.setFont(fontRegular.deriveFont(22f));
+            ta.setFont(loadCustomFont("regular",22f));
             ta.setLineWrap(true);
             ta.setWrapStyleWord(true);
             ta.setBounds(30, 75, 510 -70, 368 -100);
@@ -601,7 +562,7 @@ public class Create extends JFrame {
             add(modal);
 
             JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
-            lbl.setFont(fontBold.deriveFont(20f));
+            lbl.setFont(loadCustomFont("bold",20f));
             lbl.setForeground(Color.BLACK);
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setBounds(20, 30, 380, 80);
@@ -738,7 +699,7 @@ public class Create extends JFrame {
             modal.add(btnX);
 
             JLabel lbl = new JLabel("Deck added successfully.");
-            lbl.setFont(fontBold.deriveFont(19f));
+            lbl.setFont(loadCustomFont("bold",19f));
             lbl.setHorizontalAlignment(SwingConstants.CENTER);
             lbl.setBounds(10, 80, 300, 40);
             modal.add(lbl);
@@ -754,9 +715,5 @@ public class Create extends JFrame {
             g.setColor(new Color(0, 0, 0, 50));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Create().setVisible(true));
     }
 }
