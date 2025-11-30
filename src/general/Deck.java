@@ -18,7 +18,7 @@ public class Deck {
     }
 
     public void setSubject(String subject) {
-
+        this.subject = subject;
     }
 
     public String getColor() {
@@ -35,5 +35,9 @@ public class Deck {
 
     public int getSize() {
         return size;
+    }
+
+    public void setCards(ArrayList<Card> cards) {
+        this.cards = cards;
     }
 }

@@ -40,4 +40,8 @@ public class StudyGo extends JFrame {
         revalidate();
         repaint();
     }
+
+    public void addDeckToHome(Deck deck) {
+        homePanel.addDeck(deck);
+    }
 }

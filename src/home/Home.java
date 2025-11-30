@@ -605,6 +605,11 @@ public class Home extends panelUtilities {
         btn.setFocusPainted(false);
     }
 
+    public void addDeck(Deck deck) {
+        recentDecks.addFirst(deck);
+        addDecks(recentDecks);
+    }
+
 }
 
 

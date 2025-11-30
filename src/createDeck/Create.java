@@ -1,5 +1,7 @@
 package createDeck;
 
+import general.Card;
+import general.Deck;
 import general.StudyGo;
 import general.panelUtilities;
 
@@ -88,9 +90,31 @@ public class Create extends panelUtilities {
     public void hideSuccessScreen() {
         successView.setVisible(false);
         saveDeckToFile();
+
+        String title = titleField.getText();
+        String subject = subjectField.getText();
+
+        // Convert FlashcardData to Card objects
+        ArrayList<Card> deckCards = new ArrayList<>();
+        for (FlashcardData fd : cards) {
+            if (!fd.isEmpty()) {
+                deckCards.add(new Card(fd.front, fd.back));
+            }
+        }
+
+        Deck newDeck = new Deck(title, deckCards.size(), 0, "yellow");
+        newDeck.setCards(deckCards);
+        if (!subject.isEmpty()) {
+            newDeck.setSubject(subject);
+        }
+
+        mainFrame.addDeckToHome(newDeck);
+
         currentIndex = cards.size() - 1;
         mainDash.updateUIFromData();
         mainDash.setDiscardMode(false);
+
+        mainFrame.showHomePanel();
     }
 
     public void performDiscard() {
