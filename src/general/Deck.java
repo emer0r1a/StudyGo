@@ -5,16 +5,16 @@ import java.util.ArrayList;
 public class Deck {
     String title;
     int size;
-    int lastAccessed = 0;
+    int cardsAccessed = 0;
     String color;
     String subject = "";
     ArrayList<Card> cards;
     String link;
 
-    public Deck(String title, int size, int lastAccessed, String color) {
+    public Deck(String title, int size, int cardsAccessed, String color) {
         this.title = title;
         this.size = size;
-        this.lastAccessed = lastAccessed;
+        this.cardsAccessed = cardsAccessed;
         this.color = color;
     }
 
@@ -30,8 +30,8 @@ public class Deck {
         return title;
     }
 
-    public int getLastAccessed() {
-        return lastAccessed;
+    public int getCardsAccessed() {
+        return cardsAccessed;
     }
 
     public int getSize() {

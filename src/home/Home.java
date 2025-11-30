@@ -231,7 +231,7 @@ public class Home extends panelUtilities {
 
             // deck progress bar -> accessed cards / total
             JProgressBar deckProgress = new JProgressBar(SwingConstants.HORIZONTAL,0, d.getSize());
-            deckProgress.setValue(d.getLastAccessed());
+            deckProgress.setValue(d.getCardsAccessed());
             deckProgress.setBounds(progX,progY,85,14);
             deckProgress.setBorderPainted(false);
             deckProgress.setForeground(new Color(244,175,171));
@@ -256,7 +256,7 @@ public class Home extends panelUtilities {
             );
             deckTitle.setBounds(19, 3, 130, 100);
             deckSize.setBounds(118,149,50,20);
-            deckSize.setText(d.getLastAccessed()+"/"+d.getSize());
+            deckSize.setText(d.getCardsAccessed()+"/"+d.getSize());
             deckTitle.setForeground(Color.BLACK);
             deckSize.setForeground(new Color(153,153,153));
             subjectTitle.setBounds(19,15,102,14);
