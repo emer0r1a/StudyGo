@@ -39,7 +39,6 @@ public class Create extends panelUtilities {
         loadCustomFont("bold", 16f);
 
         loadDeckFromFile();
-        if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
 
         //  FRAME SETUP
         createPanel.setBackground(new Color(230, 240, 245));
@@ -395,7 +394,9 @@ public class Create extends panelUtilities {
           // Add Card Button
             JButton btnAdd = createImageButton("plus.png", 1100, 270);
             btnAdd.addActionListener(e -> {
-                saveCurrentInputToMemory();
+                if (!cards.isEmpty()) {
+                    saveCurrentInputToMemory();
+                }
                 cards.add(new FlashcardData("", ""));
                 currentIndex = cards.size() - 1;
                 updateUIFromData();
@@ -501,11 +502,16 @@ public class Create extends panelUtilities {
             }
         }
         void updateUIFromData() {
-            if (currentIndex < cards.size()) {
+            if (cards.isEmpty()) {
+                frontArea.setText("");
+                backArea.setText("");
+                counterLabel.setText("0/0");
+            } else if (currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
                 frontArea.setText(c.front);
                 backArea.setText(c.back);
-                if (cards.size() == 1 && c.isEmpty()) {
+
+                if (cards.isEmpty() && c.isEmpty()) {
                     counterLabel.setText("0/0");
                 } else {
                     counterLabel.setText((currentIndex + 1) + "/" + cards.size());
