@@ -99,13 +99,8 @@ public class Create extends panelUtilities {
             if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
             if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
         }
-        if(!titleField.getVisibleRect().isEmpty()){
-            mainDash.clearInputs();
-        } else {
-            subjectField.setText("");
-            frontArea.setText("");
-            backArea.setText("");
-        }
+
+        mainDash.clearInputs();
         hideDiscardScreen();
         mainFrame.showHomePanel();
     }
@@ -285,18 +280,24 @@ public class Create extends panelUtilities {
                 }
             });
 
-            if (!ph.isEmpty()) {
-                setText(ph);
-                setForeground(Color.RED);
-                addFocusListener(new FocusAdapter() {
-                    public void focusGained(FocusEvent e) {
-                        if (getText().equals(placeholder)) { setText(""); setForeground(Color.BLACK); }
-                    }
-                    public void focusLost(FocusEvent e) {
-                        if (getText().isEmpty()) { setText(placeholder); setForeground(Color.RED); }
-                    }
-                });
-            }
+//            if(!ph.isEmpty()) {
+//                addFocusListener(new FocusAdapter() {
+//                    public void focusGained(FocusEvent e) {
+//                        if (getText().equals(placeholder)) {
+//                            setText("");
+//                            setForeground(Color.BLACK);
+//                        }
+//                    }
+//
+//                    public void focusLost(FocusEvent e) {
+//                        if (getText().isEmpty()) {
+//                            setText(placeholder);
+//                            setForeground(Color.RED);
+//                        }
+//                    }
+//                });
+//            }
+
         }
 
         @Override
@@ -346,6 +347,16 @@ public class Create extends panelUtilities {
             // Inputs
             add(createLabel("DECK TITLE", 50, 50));
             titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
+
+            titleField.addFocusListener(new FocusAdapter() {
+                public void focusGained(FocusEvent e) {
+                    if (titleField.getText().equals("Deck Title REQUIRED*")) { titleField.setText(""); titleField.setForeground(Color.BLACK); }
+                }
+                public void focusLost(FocusEvent e) {
+                    if (titleField.getText().isEmpty()) { titleField.setText("Deck Title REQUIRED*"); titleField.setForeground(Color.RED); }
+                }
+            });
+
             add(titleField);
 
             add(createLabel("SUBJECT (OPTIONAL)", 580, 50));
@@ -476,7 +487,8 @@ public class Create extends panelUtilities {
             updateUIFromData();
         }
         private void clearInputs() {
-            titleField.setText("");
+            titleField.setText("Deck Title REQUIRED*");
+            titleField.setForeground(Color.RED);
             subjectField.setText("");
             frontArea.setText("");
             backArea.setText("");

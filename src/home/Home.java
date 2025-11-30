@@ -503,13 +503,13 @@ public class Home extends panelUtilities {
             br = new BufferedReader(new FileReader(path));
             String line;
 
-            // TODO: set subject of deck
             if((line = br.readLine()) != null) {
                 String[] lines = line.split("\t");
                 if(Integer.parseInt(lines[2]) > Integer.parseInt(lines[1]))
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
 
                 Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
+                if(Boolean.parseBoolean(lines[4])) d.setSubject(lines[4]);
 
                 recentDecks.addFirst(d);
             }
