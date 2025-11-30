@@ -368,7 +368,7 @@ public class Create extends panelUtilities {
             add(createCardPanel("Back", 575, false));
 
 
-// ADD CARD BUTTON
+          // Add Card Button
             JButton btnAdd = createImageButton("plus.png", 1100, 270);
             btnAdd.addActionListener(e -> {
                 saveCurrentInputToMemory();
@@ -378,7 +378,7 @@ public class Create extends panelUtilities {
             });
             add(btnAdd);
 
-// DELETE CARD BUTTON
+            // Delete Card Button
             JButton btnDelete = createImageButton("delete.png", 1100, 343);
             btnDelete.addActionListener(e -> {
                 if (cards.size() > 1) {
