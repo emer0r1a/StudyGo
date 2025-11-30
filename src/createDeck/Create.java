@@ -22,6 +22,7 @@ public class Create extends panelUtilities {
     private final String FILE_NAME = "my_flashcards.txt";
     private StudyGo mainFrame;
     private RoundedTextField titleField, subjectField;
+    private JTextArea frontArea, backArea;
 
     private final String IMG_PATH_PREFIX   = "/resources/createDeck/";
 
@@ -98,7 +99,13 @@ public class Create extends panelUtilities {
             if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
             if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
         }
-        mainDash.clearInputs();
+        if(!titleField.getVisibleRect().isEmpty()){
+            mainDash.clearInputs();
+        } else {
+            subjectField.setText("");
+            frontArea.setText("");
+            backArea.setText("");
+        }
         hideDiscardScreen();
         mainFrame.showHomePanel();
     }
@@ -321,7 +328,6 @@ public class Create extends panelUtilities {
 
     // Main Dashboard
     class MainDashboard extends JPanel {
-        private JTextArea frontArea, backArea;
         private final JLabel counterLabel;
 
         private final ShadowButton btnClear;
@@ -473,7 +479,8 @@ public class Create extends panelUtilities {
             titleField.setText("");
             subjectField.setText("");
             frontArea.setText("");
-            backArea.setText(""); }
+            backArea.setText("");
+        }
 
         private ShadowButton createNavButton(String imgName, int x, int y, String alt) {
             // Light Green Navigation Buttons
