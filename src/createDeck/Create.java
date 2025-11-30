@@ -37,7 +37,7 @@ public class Create extends JFrame {
         setTitle("StudyGo");
 
         //  FRAME SETUP
-        setSize(1280, 750);
+        setSize(1280, 720);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -47,7 +47,7 @@ public class Create extends JFrame {
         // LAYERED PANE SETUP
         // --- GUI LAYERS ---
         JLayeredPane layeredPane = new JLayeredPane();
-        layeredPane.setBounds(0, 0, 1280, 750);
+        layeredPane.setBounds(0, 0, 1280, 720);
         add(layeredPane);
 
         // Main Dashboard
@@ -57,13 +57,13 @@ public class Create extends JFrame {
 
         // DISCARD BUTTON POPUP
         discardView = new DiscardPopup();
-        discardView.setBounds(0, 0, 1280, 750);
+        discardView.setBounds(0, 0, 1280, 720);
         discardView.setVisible(false);
         layeredPane.add(discardView, Integer.valueOf(1));
 
         // SAVE BUTTON POPUP
         successView = new SuccessPopup();
-        successView.setBounds(0, 0, 1280, 750);
+        successView.setBounds(0, 0, 1280, 720);
         successView.setVisible(false);
         layeredPane.add(successView, Integer.valueOf(2));
 
