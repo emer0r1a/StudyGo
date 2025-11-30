@@ -7,7 +7,7 @@ public class Deck {
     int size;
     int lastAccessed = 0;
     String color;
-    String subject = null;
+    String subject = "";
     ArrayList<Card> cards;
 
     public Deck(String title, int size, int lastAccessed, String color) {
@@ -39,5 +39,9 @@ public class Deck {
 
     public void setCards(ArrayList<Card> cards) {
         this.cards = cards;
+    }
+
+    public String getSubject() {
+        return subject;
     }
 }

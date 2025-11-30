@@ -237,6 +237,7 @@ public class Home extends panelUtilities {
 
             JLabel deckTitle = new JLabel();
             JLabel deckSize = new JLabel(String.valueOf(d.getSize()));
+            JLabel subjectTitle = new JLabel(d.getSubject());
 
             // deck details placement
             deckSize.setFont(loadCustomFont("semibold",12));
@@ -246,14 +247,18 @@ public class Home extends panelUtilities {
                     "<html><body style='width:128px; word-wrap: break-word; overflow-wrap: break-word;'>" + titleText
                             + "</body></html>"
             );
-            deckTitle.setBounds(19, 5, 130, 100);
+            deckTitle.setBounds(19, 3, 130, 100);
             deckSize.setBounds(118,149,50,20);
             deckSize.setText(d.getLastAccessed()+"/"+d.getSize());
             deckTitle.setForeground(Color.BLACK);
             deckSize.setForeground(new Color(153,153,153));
+            subjectTitle.setBounds(19,15,102,14);
+            subjectTitle.setFont(loadCustomFont("regular",14));
+            subjectTitle.setForeground(new Color(153,153,153));
 
             deckCont.add(deckTitle);
             deckCont.add(deckSize);
+            deckCont.add(subjectTitle);
             deckContainer.add(deckCont);
 
             // add next deckCont
@@ -375,12 +380,12 @@ public class Home extends panelUtilities {
 
     private void addButtons() {
         ImageIcon cd = loadImage("/resources/home/plus-icon.png");
-        createDeck = new panelUtilities.ShadowButton("Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
+        createDeck = new ShadowButton("Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
         styleButton(createDeck);
         homePanel.add(createDeck);
 
         ImageIcon ld = loadImage("/resources/home/cards_stack.png");
-        loadDeck = new panelUtilities.ShadowButton("Load Deck", 1042, 47, 182, 50,new Color(143, 230, 139),ld, "bold", 20f);
+        loadDeck = new ShadowButton("Load Deck", 1042, 47, 182, 50,new Color(143, 230, 139),ld, "bold", 20f);
         styleButton(loadDeck);
         homePanel.add(loadDeck);
 
@@ -564,7 +569,9 @@ public class Home extends panelUtilities {
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
 
                 Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
-                if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) d.setSubject(lines[4]);
+                if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) {
+                    d.setSubject(lines[4]);
+                }
 
                 recentDecks.addFirst(d);
             }
