@@ -33,6 +33,8 @@ public class Create extends panelUtilities {
     private final SuccessPopup successView;
     private JPanel createPanel;
 
+    private File decksFolder = new File("Decks");
+
     public Create(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
         createPanel = new JPanel(null);
@@ -69,6 +71,10 @@ public class Create extends panelUtilities {
 
         // Initialize UI
         mainDash.updateUIFromData();
+
+        if (titleField.getText().equals("Deck Title REQUIRED*")) {
+            titleField.setForeground(Color.RED);
+        }
     }
 
     // --- LOGIC METHODS ---
@@ -92,6 +98,7 @@ public class Create extends panelUtilities {
         saveDeckToFile();
 
         String title = titleField.getText();
+        String link = title.replace(" ", "-");
         String subject = subjectField.getText();
 
         // Convert FlashcardData to Card objects
@@ -104,14 +111,35 @@ public class Create extends panelUtilities {
 
         Deck newDeck = new Deck(title, deckCards.size(), 0, "yellow");
         newDeck.setCards(deckCards);
+        newDeck.setLink(link);
         if (!subject.isEmpty()) {
             newDeck.setSubject(subject);
         }
 
         mainFrame.addDeckToHome(newDeck);
 
-        currentIndex = cards.size() - 1;
+        // --- START: Cleaned-up State Reset ---
+
+        // 1. Reset all input fields to default placeholder/empty state
+        //    (This calls the clearInputs method in MainDashboard)
+        mainDash.clearInputs();
+
+        // 2. Clear the static list of flashcards and add a single new empty card.
+        cards.clear();
+        cards.add(new FlashcardData("", ""));
+        currentIndex = 0; // Reset index to the first (and only) new card
+
+        // 3. Delete the temporary file ("my_flashcards.txt")
+        File tempFile = new File(FILE_NAME);
+        if (tempFile.exists()) {
+            tempFile.delete();
+        }
+
+        // 4. Force the UI (including the counter label) to render the new state (1/1)
         mainDash.updateUIFromData();
+
+        // --- END: Cleaned-up State Reset ---
+
         mainDash.setDiscardMode(false);
 
         mainFrame.showHomePanel();
@@ -121,10 +149,20 @@ public class Create extends panelUtilities {
         if (currentIndex < cards.size()) {
             cards.remove(currentIndex);
             if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
-            if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
+            if (cards.isEmpty()) cards.add(new FlashcardData("", "")); // Ensures list is never size 0
         }
 
         mainDash.clearInputs();
+        mainDash.updateUIFromData();
+
+
+        cards.clear();
+        cards.add(new FlashcardData("", ""));
+        currentIndex = 0;
+
+        mainDash.updateUIFromData();
+
+
         hideDiscardScreen();
         mainFrame.showHomePanel();
     }
@@ -135,7 +173,12 @@ public class Create extends panelUtilities {
 
     // --- FILE IO ---
     private void saveDeckToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
+        String fileName = titleField.getText() + ".txt";
+        fileName = fileName.replace(" ", "-");
+
+        File file = new File(decksFolder, fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (FlashcardData card : cards) {
                 if (card.front.trim().isEmpty() && card.back.trim().isEmpty()) continue;
                 String f = card.front.replace("\n", "<br>");
@@ -143,7 +186,12 @@ public class Create extends panelUtilities {
                 writer.write(f + "\t" + b);
                 writer.newLine();
             }
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("DATA FOLDER NOT FOUND!");
+            e.printStackTrace();
+        }
     }
 
     private void loadDeckFromFile() {
@@ -309,6 +357,7 @@ public class Create extends panelUtilities {
 //                    public void focusGained(FocusEvent e) {
 //                        if (getText().equals(placeholder)) {
 //                            setText("");
+//                            // Reverts color to BLACK when user starts typing
 //                            setForeground(Color.BLACK);
 //                        }
 //                    }
@@ -316,6 +365,7 @@ public class Create extends panelUtilities {
 //                    public void focusLost(FocusEvent e) {
 //                        if (getText().isEmpty()) {
 //                            setText(placeholder);
+//                            // Sets color to RED when the field is left empty
 //                            setForeground(Color.RED);
 //                        }
 //                    }
@@ -426,7 +476,7 @@ public class Create extends panelUtilities {
             add(btnClear);
 
             // Counter
-            counterLabel = new JLabel("0/0", SwingConstants.CENTER);
+            counterLabel = new JLabel("1/1", SwingConstants.CENTER);
             counterLabel.setFont(loadCustomFont("regular", 18f));
 
             counterLabel.setBounds(510, 570, 100, 30);
@@ -451,9 +501,20 @@ public class Create extends panelUtilities {
             btnSave.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if(!titleField.getVisibleRect().isEmpty()
-                        && !frontArea.getText().isEmpty() && !backArea.getText().isEmpty())
-                            showSuccessScreen();
+                    // Check if the title field is truly empty
+                    if (titleField.getText().trim().isEmpty()) {
+                        // FIX: Manually display the red warning text and set color to RED
+                        titleField.setText("Deck Title REQUIRED*");
+                        titleField.setForeground(Color.RED);
+
+                        // Prevent saving/showing success screen
+                        return;
+                    }
+
+                    // Proceed only if title is not empty AND card areas have content
+                    if (!frontArea.getText().isEmpty() && !backArea.getText().isEmpty()) {
+                        showSuccessScreen();
+                    }
                 }
             });
             add(btnSave);
@@ -500,18 +561,25 @@ public class Create extends panelUtilities {
                 c.back = backArea.getText();
             }
         }
+
+        // In MainDashboard class
         void updateUIFromData() {
-            if (currentIndex < cards.size()) {
+            // Check for the rare case where cards list is truly empty (size 0)
+            if (cards.isEmpty()) {
+                counterLabel.setText("1/1"); // We treat the empty panel as slot 1/1
+                frontArea.setText("");
+                backArea.setText("");
+            } else if (currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
                 frontArea.setText(c.front);
                 backArea.setText(c.back);
-                if (cards.size() == 1 && c.isEmpty()) {
-                    counterLabel.setText("0/0");
-                } else {
-                    counterLabel.setText((currentIndex + 1) + "/" + cards.size());
-                }
+
+                // FIX: Always display the current index (1-based) over the total size (N)
+                // Since cards.size() >= 1, this will correctly show 1/1 for the first card.
+                counterLabel.setText((currentIndex + 1) + "/" + cards.size());
             } else {
-                counterLabel.setText("0/0");
+                // Fallback for safety, though it shouldn't be reached after the reset in hideSuccessScreen()
+                counterLabel.setText((cards.size()) + "/" + cards.size());
             }
         }
         private void navigate(int index) {
@@ -521,13 +589,16 @@ public class Create extends panelUtilities {
             currentIndex = index;
             updateUIFromData();
         }
+        // In MainDashboard class
         private void clearInputs() {
-            titleField.setText("Deck Title REQUIRED*");
-            titleField.setForeground(Color.RED);
+            titleField.setText(""); // FIX: Set to blank text.
+            titleField.setForeground(Color.BLACK); // Set text color to Black.
+
             subjectField.setText("");
             frontArea.setText("");
             backArea.setText("");
         }
+// ...
 
         private ShadowButton createNavButton(String imgName, int x, int y, String alt) {
             // Light Green Navigation Buttons
@@ -665,6 +736,7 @@ public class Create extends panelUtilities {
             g.setColor(new Color(0, 0, 0, 50));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
+
     }
 
     // Save Popup

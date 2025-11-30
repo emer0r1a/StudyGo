@@ -224,6 +224,13 @@ public class Home extends panelUtilities {
                         }
                     });
 
+                    editItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+
+                        }
+                    });
+
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
                 }
             });

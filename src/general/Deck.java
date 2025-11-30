@@ -3,6 +3,7 @@ package general;
 import java.util.ArrayList;
 
 public class Deck {
+    String link;
     String title;
     int size;
     int lastAccessed = 0;
@@ -40,4 +41,9 @@ public class Deck {
     public void setCards(ArrayList<Card> cards) {
         this.cards = cards;
     }
+
+    public String getLink() { return link; }
+
+    public void setLink(String link) { this.link = link; }
+
 }
