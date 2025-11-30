@@ -193,6 +193,13 @@ public class Home extends panelUtilities {
                     editItem.setBorder(new EmptyBorder(5, 5, 5, 5));
                     optionsMenu.add(editItem);
 
+                    editItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+
+                        }
+                    });
+
                     ImageIcon dd = loadImage("/resources/home/delete.png");
                     JMenuItem deleteItem = new JMenuItem(dd);
                     deleteItem.setBackground(new Color(255,253,250));

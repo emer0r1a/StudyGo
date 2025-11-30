@@ -9,6 +9,7 @@ public class Deck {
     String color;
     String subject = "";
     ArrayList<Card> cards;
+    String link;
 
     public Deck(String title, int size, int lastAccessed, String color) {
         this.title = title;
@@ -44,4 +45,8 @@ public class Deck {
     public String getSubject() {
         return subject;
     }
+
+    public String getLink() { return link; }
+
+    public void setLink(String link) { this.link = link; }
 }
