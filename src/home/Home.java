@@ -37,6 +37,7 @@ public class Home extends panelUtilities {
     private JPanel emptyDeckPanel, noResultPanel;
     private JLabel currentlyToggledDeck = null;
     private ImageIcon currentOriginalIcon = null;
+    private Deck currentlySelectedDeck = null;
 
     public Home(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
@@ -191,6 +192,12 @@ public class Home extends panelUtilities {
             deckCont.setBounds(0, 0, originalIcon.getIconWidth(), originalIcon.getIconHeight());
             deckWrapper.add(deckCont);
 
+            if (d == currentlySelectedDeck) {
+                deckCont.setIcon(altIcon);
+                currentlyToggledDeck = deckCont;
+                currentOriginalIcon = originalIcon;
+            }
+
             final boolean[] isToggled = {false};
 
             deckWrapper.addMouseListener(new MouseAdapter() {
@@ -199,17 +206,23 @@ public class Home extends panelUtilities {
                     if (e.getSource() != deckWrapper) return;
                     if (currentlyToggledDeck != null && currentlyToggledDeck != deckCont) {
                         currentlyToggledDeck.setIcon(currentOriginalIcon);
+                        currentlySelectedDeck = null;
                     }
-                    if (isToggled[0]) {
+
+                    if (currentlyToggledDeck == deckCont) {
+                        // Untoggle this deck
                         deckCont.setIcon(originalIcon);
                         currentlyToggledDeck = null;
                         currentOriginalIcon = null;
+                        currentlySelectedDeck = null; // Clear selection
                     } else {
+                        // Toggle this deck
                         deckCont.setIcon(altIcon);
                         currentlyToggledDeck = deckCont;
                         currentOriginalIcon = originalIcon;
+                        currentlySelectedDeck = d; // SET THE SELECTED DECK OBJECT
                     }
-                    isToggled[0] = !isToggled[0];
+
                     deckCont.revalidate();
                     deckCont.repaint();
                 }
@@ -249,6 +262,12 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            if (d == currentlySelectedDeck) {
+                                currentlySelectedDeck = null;
+                                currentlyToggledDeck = null;
+                                currentOriginalIcon = null;
+                            }
+
                             decks.remove(d);
                             recentDecks.remove(d);
 
@@ -434,7 +453,24 @@ public class Home extends panelUtilities {
         loadDeck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (currentlySelectedDeck != null) {
+                    String deckFilePath = currentlySelectedDeck.getLink();
 
+                    if (deckFilePath != null && !deckFilePath.isEmpty()) {
+                        try {
+                            mainFrame.showLoadDeckPanel(deckFilePath);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (FontFormatException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        // resetToggledDeck();
+                    } else {
+                        JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
     }
@@ -606,7 +642,7 @@ public class Home extends panelUtilities {
                 if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) {
                     d.setSubject(lines[4]);
                 }
-
+                d.setLink(path);
                 recentDecks.addFirst(d);
             }
 
