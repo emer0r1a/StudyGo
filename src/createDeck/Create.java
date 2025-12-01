@@ -17,9 +17,8 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class Create extends panelUtilities {
-
     // Data
-
+    Deck loadedDeck;
     public static ArrayList<FlashcardData> cards = new ArrayList<>();
     public static int currentIndex = 0;
 
@@ -38,8 +37,11 @@ public class Create extends panelUtilities {
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
 
+    private boolean exists;
+
     public Create(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
+        exists = false;
         createPanel = new JPanel(null);
         loadCustomFont("bold", 16f);
 
@@ -102,6 +104,9 @@ public class Create extends panelUtilities {
     public void hideDiscardScreen() {
         discardView.setVisible(false);
         mainDash.setDiscardMode(false);
+        if (loadedDeck != null) {
+            loadedDeck = null;
+        }
     }
 
     public void performDiscard() {
@@ -126,17 +131,48 @@ public class Create extends panelUtilities {
         mainFrame.showHomePanel();
     }
 
-    public void loadEditDeck(String link) {
+    public void loadEditDeck(String link, Deck d) {
         File file = new File(decksFolder, link);
+        loadedDeck = d;
+        exists = d.getExistance();
 
         BufferedReader br = null;
 
         try {
             br = new BufferedReader(new FileReader(file));
 
+            String line[] = br.readLine().split("\t");
+            titleField.setText(line[0]);
+            subjectField.setText(line[1]);
 
+            String cardText;
+
+            while ((cardText = br.readLine()) != null) {
+                line = cardText.split("\t");
+                Card c = new Card(line[0], line[1]);
+
+                if (cards.get(0).getFront().isEmpty() && cards.get(0).getBack().isEmpty()) {
+                    cards.get(0).setFront(line[0]);
+                    cards.get(0).setBack(line[1]);
+                } else {
+                    FlashcardData fc = new FlashcardData(line[0], line[1]);
+                    cards.add(fc);
+                }
+            }
+
+            mainDash.updateUIFromData();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+            } catch (IOException e) {
+
+            }
+        }
+
+        if (titleField.getForeground().equals(Color.RED)) {
+            titleField.setForeground(Color.black);
         }
     }
 
@@ -156,22 +192,32 @@ public class Create extends panelUtilities {
         if(title.contains("REQUIRED")) title = "Untitled Deck"; // Fallback
 
         // Convert FlashcardData to Card objects
-        ArrayList<Card> deckCards = new ArrayList<>();
-        for (FlashcardData fd : cards) {
-            // Only add if at least one side has text
-            if (!fd.isEmpty()) {
-                deckCards.add(new Card(fd.front, fd.back));
+
+        if (!exists) {
+            ArrayList<Card> deckCards = new ArrayList<>();
+            for (FlashcardData fd : cards) {
+                // Only add if at least one side has text
+                if (!fd.isEmpty()) {
+                    deckCards.add(new Card(fd.front, fd.back));
+                }
             }
+
+            Deck newDeck = new Deck(title, deckCards.size(), 0, "yellow");
+            newDeck.setCards(deckCards);
+            newDeck.setLink(link);
+            newDeck.setExistance(true);
+
+            if (!subject.isEmpty()) {
+                newDeck.setSubject(subject);
+            }
+
+            mainFrame.addDeckToHome(newDeck);
         }
 
-        Deck newDeck = new Deck(title, deckCards.size(), 0, "yellow");
-        newDeck.setCards(deckCards);
-        newDeck.setLink(link);
-        if (!subject.isEmpty()) {
-            newDeck.setSubject(subject);
+        exists = false;
+        if (loadedDeck != null) {
+            loadedDeck = null;
         }
-
-        mainFrame.addDeckToHome(newDeck);
 
         currentIndex = cards.size() - 1;
         // --- START: Cleaned-up State Reset ---
@@ -230,19 +276,36 @@ public class Create extends panelUtilities {
 
     // --- FILE IO ---
     private void saveDeckToFile() {
-        String fileName = titleField.getText() + ".txt";
-        fileName = fileName.replace(" ", "-");
+        String newFileName = titleField.getText().trim().replace(" ", "-") + ".txt";
+        File newFile = new File(decksFolder, newFileName);
 
-        File file = new File(decksFolder, fileName);
+        try {
+            // Only attempt rename if the deck was previously loaded
+            if (loadedDeck != null) {
+                String oldFileName = loadedDeck.getTitle().trim().replace(" ", "-") + ".txt";
+                File oldFile = new File(decksFolder, oldFileName);
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            for (FlashcardData card : cards) {
-                if (card.front.trim().isEmpty() && card.back.trim().isEmpty()) continue;
-                String f = card.front.replace("\n", "<br>");
-                String b = card.back.replace("\n", "<br>");
-                writer.write(f + "\t" + b);
-                writer.newLine();
+                // Rename only if the name changed
+                if (!oldFileName.equals(newFileName) && oldFile.exists()) {
+                    boolean success = oldFile.renameTo(newFile);
+                    System.out.println("Rename successful: " + success);
+                }
             }
+
+            // Write to the correct file (newFile)
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
+                writer.write(titleField.getText() + "\t" + subjectField.getText());
+                writer.newLine();
+
+                for (FlashcardData card : cards) {
+                    if (card.front.trim().isEmpty() && card.back.trim().isEmpty()) continue;
+                    String f = card.front.replace("\n", "<br>");
+                    String b = card.back.replace("\n", "<br>");
+                    writer.write(f + "\t" + b);
+                    writer.newLine();
+                }
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -256,6 +319,22 @@ public class Create extends panelUtilities {
         public FlashcardData(String f, String b) { front = f; back = b; }
         public boolean isEmpty() {
             return (front == null || front.trim().isEmpty()) && (back == null || back.trim().isEmpty());
+        }
+
+        public void setFront(String front) {
+            this.front = front;
+        }
+
+        public void setBack(String back) {
+            this.back = back;
+        }
+
+        public String getFront() {
+            return front;
+        }
+
+        public String getBack() {
+            return back;
         }
     }
 

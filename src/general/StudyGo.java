@@ -41,9 +41,9 @@ public class StudyGo extends JFrame {
         repaint();
     }
 
-    public void showEditPanel(String link) {
+    public void showEditPanel(String link, Deck d) {
         setContentPane(createPanel.getPanel());
-        createPanel.loadEditDeck(link);
+        createPanel.loadEditDeck(link, d);
     }
 
     public void addDeckToHome(Deck deck) {

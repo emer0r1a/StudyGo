@@ -3,6 +3,7 @@ package general;
 import java.util.ArrayList;
 
 public class Deck {
+    boolean exists;
     String title;
     int size;
     int cardsAccessed = 0;
@@ -16,6 +17,7 @@ public class Deck {
         this.size = size;
         this.cardsAccessed = cardsAccessed;
         this.color = color;
+        exists = false;
     }
 
     public void setSubject(String subject) {
@@ -49,4 +51,12 @@ public class Deck {
     public String getLink() { return link; }
 
     public void setLink(String link) { this.link = link; }
+
+    public void setExistance(boolean exists) {
+        this.exists = exists;
+    }
+
+    public boolean getExistance() {
+        return exists;
+    }
 }

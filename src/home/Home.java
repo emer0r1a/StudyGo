@@ -196,8 +196,7 @@ public class Home extends panelUtilities {
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            mainFrame.showEditPanel(d.getLink());
-                            System.out.println(d.getLink());
+                            mainFrame.showEditPanel(d.getLink(),d);
                         }
                     });
 
