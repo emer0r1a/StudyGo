@@ -3,6 +3,7 @@ package LOADDECK;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,6 +15,9 @@ public class LOADDECK extends JFrame {
 
     // --- LOGIC VARIABLES ---
     private ArrayList<String> question = new ArrayList<>();
+
+    private File decksFolder = new File("Decks");
+
     private ArrayList<String> answer = new ArrayList<>();
     private int currentIndex = 0;
     private boolean isShowingQuestion = true;

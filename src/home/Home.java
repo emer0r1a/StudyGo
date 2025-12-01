@@ -580,7 +580,7 @@ public class Home extends panelUtilities {
                     d.setSubject(lines[4]);
                 }
 
-                recentDecks.addFirst(d);
+                recentDecks.add(0, d);
             }
 
             // load cards from deck
@@ -618,7 +618,7 @@ public class Home extends panelUtilities {
     }
 
     public void addDeck(Deck deck) {
-        recentDecks.addFirst(deck);
+        recentDecks.add(0,deck);
         addDecks(recentDecks);
     }
 
