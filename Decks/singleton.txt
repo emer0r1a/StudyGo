@@ -1,5 +1,0 @@
-singleton	4	0	oop
-question1	annswer1
-question2	answer2
-question3	answer3
-question4	answer4

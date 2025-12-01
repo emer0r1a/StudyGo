@@ -1,9 +1,6 @@
 package createDeck;
 
-import general.Card;
-import general.Deck;
-import general.StudyGo;
-import general.panelUtilities;
+import general.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -148,32 +145,32 @@ public class Create extends panelUtilities {
 
     public void hideSuccessScreen() {
         successView.setVisible(false);
-        saveDeckToFile();
 
-        String title = titleField.getText();
-        String link = title.replace(" ", "-") + ".txt";
-        String subject = subjectField.getText();
-        if(title.contains("REQUIRED")) title = "Untitled Deck"; // Fallback
+        String filename = DeckFileManager.saveDeck(
+                titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
+                subjectField.getText().trim(),
+                cards
+        );
 
-        // Convert FlashcardData to Card objects
-        ArrayList<Card> deckCards = new ArrayList<>();
-        for (FlashcardData fd : cards) {
-            // Only add if at least one side has text
-            if (!fd.isEmpty()) {
-                deckCards.add(new Card(fd.front, fd.back));
+        if (filename != null) {
+            // Load the deck header back from file
+            Deck newDeck = DeckFileManager.loadDeckHeader(filename);
+
+            if (newDeck != null) {
+                // Convert FlashcardData to Card objects
+                ArrayList<Card> deckCards = new ArrayList<>();
+                for (FlashcardData fd : cards) {
+                    // Only add if at least one side has text
+                    if (!fd.isEmpty()) {
+                        deckCards.add(new Card(fd.getFront(), fd.getBack()));
+                    }
+                }
+                newDeck.setCards(deckCards);
+
+                // Add to home screen
+                mainFrame.addDeckToHome(newDeck);
             }
         }
-
-        Deck newDeck = new Deck(title, deckCards.size(), 0, "yellow");
-        newDeck.setCards(deckCards);
-        newDeck.setLink(link);
-        if (!subject.isEmpty()) {
-            newDeck.setSubject(subject);
-        }
-
-        mainFrame.addDeckToHome(newDeck);
-
-        currentIndex = cards.size() - 1;
         // --- START: Cleaned-up State Reset ---
 
         // 1. Reset all input fields to default placeholder/empty state
@@ -237,9 +234,9 @@ public class Create extends panelUtilities {
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             for (FlashcardData card : cards) {
-                if (card.front.trim().isEmpty() && card.back.trim().isEmpty()) continue;
-                String f = card.front.replace("\n", "<br>");
-                String b = card.back.replace("\n", "<br>");
+                if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) continue;
+                String f = card.getFront().replace("\n", "<br>");
+                String b = card.getBack().replace("\n", "<br>");
                 writer.write(f + "\t" + b);
                 writer.newLine();
             }
@@ -252,10 +249,27 @@ public class Create extends panelUtilities {
     }
 
     public static class FlashcardData {
-        String front, back;
-        public FlashcardData(String f, String b) { front = f; back = b; }
+        private String front;
+        private String back;
+        public FlashcardData(String f, String b) { setFront(f); setBack(b); }
         public boolean isEmpty() {
-            return (front == null || front.trim().isEmpty()) && (back == null || back.trim().isEmpty());
+            return (getFront() == null || getFront().trim().isEmpty()) && (getBack() == null || getBack().trim().isEmpty());
+        }
+
+        public String getFront() {
+            return front;
+        }
+
+        public void setFront(String front) {
+            this.front = front;
+        }
+
+        public String getBack() {
+            return back;
+        }
+
+        public void setBack(String back) {
+            this.back = back;
         }
     }
 
@@ -449,8 +463,8 @@ public class Create extends panelUtilities {
         void saveCurrentInputToMemory() {
             if (!cards.isEmpty() && currentIndex >= 0 && currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
-                c.front = frontArea.getText();
-                c.back = backArea.getText();
+                c.setFront(frontArea.getText());
+                c.setBack(backArea.getText());
             }
         }
 
@@ -462,8 +476,8 @@ public class Create extends panelUtilities {
                 backArea.setText("");
             } else if (currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
-                frontArea.setText(c.front);
-                backArea.setText(c.back);
+                frontArea.setText(c.getFront());
+                backArea.setText(c.getBack());
                 // FIX: Always display the current index (1-based) over the total size (N)
                 // Since cards.size() >= 1, this will correctly show 1/1 for the first card.
                 counterLabel.setText((currentIndex + 1) + "/" + cards.size());
