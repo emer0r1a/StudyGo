@@ -231,6 +231,12 @@ public class Home extends panelUtilities {
                             decks.remove(d);
                             recentDecks.remove(d);
 
+                            // delete deck file from Decks directory
+                            File toDelete = new File("Decks/"+d.getLink());
+                            if(toDelete.delete()) {
+                                System.out.println("FILE DELETED");
+                            } else System.out.println("ERROR DELETING");
+
                             if(decks == recentDecks) {
                                 addDecks(recentDecks);
                             } else if(decks == resultDeck) {
@@ -498,6 +504,8 @@ public class Home extends panelUtilities {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+
+
         }
     }
 
@@ -612,6 +620,9 @@ public class Home extends panelUtilities {
                 }
 
                 recentDecks.add(0, d);
+
+                File f = new File(path);
+                d.setLink(f.getName());
             }
 
             // load cards from deck
