@@ -248,7 +248,8 @@ public class LoadDeck extends panelUtilities {
         File file = new File(decksFolder, filename);
         BufferedReader br = new BufferedReader(new FileReader(file));
         deckTitle = br.readLine();
-
+        deckTitle = deckTitle.toUpperCase();
+        
         String line;
         while ((line = br.readLine()) != null) {
             if (line.trim().isEmpty()) continue;
@@ -539,3 +540,4 @@ class RoundedProgressBar extends JProgressBar {
         g2.dispose();
     }
 }
+
