@@ -34,16 +34,13 @@ public class DeckFileManager {
             writer.newLine();
 
             for (FlashcardData card : cards) {
-                if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) {
-                    continue; // Skip empty cards
-                }
-
-                String front = card.getFront().replace("\n", "<br>");
-                String back = card.getBack().replace("\n", "<br>");
-
-                writer.write(front + "\t" + back);
+                if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) continue;
+                String f = card.getFront().replace("\n", "<br>");
+                String b = card.getBack().replace("\n", "<br>");
+                writer.write(f + "\t" + b);
                 writer.newLine();
             }
+
             return fileName;
 
         } catch (IOException e) {
