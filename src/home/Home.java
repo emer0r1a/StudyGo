@@ -464,6 +464,7 @@ public class Home extends panelUtilities {
         createDeck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                resetToggledDeck();
                 openPopupMenu();
             }
         });
@@ -482,7 +483,7 @@ public class Home extends panelUtilities {
                         } catch (FontFormatException ex) {
                             throw new RuntimeException(ex);
                         }
-                        // resetToggledDeck();
+                         resetToggledDeck();
                     } else {
                         JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
