@@ -13,7 +13,52 @@ public class DeckFileManager {
             decksFolder.mkdirs();
         }
     }
-    
+
+    public static String saveExistingDeck(
+            String title, String subject, ArrayList<FlashcardData> cards, String oldLink
+    ) {
+        String newLink = title.replace(" ", "-").replace(".", "-") + ".txt";
+
+        File oldFile = new File(decksFolder, oldLink);
+        File newFile = new File(decksFolder, newLink);
+
+        System.out.println(newLink);
+        System.out.println(oldLink);
+
+        if (!oldLink.equals(newLink) && oldFile.exists()) {
+            oldFile.renameTo(newFile);
+        }
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
+
+            int totalCards = 0;
+            for (FlashcardData card : cards) {
+                if (!card.isEmpty()) totalCards++;
+            }
+
+            String header = title + "\t" + totalCards + "\t0\t" +
+                    (subject != null && !subject.trim().isEmpty() ? subject : "");
+            writer.write(header);
+            writer.newLine();
+
+            for (FlashcardData card : cards) {
+                if (card.isEmpty()) continue;
+                String f = card.getFront().replace("\n", "<br>");
+                String b = card.getBack().replace("\n", "<br>");
+                writer.write(f + "\t" + b);
+                writer.newLine();
+            }
+
+
+            return newLink;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
     public static String saveDeck(String title, String subject, ArrayList<FlashcardData> cards) {
         if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
             title = "Untitled Deck"; // Fallback
@@ -48,7 +93,7 @@ public class DeckFileManager {
             return null;
         }
     }
-    
+
     // load header(title,size,...)
     public static Deck loadDeckHeader(String filename) {
         File file = new File(decksFolder, filename);
@@ -93,7 +138,7 @@ public class DeckFileManager {
             return null;
         }
     }
-    
+
     public static ArrayList<Card> loadCards(String filename) {
         ArrayList<Card> cards = new ArrayList<>();
         File file = new File(decksFolder, filename);
@@ -255,5 +300,15 @@ public class DeckFileManager {
         }
 
         return false;
+    }
+
+    public static ArrayList<FlashcardData> loadEditDeck(String link, Deck currentDeck) {
+        ArrayList<FlashcardData> cards = new ArrayList<>();
+
+        for (Card c : currentDeck.getCards()) {
+            cards.add(new FlashcardData(c.getQuestion(),c.getAnswer()));
+        }
+
+        return cards;
     }
 }

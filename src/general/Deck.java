@@ -42,6 +42,10 @@ public class Deck {
         this.cards = cards;
     }
 
+    public ArrayList<Card> getCards() {
+        return cards;
+    }
+
     public String getSubject() {
         return subject;
     }

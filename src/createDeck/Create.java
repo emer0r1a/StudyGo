@@ -35,6 +35,11 @@ public class Create extends panelUtilities {
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
 
+    private boolean deckExists = false;
+
+    private Deck toBeEdited;
+    private String oldLink = "";
+
     public Create(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
         createPanel = new JPanel(null);
@@ -123,19 +128,6 @@ public class Create extends panelUtilities {
         mainFrame.showHomePanel();
     }
 
-    public void loadEditDeck(String link) {
-        File file = new File(decksFolder, link);
-
-        BufferedReader br = null;
-
-        try {
-            br = new BufferedReader(new FileReader(file));
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     // Success/Save Logic
     public void showSuccessScreen() {
@@ -144,13 +136,26 @@ public class Create extends panelUtilities {
     }
 
     public void hideSuccessScreen() {
+        String filename;
         successView.setVisible(false);
 
-        String filename = DeckFileManager.saveDeck(
-                titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
-                subjectField.getText().trim(),
-                cards
-        );
+        if (!oldLink.isEmpty()) {
+            filename = DeckFileManager.saveExistingDeck(
+                    titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
+                    subjectField.getText().trim(),
+                    cards,
+                    oldLink
+            );
+
+            deckExists = false;
+            oldLink = "";
+        } else {
+            filename = DeckFileManager.saveDeck(
+                    titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
+                    subjectField.getText().trim(),
+                    cards
+            );
+        }
 
         if (filename != null) {
             // Load the deck header back from file
@@ -219,6 +224,25 @@ public class Create extends panelUtilities {
         }
         mainDash.updateUIFromData();
         hideDeleteScreen();
+    }
+
+    public void loadToBeEdited(String link, Deck d) {
+        cards = DeckFileManager.loadEditDeck(link,d);
+
+        if (oldLink.isEmpty()) {
+            deckExists = true;
+            oldLink = d.getLink();
+            toBeEdited = d;
+        }
+
+        titleField.setText(d.getTitle());
+        subjectField.setText(d.getSubject());
+
+        mainDash.updateUIFromData();
+
+        if (titleField.getForeground().equals(Color.RED)) {
+            titleField.setForeground(Color.black);
+        }
     }
 
     public JPanel getPanel() {

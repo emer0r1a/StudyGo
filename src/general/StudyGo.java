@@ -7,6 +7,7 @@ import home.Home;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class StudyGo extends JFrame {
     private Home homePanel;
@@ -44,9 +45,9 @@ public class StudyGo extends JFrame {
         repaint();
     }
 
-    public void showEditPanel(String link) {
+    public void showEditPanel(String link, Deck currentDeck) {
         setContentPane(createPanel.getPanel());
-        createPanel.loadEditDeck(link);
+        createPanel.loadToBeEdited(link, currentDeck);
     }
 
     public void addDeckToHome(Deck deck) {

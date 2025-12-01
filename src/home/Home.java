@@ -153,6 +153,26 @@ public class Home extends panelUtilities {
         noResultPanel.setVisible(false);
     }
 
+    private void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
+        if (d == currentlySelectedDeck) {
+            currentlySelectedDeck = null;
+            currentlyToggledDeck = null;
+            currentOriginalIcon = null;
+        }
+
+        decks.remove(d);
+        recentDecks.remove(d);
+
+        if(decks == recentDecks) {
+            addDecks(recentDecks);
+        } else if(decks == resultDeck) {
+            addDecks(resultDeck);
+        }
+
+        deckContainer.revalidate();
+        deckContainer.repaint();
+    }
+
     private void updateEmptyState(ArrayList<Deck> decks, String searchTxt) {
         boolean isPlaceholder = searchBar.getForeground().equals(new Color(153,153,153));
         boolean isSearching = !searchTxt.isEmpty() && !isPlaceholder;
@@ -280,23 +300,17 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            if (d == currentlySelectedDeck) {
-                                currentlySelectedDeck = null;
-                                currentlyToggledDeck = null;
-                                currentOriginalIcon = null;
-                            }
+                            removeDeckMethod(d, decks);
+                        }
+                    });
 
-                            decks.remove(d);
-                            recentDecks.remove(d);
-
-                            if(decks == recentDecks) {
-                                addDecks(recentDecks);
-                            } else if(decks == resultDeck) {
-                                addDecks(resultDeck);
-                            }
-
-                            deckContainer.revalidate();
-                            deckContainer.repaint();
+                    editItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println(d.getCards().size());
+                            System.out.println(d.getLink());
+                             mainFrame.showEditPanel(d.getLink(), d);
+                             removeDeckMethod(d, decks);
                         }
                     });
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
@@ -665,12 +679,16 @@ public class Home extends panelUtilities {
             br = new BufferedReader(new FileReader(path));
             String line;
 
+            Deck d = null;
+
             if((line = br.readLine()) != null) {
                 String[] lines = line.split("\t");
                 if(Integer.parseInt(lines[2]) > Integer.parseInt(lines[1]))
                     throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
 
-                Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
+                d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
+                String fileName[] = path.split("/");
+                d.setLink(fileName[1]);
                 if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) {
                     d.setSubject(lines[4]);
                 }
@@ -684,6 +702,7 @@ public class Home extends panelUtilities {
                 recentCards.add(new Card(qa[0], qa[1]));
             }
 
+            d.setCards(recentCards);
             addDecks(recentDecks);
 
             if(isImport) {
