@@ -38,6 +38,7 @@ public class Home extends panelUtilities {
     int rowCtr = 0, colCtr = 0;
     private StudyGo mainFrame;
     private JPanel emptyDeckPanel, noResultPanel;
+    private boolean isImport = false;
 
     public Home(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
@@ -92,6 +93,13 @@ public class Home extends panelUtilities {
         addSearchBar();
         addDecks(recentDecks);
 
+        // check if Decks directory contains files
+        File directory = new File("Decks");
+        String[] files = directory.list();
+        if(files != null && files.length > 0) {
+            loadPreexistingDecks(files);
+        }
+
         deckContainer.setBounds(105,220,1055,407);
         deckContainer.setOpaque(false);
         homePanel.add(deckContainer);
@@ -102,6 +110,12 @@ public class Home extends panelUtilities {
                 homePanel.requestFocusInWindow();
             }
         });
+    }
+
+    private void loadPreexistingDecks(String[] files) {
+        for(String file : files) {
+            loadDeckFromFile("Decks/"+file);
+        }
     }
 
     private void showEmptyDeck() {
@@ -477,6 +491,7 @@ public class Home extends panelUtilities {
 
         // if file has valid format -> load deck from file
         if(open == JFileChooser.APPROVE_OPTION) {
+            isImport = true;
             loadDeckFromFile(chooseFile.getSelectedFile().getAbsolutePath());
         }
     }
@@ -616,10 +631,16 @@ public class Home extends panelUtilities {
 
             addDecks(recentDecks);
 
-            successAddDeckPanel();
+            if(isImport) {
+                successAddDeckPanel();
+                isImport = false;
+            }
             br.close();
         } catch (IOException | RuntimeException e) {
-            errorFilePanel();
+            if(isImport) {
+                errorFilePanel();
+                isImport = false;
+            }
             throw new RuntimeException(e);
         }
     }
