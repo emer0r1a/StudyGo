@@ -1,7 +1,11 @@
 package LOADDECK;
 
+import general.StudyGo;
+import general.panelUtilities;
+
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -11,42 +15,54 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-public class LOADDECK extends JFrame {
+public class LoadDeck extends panelUtilities {
 
     // --- LOGIC VARIABLES ---
     private ArrayList<String> question = new ArrayList<>();
 
     private File decksFolder = new File("Decks");
-
     private ArrayList<String> answer = new ArrayList<>();
     private int currentIndex = 0;
     private boolean isShowingQuestion = true;
     private String filename;
     private String deckTitle;
+    private StudyGo mainFrame;
 
     // --- UI COMPONENTS ---
+    private JPanel loadDeckPanel;
     private JTextPane textInside;
     private JLabel currentCount;
     private RoundedProgressBar progressBar;
     private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
 
-    public LOADDECK(String filename) throws IOException, FontFormatException {
-        super("StudyGo");
+    public LoadDeck(StudyGo mainFrame, String filename) throws IOException, FontFormatException {
+        this.mainFrame = mainFrame;
         this.filename = filename;
-
-        // --- WINDOW SETUP ---
-        setSize(1280, 720);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(false);
-        getContentPane().setBackground(new Color(239, 248, 253));
-        setLayout(null);
+        loadDeckPanel = new JPanel(null);
 
         // --- DATA LOADING ---
-        loadData(); //diri i read ug iadd sa array ang mga contents sa file
+        try {
+            loadData();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Handle error state gracefully, e.g., show an error message
+        }
+        addGUI();
+        updateUI();
+    }
+
+    public JPanel getPanel() {
+        return loadDeckPanel;
+    }
+
+    private void addGUI() {
+        loadDeckPanel.setBackground(new Color(239, 248, 253));
+        loadDeckPanel.setPreferredSize(new Dimension(1280, 720));
+        loadDeckPanel.setLayout(null);
+        loadDeckPanel.setBounds(0, 0, 1280, 720);
 
         // --- BACKGROUND PANEL ---
-        ImageIcon originalBg = new ImageIcon(getClass().getResource("resources/bg.png")); //mao ni ang rectangle sa luyo
+        ImageIcon originalBg = loadImage("/LOADDECK/resources/bg.png"); // Use loadImage from panelUtilities
         int bgWidth = 1185;
         int bgHeight = 631;
         int x = (1280 - bgWidth) / 2;
@@ -57,42 +73,43 @@ public class LOADDECK extends JFrame {
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
         // --- HEADER (Title & Close/Settings) ---
-        JLabel titleLabel = new JLabel(deckTitle);//dapat first line sa kada file kay ang deck title
+        JLabel titleLabel = new JLabel(deckTitle);
         titleLabel.setForeground(Color.BLACK);
-        titleLabel.setFont(getCustomFont(33.33f));
-        titleLabel.setBounds(526, 40, 400, 45);
+        titleLabel.setFont(loadCustomFont("semibold", 33.33f)); // Use loadCustomFont
+        titleLabel.setBounds(390, 40, 400, 45); // Adjusted X position to center
 
-        ImageIcon settingsIcon = new ImageIcon(getClass().getResource("resources/settings.png"));
+        ImageIcon settingsIcon = loadImage("/LOADDECK/resources/settings.png");
         RoundedButton btnSettings = new RoundedButton("", 10);
         btnSettings.setBackground(Color.decode("#79ADDC"));
         btnSettings.setHdIcon(settingsIcon.getImage(), 31, 31);
         btnSettings.setBounds(1105, 35, 41, 41);
 
-        ImageIcon closeIcon = new ImageIcon(getClass().getResource("resources/close.png")); //basta i click ni kay mo terminate ang system/app(idk what to call it)
+        ImageIcon closeIcon = loadImage("/LOADDECK/resources/close.png");
         RoundedButton btnClose = new RoundedButton("", 10);
         btnClose.setBackground(Color.decode("#E68B8C"));
         btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
         btnClose.setBounds(40, 35, 41, 41);
-        btnClose.addActionListener(e -> dispose());
+        btnClose.addActionListener(e -> mainFrame.showHomePanel()); // Go back to home
 
         // --- PROGRESS & COUNTER ---
         progressBar = new RoundedProgressBar();
+        progressBar.setMaximum(question.size() == 0 ? 1 : question.size()); // Avoid division by zero
         progressBar.setValue(0);
         progressBar.setBounds(320, 100, 548, 17);
 
-        JPanel counterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));//mura siyag div sa html, serves as a container sa count ug totalCount para next to each other and no space
+        JPanel counterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         counterPanel.setOpaque(false);
         counterPanel.setBounds(320, 115, 227, 50);
 
-        currentCount = new JLabel("1");//default
+        currentCount = new JLabel("1");
         currentCount.setForeground(Color.decode("#79ADDC"));
-        currentCount.setFont(getCustomFont(33.33f));
+        currentCount.setFont(loadCustomFont("semibold", 33.33f)); // Use loadCustomFont
 
-        JLabel totalCount = new JLabel("/" + question.size());//total questions
+        JLabel totalCount = new JLabel("/" + question.size());
         totalCount.setForeground(Color.decode("#9FA1A6"));
-        totalCount.setFont(getCustomFont(22f));
+        totalCount.setFont(loadCustomFont("semibold", 22f)); // Use loadCustomFont
 
-        counterPanel.add(currentCount);//gi group para tapad sila
+        counterPanel.add(currentCount);
         counterPanel.add(totalCount);
 
         // --- CARD AREA ---
@@ -101,63 +118,64 @@ public class LOADDECK extends JFrame {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
-        CardPanel stack = new CardPanel("resources/stack.png");//design sa luyo
+        CardPanel stack = new CardPanel("/LOADDECK/resources/stack.png");
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
-        StyledCardPanel myCard = new StyledCardPanel();//ang card itself
+        StyledCardPanel myCard = new StyledCardPanel();
         myCard.setBounds(cardX + 40, cardY + 45, 548, 388);
 
         JPanel textContainer = new JPanel(new GridBagLayout());
-        textContainer.setBounds(20, 10, 508, 360); // Fill the card space
+        textContainer.setBounds(20, 10, 508, 360);
         textContainer.setOpaque(false);
 
         textInside = new JTextPane();
-        textInside.setFont(getCustomFont(25f));
+        textInside.setFont(loadCustomFont("regular", 25f)); // Use loadCustomFont
         textInside.setEditable(false);
-        textInside.setOpaque(false); // Transparent background
+        textInside.setOpaque(false);
 
         StyledDocument doc = textInside.getStyledDocument();
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         textInside.setParagraphAttributes(center, false);
 
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 1.0;
-
         gbc.fill = GridBagConstraints.HORIZONTAL;
-
         textContainer.add(textInside, gbc);
-
         myCard.add(textContainer);
+
+        // --- NAVIGATION BUTTONS ---
+        ActionListener navActionListener = e -> {
+            RoundedButton source = (RoundedButton) e.getSource();
+            String command = source.getText();
+
+            if (command.equals("Previous")) {
+                if (currentIndex > 0) currentIndex--;
+            } else if (command.equals("Next")) {
+                if (currentIndex < question.size() - 1) currentIndex++;
+            } else if (command.isEmpty()) { // Icon buttons
+                if (source == btnPreviousIcon) currentIndex = 0;
+                else if (source == btnNextIcon) currentIndex = question.size() - 1;
+            }
+            isShowingQuestion = true;
+            updateUI();
+        };
 
         // 1. Previous Icon
         btnPreviousIcon = new RoundedButton("", 15);
         btnPreviousIcon.setBackground(Color.decode("#91E586"));
-        btnPreviousIcon.setForeground(Color.WHITE);
-        btnPreviousIcon.setHdIcon(new ImageIcon(getClass().getResource("resources/double_arrow_left.png")).getImage(), 15, 12);
-        btnPreviousIcon.addActionListener(e -> {
-            currentIndex = 0;
-            isShowingQuestion = true;
-            updateUI();
-        });
+        btnPreviousIcon.setHdIcon(loadImage("/LOADDECK/resources/double_arrow_left.png").getImage(), 15, 12);
+        btnPreviousIcon.addActionListener(navActionListener);
 
         // 2. Previous Text
         btnPrevious = new RoundedButton("Previous", 15);
         btnPrevious.setBackground(Color.decode("#91E586"));
-        btnPrevious.setForeground(Color.WHITE);
-        btnPrevious.setFont(getCustomFont(22f));
-        btnPrevious.setHdIcon(new ImageIcon(getClass().getResource("resources/prev-icon.png")).getImage(), 16, 16);
+        btnPrevious.setFont(loadCustomFont("semibold", 22f));
+        btnPrevious.setHdIcon(loadImage("/LOADDECK/resources/prev-icon.png").getImage(), 16, 16);
         btnPrevious.setIconOnLeft(true);
-        btnPrevious.addActionListener(e -> {
-            if (currentIndex > 0) {
-                currentIndex--;
-                isShowingQuestion = true;
-                updateUI();
-            }
-        });
+        btnPrevious.addActionListener(navActionListener);
 
         // 3. Visibility (Flip)
         btnVisibility = new RoundedButton("", 15);
@@ -170,27 +188,15 @@ public class LOADDECK extends JFrame {
         // 4. Next Text
         btnNext = new RoundedButton("Next", 15);
         btnNext.setBackground(Color.decode("#91E586"));
-        btnNext.setForeground(Color.WHITE);
-        btnNext.setFont(getCustomFont(22f));
-        btnNext.setHdIcon(new ImageIcon(getClass().getResource("resources/next-icon.png")).getImage(), 16, 16);
-        btnNext.addActionListener(e -> {
-            if (currentIndex < question.size() - 1) {
-                currentIndex++;
-                isShowingQuestion = true;
-                updateUI();
-            }
-        });
+        btnNext.setFont(loadCustomFont("semibold", 22f));
+        btnNext.setHdIcon(loadImage("/LOADDECK/resources/next-icon.png").getImage(), 16, 16);
+        btnNext.addActionListener(navActionListener);
 
         // 5. Next Icon
         btnNextIcon = new RoundedButton("", 15);
         btnNextIcon.setBackground(Color.decode("#91E586"));
-        btnNextIcon.setForeground(Color.WHITE);
-        btnNextIcon.setHdIcon(new ImageIcon(getClass().getResource("resources/double_arrow_right.png")).getImage(), 22, 22);
-        btnNextIcon.addActionListener(e -> {
-            currentIndex = question.size() - 1;
-            isShowingQuestion = true;
-            updateUI();
-        });
+        btnNextIcon.setHdIcon(loadImage("/LOADDECK/resources/double_arrow_right.png").getImage(), 22, 22);
+        btnNextIcon.addActionListener(navActionListener);
 
         // Button Positioning
         int axisY = 560;
@@ -225,11 +231,7 @@ public class LOADDECK extends JFrame {
         backgroundPanel.add(btnNext);
         backgroundPanel.add(btnNextIcon);
 
-        add(backgroundPanel);
-
-        // Initial State
-        updateUI();
-        setVisible(true);
+        loadDeckPanel.add(backgroundPanel);
     }
 
     private void loadData() throws IOException {
@@ -280,6 +282,7 @@ public class LOADDECK extends JFrame {
 
         // 3. Update Counter
         currentCount.setText(String.valueOf(currentIndex + 1));
+        progressBar.setMaximum(question.size());
 
         // 4. Update Progress Bar
         int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
@@ -298,11 +301,9 @@ public class LOADDECK extends JFrame {
         btnNextIcon.setEnabled(!isLast);
         btnNext.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
         btnNextIcon.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
-    }
 
-    private Font getCustomFont(float size) throws IOException, FontFormatException {
-        java.io.InputStream is = getClass().getResourceAsStream("resources/Gabarito-SemiBold.ttf");
-        return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
+        loadDeckPanel.revalidate();
+        loadDeckPanel.repaint();
     }
 }
 
