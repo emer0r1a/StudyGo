@@ -14,6 +14,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 public class Home extends panelUtilities {
@@ -482,6 +486,18 @@ public class Home extends panelUtilities {
         if(open == JFileChooser.APPROVE_OPTION) {
             isImport = true;
             loadDeckFromFile(chooseFile.getSelectedFile().getAbsolutePath());
+            Path source, decksFolder;
+            try {
+                source = Paths.get(chooseFile.getSelectedFile().getAbsolutePath());
+                decksFolder = Paths.get("Decks");
+
+                Files.createDirectories(decksFolder);
+
+                Path target = decksFolder.resolve(source.getFileName());
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
