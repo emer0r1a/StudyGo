@@ -126,6 +126,20 @@ public class Create extends panelUtilities {
         mainFrame.showHomePanel();
     }
 
+    public void loadEditDeck(String link) {
+        File file = new File(decksFolder, link);
+
+        BufferedReader br = null;
+
+        try {
+            br = new BufferedReader(new FileReader(file));
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // Success/Save Logic
     public void showSuccessScreen() {
         mainDash.saveCurrentInputToMemory();
@@ -137,7 +151,7 @@ public class Create extends panelUtilities {
         saveDeckToFile();
 
         String title = titleField.getText();
-        String link = title.replace(" ", "-");
+        String link = title.replace(" ", "-") + ".txt";
         String subject = subjectField.getText();
         if(title.contains("REQUIRED")) title = "Untitled Deck"; // Fallback
 

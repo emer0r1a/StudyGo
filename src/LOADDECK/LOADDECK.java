@@ -233,7 +233,8 @@ public class LOADDECK extends JFrame {
     }
 
     private void loadData() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(filename));
+        File file = new File(decksFolder, filename);
+        BufferedReader br = new BufferedReader(new FileReader(file));
         deckTitle = br.readLine();
 
         String line;
