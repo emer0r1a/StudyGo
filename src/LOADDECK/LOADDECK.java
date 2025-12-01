@@ -540,4 +540,19 @@ class RoundedProgressBar extends JProgressBar {
         g2.dispose();
     }
 }
+//try to add the following:
+//Fullscreen or Distraction-Free View
+//Hide unnecessary buttons and menus so the user can focus only on the cards.
+
+//Flip Card on Click or Spacebar
+//Make flipping easy and intuitive by allowing a click or pressing the spacebar to show the answer.
+
+//Next/Previous Navigation
+//Buttons or keyboard arrows to quickly move between cards without exiting Study Mode.
+
+//Progress Indicator
+//Show “Card X of Y” and a simple progress bar so users know how far they are.
+
+//Adjustable Auto-Flip Timer (Optional)
+// users toggle automatic flipping after a few seconds to speed up or slow down their pace.
 
