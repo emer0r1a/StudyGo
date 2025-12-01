@@ -2,6 +2,8 @@ package LOADDECK;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,11 +11,13 @@ import java.util.ArrayList;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import java.util.Collections;
 
 public class LOADDECK extends JFrame {
 
     // --- LOGIC VARIABLES ---
     private ArrayList<String> question = new ArrayList<>();
+
     private ArrayList<String> answer = new ArrayList<>();
     private int currentIndex = 0;
     private boolean isShowingQuestion = true;
@@ -26,11 +30,11 @@ public class LOADDECK extends JFrame {
     private RoundedProgressBar progressBar;
     private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
 
+
     public LOADDECK(String filename) throws IOException, FontFormatException {
         super("StudyGo");
         this.filename = filename;
 
-        // --- WINDOW SETUP ---
         setSize(1280, 720);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -38,10 +42,9 @@ public class LOADDECK extends JFrame {
         getContentPane().setBackground(new Color(239, 248, 253));
         setLayout(null);
 
-        // --- DATA LOADING ---
         loadData(); //diri i read ug iadd sa array ang mga contents sa file
 
-        // --- BACKGROUND PANEL ---
+
         ImageIcon originalBg = new ImageIcon(getClass().getResource("resources/bg.png")); //mao ni ang rectangle sa luyo
         int bgWidth = 1185;
         int bgHeight = 631;
@@ -58,11 +61,21 @@ public class LOADDECK extends JFrame {
         titleLabel.setFont(getCustomFont(33.33f));
         titleLabel.setBounds(526, 40, 400, 45);
 
-        ImageIcon settingsIcon = new ImageIcon(getClass().getResource("resources/settings.png"));
-        RoundedButton btnSettings = new RoundedButton("", 10);
-        btnSettings.setBackground(Color.decode("#79ADDC"));
-        btnSettings.setHdIcon(settingsIcon.getImage(), 31, 31);
-        btnSettings.setBounds(1105, 35, 41, 41);
+        ImageIcon shuffleIcon = new ImageIcon(getClass().getResource("resources/Shuffle.png")); //shufffles the card
+        RoundedButton btnShuffle = new RoundedButton("", 10);
+        btnShuffle.setBackground(Color.decode("#79ADDC"));
+        btnShuffle.setHdIcon(shuffleIcon.getImage(), 31, 31);
+        btnShuffle.setBounds(1105, 35, 41, 41);
+        btnShuffle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                shuffleDeck();
+                currentIndex = 0;
+                isShowingQuestion = true;
+                updateUI();
+            }
+        });
+
 
         ImageIcon closeIcon = new ImageIcon(getClass().getResource("resources/close.png")); //basta i click ni kay mo terminate ang system/app(idk what to call it)
         RoundedButton btnClose = new RoundedButton("", 10);
@@ -212,7 +225,7 @@ public class LOADDECK extends JFrame {
         backgroundPanel.add(progressBar);
         backgroundPanel.add(counterPanel);
         backgroundPanel.add(titleLabel);
-        backgroundPanel.add(btnSettings);
+        backgroundPanel.add(btnShuffle);
         backgroundPanel.add(btnClose);
 
         backgroundPanel.add(btnPreviousIcon);
@@ -257,7 +270,7 @@ public class LOADDECK extends JFrame {
     private void updateUI() {
         if (question.isEmpty()) return;
 
-        // 1. Update Text
+        // Update Text
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -265,18 +278,18 @@ public class LOADDECK extends JFrame {
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
-        // 2. Update Icon
 
+        // Update Icon
         if (isShowingQuestion) {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility_off.png")).getImage(), 26, 26);
         } else {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility.png")).getImage(), 26, 26);
         }
 
-        // 3. Update Counter
+        //Update Counter
         currentCount.setText(String.valueOf(currentIndex + 1));
 
-        // 4. Update Progress Bar
+        // Update Progress Bar
         int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
         progressBar.setValue(percentage);
 
@@ -293,6 +306,26 @@ public class LOADDECK extends JFrame {
         btnNextIcon.setEnabled(!isLast);
         btnNext.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
         btnNextIcon.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
+    }
+
+    private void shuffleDeck(){
+        ArrayList<Integer> index = new ArrayList<>();
+        for (int i=0; i<question.size(); i++){
+            index.add(i);
+        }
+
+        Collections.shuffle(index);
+
+        ArrayList<String> q = new ArrayList<>();
+        ArrayList<String> a = new ArrayList<>();
+
+        for (int newPos : index) {
+            q.add(question.get(newPos));
+            a.add(answer.get(newPos));
+        }
+
+        question = q;
+        answer = a;
     }
 
     private Font getCustomFont(float size) throws IOException, FontFormatException {
@@ -375,7 +408,7 @@ class RoundedButton extends JButton {
     private int iconW, iconH;
     private int gap = 10;
     private boolean iconOnLeft = false;
-    private int shadowHeight = 5;
+    private int shadowHeight = 5; // The depth of the 3D effect
 
     public RoundedButton(String text, int radius) {
         super(text);
@@ -386,22 +419,26 @@ class RoundedButton extends JButton {
         setOpaque(false);
         setForeground(Color.WHITE);
     }
+
     public void setHdIcon(Image img, int width, int height) {
         this.iconImage = img;
         this.iconW = width;
         this.iconH = height;
         repaint();
     }
+
     public void setIconOnLeft(boolean onLeft) {
         this.iconOnLeft = onLeft;
         repaint();
     }
+
     private Color getShadowColor(Color c) {
         int r = Math.max(0, c.getRed() - 40);
         int g = Math.max(0, c.getGreen() - 40);
         int b = Math.max(0, c.getBlue() - 40);
         return new Color(r, g, b);
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -409,24 +446,48 @@ class RoundedButton extends JButton {
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-        int w = getWidth();
-        int h = getHeight() - shadowHeight;
+        // 1. Check if the button is currently being pressed
+        ButtonModel model = getModel();
+        boolean isPressed = model.isPressed() && model.isRollover();
 
+        int w = getWidth();
+        int h = getHeight() - shadowHeight; // Actual height of the clickable "face"
+
+        // 2. Calculate the vertical shift
+        // If pressed, shift everything down by the shadowHeight
+        int shiftY = isPressed ? shadowHeight : 0;
+
+        // --- DRAWING ---
+
+        // Draw Shadow (Always visible at the bottom, creating the "track")
+        // We don't shift this, or the button would move entirely.
+        // We only want the face to move.
         g2.setColor(getShadowColor(getBackground()));
         g2.fillRoundRect(0, shadowHeight, w, h, radius, radius);
+
+        // Draw Face (The colorful part)
+        // If pressed, this draws lower (y + shiftY), covering the shadow
         g2.setColor(getBackground());
-        g2.fillRoundRect(0, 0, w, h, radius, radius);
+        g2.fillRoundRect(0, shiftY, w, h, radius, radius);
+
+        // --- TEXT & ICON POSITIONING ---
 
         String text = getText();
         boolean hasText = (text != null && !text.isEmpty());
         FontMetrics fm = g2.getFontMetrics(getFont());
         int textW = hasText ? fm.stringWidth(text) : 0;
+
+        // Calculate total content width to center it
         int totalContentWidth = textW;
         if (iconImage != null) totalContentWidth += iconW;
         if (hasText && iconImage != null) totalContentWidth += gap;
 
         int startX = (w - totalContentWidth) / 2;
-        int faceCenterY = h / 2;
+
+        // Calculate Center Y based on the visual "face" height (h), not total height
+        // IMPORTANT: Add 'shiftY' to move text/icon down with the face
+        int faceCenterY = (h / 2) + shiftY;
+
         int textY = faceCenterY + (fm.getAscent() / 2) - 2;
         int iconY = faceCenterY - (iconH / 2);
 
@@ -446,6 +507,7 @@ class RoundedButton extends JButton {
             }
             if (iconImage != null) g2.drawImage(iconImage, startX, iconY, iconW, iconH, this);
         }
+
         g2.dispose();
     }
 }
@@ -455,6 +517,7 @@ class RoundedProgressBar extends JProgressBar {
         setOpaque(false);
         setBorderPainted(false);
     }
+
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -475,3 +538,5 @@ class RoundedProgressBar extends JProgressBar {
         g2.dispose();
     }
 }
+
+
