@@ -471,7 +471,24 @@ public class Home extends panelUtilities {
         loadDeck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (currentlySelectedDeck != null) {
+                    String deckFilePath = currentlySelectedDeck.getLink();
 
+                    if (deckFilePath != null && !deckFilePath.isEmpty()) {
+                        try {
+                            mainFrame.showLoadDeckPanel(deckFilePath);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (FontFormatException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        // resetToggledDeck();
+                    } else {
+                        JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
     }
