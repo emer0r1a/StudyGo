@@ -29,6 +29,7 @@ public class Home extends panelUtilities {
     private JPopupMenu optionsMenu;
     private JPanel deckContainer = new JPanel(null);
     private ImageIcon yellowDeck, blueDeck, brightYellowDeck, greenDeck, pinkDeck, dOptions;
+    private ImageIcon yellowDeckPicked, blueDeckPicked, brightYellowDeckPicked, greenDeckPicked, pinkDeckPicked;
     ArrayList<Deck> recentDecks;
     ArrayList<Card> recentCards;
     ArrayList<Deck> resultDeck;
@@ -39,6 +40,9 @@ public class Home extends panelUtilities {
     private StudyGo mainFrame;
     private JPanel emptyDeckPanel, noResultPanel;
     private boolean isImport = false;
+    private JLabel currentlyToggledDeck = null;
+    private ImageIcon currentOriginalIcon = null;
+    private Deck currentlySelectedDeck = null;
 
     public Home(StudyGo mainFrame) {
         this.mainFrame = mainFrame;
@@ -107,6 +111,7 @@ public class Home extends panelUtilities {
         homePanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                resetToggledDeck();
                 homePanel.requestFocusInWindow();
             }
         });
@@ -174,25 +179,79 @@ public class Home extends panelUtilities {
         greenDeck = loadImage("/resources/home/green-card.png");
         pinkDeck = loadImage("/resources/home/pink-card.png");
 
+        yellowDeckPicked = loadImage("/resources/home/outlined-brightyellow.png");
+        blueDeckPicked = loadImage("/resources/home/outlined-blue.png");
+        brightYellowDeckPicked = loadImage("/resources/home/outlined-yellow.png");
+        greenDeckPicked = loadImage("/resources/home/outlined-green.png");
+        pinkDeckPicked = loadImage("/resources/home/outlined-pink.png");
+
         dOptions = loadImage("/resources/home/options.png");
 
         // display deckCont with details
         for(Deck d : decks) {
             if(decks.size() > 9) continue;
 
+            JPanel deckWrapper = new JPanel(null);
+            deckWrapper.setBounds(deckX, deckY, yellowDeck.getIconWidth(), yellowDeck.getIconHeight());
+            deckWrapper.setOpaque(false);
+
             JLabel deckCont;
+            ImageIcon originalIcon;
+            ImageIcon altIcon;
+
             switch (d.getColor()) {
-                case "blue" -> deckCont = new JLabel(blueDeck);
-                case "green" -> deckCont = new JLabel(greenDeck);
-                case "bright yellow" -> deckCont = new JLabel(brightYellowDeck);
-                case "pink" -> deckCont = new JLabel(pinkDeck);
-                default -> deckCont = new JLabel(yellowDeck);
+                case "blue" -> { originalIcon = blueDeck; altIcon = blueDeckPicked; deckCont = new JLabel(blueDeck); }
+                case "green" -> { originalIcon = greenDeck; altIcon = greenDeckPicked; deckCont = new JLabel(greenDeck); }
+                case "bright yellow" -> { originalIcon = brightYellowDeck; altIcon = brightYellowDeckPicked; deckCont = new JLabel(brightYellowDeck); }
+                case "pink" -> { originalIcon = pinkDeck; altIcon = pinkDeckPicked; deckCont = new JLabel(pinkDeck); }
+                default -> { originalIcon = yellowDeck; altIcon = yellowDeckPicked; deckCont = new JLabel(yellowDeck); }
             }
+
+            deckCont.setBounds(0, 0, originalIcon.getIconWidth(), originalIcon.getIconHeight());
+            deckWrapper.add(deckCont);
+
+            if (d == currentlySelectedDeck) {
+                deckCont.setIcon(altIcon);
+                currentlyToggledDeck = deckCont;
+                currentOriginalIcon = originalIcon;
+            }
+
+            final boolean[] isToggled = {false};
+
+            deckWrapper.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getSource() != deckWrapper) return;
+                    if (currentlyToggledDeck != null && currentlyToggledDeck != deckCont) {
+                        currentlyToggledDeck.setIcon(currentOriginalIcon);
+                        currentlySelectedDeck = null;
+                    }
+
+                    if (currentlyToggledDeck == deckCont) {
+                        // Untoggle this deck
+                        deckCont.setIcon(originalIcon);
+                        currentlyToggledDeck = null;
+                        currentOriginalIcon = null;
+                        currentlySelectedDeck = null; // Clear selection
+                    } else {
+                        // Toggle this deck
+                        deckCont.setIcon(altIcon);
+                        currentlyToggledDeck = deckCont;
+                        currentOriginalIcon = originalIcon;
+                        currentlySelectedDeck = d; // SET THE SELECTED DECK OBJECT
+                    }
+
+                    deckCont.revalidate();
+                    deckCont.repaint();
+                }
+            });
 
             // deck options button -> popup menu
             JButton deckOptions = new JButton(dOptions);
             styleButton(deckOptions);
-            deckOptions.setBounds(opX,opY,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckOptions.setBounds(132, 20,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckCont.add(deckOptions);
+
             deckOptions.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -211,13 +270,6 @@ public class Home extends panelUtilities {
                     editItem.setBorder(new EmptyBorder(5, 5, 5, 5));
                     optionsMenu.add(editItem);
 
-                    editItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-
-                        }
-                    });
-
                     ImageIcon dd = loadImage("/resources/home/delete.png");
                     JMenuItem deleteItem = new JMenuItem(dd);
                     deleteItem.setBackground(new Color(255,253,250));
@@ -228,14 +280,14 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            if (d == currentlySelectedDeck) {
+                                currentlySelectedDeck = null;
+                                currentlyToggledDeck = null;
+                                currentOriginalIcon = null;
+                            }
+
                             decks.remove(d);
                             recentDecks.remove(d);
-
-                            // delete deck file from Decks directory
-                            File toDelete = new File("Decks/"+d.getLink());
-                            if(toDelete.delete()) {
-                                System.out.println("FILE DELETED");
-                            } else System.out.println("ERROR DELETING");
 
                             if(decks == recentDecks) {
                                 addDecks(recentDecks);
@@ -247,24 +299,18 @@ public class Home extends panelUtilities {
                             deckContainer.repaint();
                         }
                     });
-
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
                 }
             });
-            deckContainer.add(deckOptions);
 
             // deck progress bar -> accessed cards / total
             JProgressBar deckProgress = new JProgressBar(SwingConstants.HORIZONTAL,0, d.getSize());
             deckProgress.setValue(d.getCardsAccessed());
-            deckProgress.setBounds(progX,progY,85,14);
+            deckProgress.setBounds(19, 152, 85, 14);
+            deckCont.add(deckProgress);
             deckProgress.setBorderPainted(false);
             deckProgress.setForeground(new Color(244,175,171));
             deckProgress.setBackground(new Color(255,253,250));
-            deckContainer.add(deckProgress);
-
-            // deck container layout
-            deckCont.setLayout(null);
-            deckCont.setBounds(deckX, deckY, yellowDeck.getIconWidth(), yellowDeck.getIconHeight());
 
             JLabel deckTitle = new JLabel();
             JLabel deckSize = new JLabel(String.valueOf(d.getSize()));
@@ -290,24 +336,18 @@ public class Home extends panelUtilities {
             deckCont.add(deckTitle);
             deckCont.add(deckSize);
             deckCont.add(subjectTitle);
-            deckContainer.add(deckCont);
+            deckContainer.add(deckWrapper);
 
             // add next deckCont
             deckX += 221;
-            opX += 221;
-            progX += 221;
             colCtr++;
 
             // if current decks in row are 5, add new row
             if(colCtr > 4) {
                 rowCtr++;
                 deckY += 217;
-                opY += 217;
-                progY += 217;
                 colCtr = 0;
                 deckX = 0;
-                progX = 19;
-                opX = 132;
             }
 
         }
@@ -431,7 +471,24 @@ public class Home extends panelUtilities {
         loadDeck.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (currentlySelectedDeck != null) {
+                    String deckFilePath = currentlySelectedDeck.getLink();
 
+                    if (deckFilePath != null && !deckFilePath.isEmpty()) {
+                        try {
+                            mainFrame.showLoadDeckPanel(deckFilePath);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (FontFormatException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        // resetToggledDeck();
+                    } else {
+                        JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                }
             }
         });
     }
@@ -504,8 +561,6 @@ public class Home extends panelUtilities {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-
         }
     }
 
@@ -603,7 +658,7 @@ public class Home extends panelUtilities {
         homePanel.repaint();
     }
 
-    private void loadDeckFromFile(String path) {
+    private void loadDeckFromFile(String path){
         BufferedReader br;
         try {
             br = new BufferedReader(new FileReader(path));
@@ -620,9 +675,6 @@ public class Home extends panelUtilities {
                 }
 
                 recentDecks.add(0, d);
-
-                File f = new File(path);
-                d.setLink(f.getName());
             }
 
             // load cards from deck
@@ -668,6 +720,17 @@ public class Home extends panelUtilities {
     public void addDeck(Deck deck) {
         recentDecks.add(0,deck);
         addDecks(recentDecks);
+    }
+
+    private void resetToggledDeck() {
+        if (currentlyToggledDeck != null) {
+            currentlyToggledDeck.setIcon(currentOriginalIcon);
+            currentlyToggledDeck.revalidate();
+            currentlyToggledDeck.repaint();
+
+            currentlyToggledDeck = null;
+            currentOriginalIcon = null;
+        }
     }
 
 }
