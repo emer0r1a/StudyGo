@@ -1,9 +1,12 @@
 package general;
 
+import LOADDECK.LoadDeck;
 import createDeck.Create;
 import home.Home;
 
 import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
 
 public class StudyGo extends JFrame {
     private Home homePanel;
@@ -48,5 +51,12 @@ public class StudyGo extends JFrame {
 
     public void addDeckToHome(Deck deck) {
         homePanel.addDeck(deck);
+    }
+
+    public void showLoadDeckPanel(String filename) throws IOException, FontFormatException {
+        LoadDeck loadDeckPanel = new LoadDeck(this, filename);
+        setContentPane(loadDeckPanel.getPanel());
+        revalidate();
+        repaint();
     }
 }

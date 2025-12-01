@@ -14,10 +14,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 
 public class Home extends panelUtilities {
@@ -200,8 +196,7 @@ public class Home extends panelUtilities {
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            mainFrame.showEditPanel(d.getLink());
-                            System.out.println(d.getLink());
+
                         }
                     });
 
@@ -217,12 +212,6 @@ public class Home extends panelUtilities {
                         public void actionPerformed(ActionEvent e) {
                             decks.remove(d);
                             recentDecks.remove(d);
-
-                            // delete deck file from Decks directory
-                            File toDelete = new File("Decks/"+d.getLink());
-                            if(toDelete.delete()) {
-                                System.out.println("FILE DELETED");
-                            } else System.out.println("ERROR DELETING");
 
                             if(decks == recentDecks) {
                                 addDecks(recentDecks);
@@ -591,21 +580,7 @@ public class Home extends panelUtilities {
                     d.setSubject(lines[4]);
                 }
 
-                Path source, decksFolder;
-                try {
-                    source = Paths.get(path);
-                    decksFolder = Paths.get("Decks");
-
-                    Files.createDirectories(decksFolder);
-
-                    Path target = decksFolder.resolve(source.getFileName());
-                    Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-
                 recentDecks.add(0, d);
-                d.setLink(source.getFileName().toString());
             }
 
             // load cards from deck
