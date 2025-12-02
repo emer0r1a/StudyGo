@@ -137,9 +137,12 @@ public class Home extends panelUtilities {
 
     public void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
         if (d == currentlySelectedDeck) {
-            currentlySelectedDeck = null;
-            currentlyToggledDeck = null;
-            currentOriginalIcon = null;
+            resetToggledDeck();
+        }
+
+        String filename = d.getLink();
+        if (filename != null && !filename.isEmpty()) {
+            DeckFileManager.deleteDeck(filename);
         }
 
         decks.remove(d);
@@ -213,9 +216,7 @@ public class Home extends panelUtilities {
             deckWrapper.add(deckCont);
 
             if (d == currentlySelectedDeck) {
-                deckCont.setIcon(altIcon);
-                currentlyToggledDeck = deckCont;
-                currentOriginalIcon = originalIcon;
+                resetToggledDeck();
             }
 
             final boolean[] isToggled = {false};

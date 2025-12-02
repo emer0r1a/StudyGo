@@ -1,2 +1,4 @@
-test	12	1	blue	csit
+test	3	0	blue
 hello	world
+fdgsdfgdfg	sdfgsddfgsd
+sfgsdfgs	dfgsdgdfg
