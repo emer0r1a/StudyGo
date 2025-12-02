@@ -56,31 +56,9 @@ public class Home extends panelUtilities {
     }
 
     private void addGUI() {
-        Image bg = loadImage("/resources/home/home-panel.png").getImage();
-        homePanel = new JPanel(null) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                if (bg != null) {
-                    Graphics2D g2 = (Graphics2D) g.create();
-
-                    // high-quality rendering - to make image not blurry
-                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                    g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-                    g2.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
-                    g2.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
-
-                    g2.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
-                    g2.dispose();
-                }
-            }
-        };
+        homePanel = new panelUtilities.BackgroundPanel("/resources/home/home-panel.png");
         homePanel.setPreferredSize(new Dimension(1280, 720));
-        homePanel.setLayout(null);
-        homePanel.setBounds(0,0,1280,720);
-
+        homePanel.setBounds(0, 0, 1280, 720);
 
         // create 'no decks' panel if empty
         showEmptyDeck();
@@ -215,9 +193,7 @@ public class Home extends panelUtilities {
             deckWrapper.add(deckCont);
 
             if (d == currentlySelectedDeck) {
-                deckCont.setIcon(altIcon);
-                currentlyToggledDeck = deckCont;
-                currentOriginalIcon = originalIcon;
+                resetToggledDeck();
             }
 
             final boolean[] isToggled = {false};
