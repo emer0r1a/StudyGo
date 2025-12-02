@@ -201,11 +201,11 @@ public class StudyMode extends JFrame {
         } else {
             // --- DECK FINISHED LOGIC ---
             if (!retryQuestions.isEmpty()) {
-                // We have missed cards
-                int response = JOptionPane.showConfirmDialog(this,
-                        "You missed " + retryQuestions.size() + " cards. Review them now?",
-                        "Review Missed Cards",
-                        JOptionPane.YES_NO_OPTION);
+
+                // 1. USE CUSTOM DIALOG HERE
+                int response = CustomDialog.showConfirmDialog(this,
+                        "You missed " + retryQuestions.size() + " cards.\nReview them now?",
+                        "Review Missed Cards");
 
                 if (response == JOptionPane.YES_OPTION) {
                     // 1. Swap main lists with retry lists
@@ -229,13 +229,12 @@ public class StudyMode extends JFrame {
                     dispose();
                 }
             } else {
-                // Perfect score (No missed cards)
-                JOptionPane.showMessageDialog(this, "Deck Completed! Great Job!");
+                // 2. USE CUSTOM DIALOG HERE
+                CustomDialog.showMessageDialog(this, "Deck Completed! Great Job!");
                 dispose();
             }
         }
     }
-
     private void updateCard() {
         if(question.isEmpty()) return;
 
