@@ -90,7 +90,7 @@ public class LoadDeck extends panelUtilities {
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
         // --- HEADER (Title & Close/Settings) ---
-        JLabel titleLabel = new JLabel(deckTitle);
+        JLabel titleLabel = new JLabel(deckTitle, SwingConstants.CENTER);
         titleLabel.setForeground(Color.BLACK);
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
         titleLabel.setBounds(390, 40, 400, 45);
@@ -117,7 +117,7 @@ public class LoadDeck extends panelUtilities {
 
         // --- PROGRESS & COUNTER ---
         progressBar = new RoundedProgressBar();
-        progressBar.setMaximum(question.size() == 0 ? 1 : question.size());
+        //progressBar.setMaximum(question.size() == 0 ? 1 : question.size());
         progressBar.setValue(0);
         progressBar.setBounds(320, 100, 548, 17);
 
@@ -296,7 +296,7 @@ public class LoadDeck extends panelUtilities {
         }
 
         currentCount.setText(String.valueOf(currentIndex + 1));
-        progressBar.setMaximum(question.size());
+        //progressBar.setMaximum(question.size());
 
         int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
         progressBar.setValue(percentage);
