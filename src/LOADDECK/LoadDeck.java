@@ -5,11 +5,10 @@ import general.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -17,23 +16,26 @@ import javax.swing.text.StyledDocument;
 public class LoadDeck extends panelUtilities {
 
     // --- LOGIC VARIABLES ---
-    private ArrayList<String> question = new ArrayList<>();
+    ArrayList<String> question = new ArrayList<>();
 
     private File decksFolder = new File("Decks");
-    private ArrayList<String> answer = new ArrayList<>();
-    private int currentIndex = 0;
-    private boolean isShowingQuestion = true;
-    private String filename;
-    private String deckTitle;
+    ArrayList<String> answer = new ArrayList<>();
+    int currentIndex = 0;
+    boolean isShowingQuestion = true;
+
+    // Made these package-private (no 'private' keyword) so SettingsOverlay can see them
+    String filename;
+    String deckTitle;
+
     private StudyGo mainFrame;
-    private int maxCardsAccessed = 0;
 
     // --- UI COMPONENTS ---
     private JPanel loadDeckPanel;
     private JTextPane textInside;
-    private JLabel currentCount;
+    JLabel currentCount;
     private RoundedProgressBar progressBar;
     private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
+    private SettingsOverlay settingsOverlay;
 
     public LoadDeck(StudyGo mainFrame, String filename) throws IOException, FontFormatException {
         this.mainFrame = mainFrame;
@@ -45,10 +47,13 @@ public class LoadDeck extends panelUtilities {
             loadData();
         } catch (IOException e) {
             e.printStackTrace();
-            // Handle error state gracefully, e.g., show an error message
         }
         addGUI();
         updateUI();
+    }
+
+    public int getCurrentIndex() {
+        return currentIndex;
     }
 
     public JPanel getPanel() {
@@ -61,8 +66,20 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.setLayout(null);
         loadDeckPanel.setBounds(0, 0, 1280, 720);
 
+        // --- FIX 2: SETTINGS OVERLAY ---
+        // Initialize it first
+        settingsOverlay = new SettingsOverlay(this, e -> {
+            settingsOverlay.setVisible(false);
+        }, loadCustomFont("semibold",20f));
+
+        settingsOverlay.setBounds(0, 0, 1280, 720);
+        settingsOverlay.setVisible(false);
+
+        // Add it to the panel directly (JPanels don't use getLayeredPane)
+        loadDeckPanel.add(settingsOverlay);
+
         // --- BACKGROUND PANEL ---
-        ImageIcon originalBg = loadImage("/LOADDECK/resources/bg.png"); // Use loadImage from panelUtilities
+        ImageIcon originalBg = loadImage("/LOADDECK/resources/bg.png");
         int bgWidth = 1185;
         int bgHeight = 631;
         int x = (1280 - bgWidth) / 2;
@@ -75,8 +92,8 @@ public class LoadDeck extends panelUtilities {
         // --- HEADER (Title & Close/Settings) ---
         JLabel titleLabel = new JLabel(deckTitle);
         titleLabel.setForeground(Color.BLACK);
-        titleLabel.setFont(loadCustomFont("semibold", 33.33f)); // Use loadCustomFont
-        titleLabel.setBounds(390, 40, 400, 45); // Adjusted X position to center
+        titleLabel.setFont(loadCustomFont("semibold", 33.33f));
+        titleLabel.setBounds(390, 40, 400, 45);
 
         ImageIcon settingsIcon = loadImage("/LOADDECK/resources/settings.png");
         RoundedButton btnSettings = new RoundedButton("", 10);
@@ -84,19 +101,23 @@ public class LoadDeck extends panelUtilities {
         btnSettings.setHdIcon(settingsIcon.getImage(), 31, 31);
         btnSettings.setBounds(1105, 35, 41, 41);
 
+        // Settings Button Logic: Show overlay and bring to front
+        btnSettings.addActionListener(e -> {
+            settingsOverlay.setVisible(true);
+            loadDeckPanel.setComponentZOrder(settingsOverlay, 0); // Bring to front
+            loadDeckPanel.repaint();
+        });
+
         ImageIcon closeIcon = loadImage("/LOADDECK/resources/close.png");
         RoundedButton btnClose = new RoundedButton("", 10);
         btnClose.setBackground(Color.decode("#E68B8C"));
         btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
         btnClose.setBounds(40, 35, 41, 41);
-        btnClose.addActionListener(e -> {
-            DeckFileManager.updateProgress(filename, maxCardsAccessed + 1);
-            mainFrame.showHomePanel();
-        }); // Go back to home
+        btnClose.addActionListener(e -> mainFrame.showHomePanel());
 
         // --- PROGRESS & COUNTER ---
         progressBar = new RoundedProgressBar();
-        progressBar.setMaximum(question.size() == 0 ? 1 : question.size()); // Avoid division by zero
+        progressBar.setMaximum(question.size() == 0 ? 1 : question.size());
         progressBar.setValue(0);
         progressBar.setBounds(320, 100, 548, 17);
 
@@ -106,11 +127,11 @@ public class LoadDeck extends panelUtilities {
 
         currentCount = new JLabel("1");
         currentCount.setForeground(Color.decode("#79ADDC"));
-        currentCount.setFont(loadCustomFont("semibold", 33.33f)); // Use loadCustomFont
+        currentCount.setFont(loadCustomFont("semibold", 33.33f));
 
         JLabel totalCount = new JLabel("/" + question.size());
         totalCount.setForeground(Color.decode("#9FA1A6"));
-        totalCount.setFont(loadCustomFont("semibold", 22f)); // Use loadCustomFont
+        totalCount.setFont(loadCustomFont("semibold", 22f));
 
         counterPanel.add(currentCount);
         counterPanel.add(totalCount);
@@ -132,7 +153,7 @@ public class LoadDeck extends panelUtilities {
         textContainer.setOpaque(false);
 
         textInside = new JTextPane();
-        textInside.setFont(loadCustomFont("regular", 25f)); // Use loadCustomFont
+        textInside.setFont(loadCustomFont("regular", 25f));
         textInside.setEditable(false);
         textInside.setOpaque(false);
 
@@ -158,16 +179,10 @@ public class LoadDeck extends panelUtilities {
                 if (currentIndex > 0) currentIndex--;
             } else if (command.equals("Next")) {
                 if (currentIndex < question.size() - 1) currentIndex++;
-            } else if (command.isEmpty()) { // Icon buttons
+            } else if (command.isEmpty()) {
                 if (source == btnPreviousIcon) currentIndex = 0;
                 else if (source == btnNextIcon) currentIndex = question.size() - 1;
             }
-
-            if (currentIndex > maxCardsAccessed) {
-                maxCardsAccessed = currentIndex;
-                DeckFileManager.updateProgress(filename, maxCardsAccessed + 1);
-            }
-
             isShowingQuestion = true;
             updateUI();
         };
@@ -263,10 +278,9 @@ public class LoadDeck extends panelUtilities {
         }
     }
 
-    private void updateUI() {
+    void updateUI() {
         if (question.isEmpty()) return;
 
-        // 1. Update Text
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -274,7 +288,6 @@ public class LoadDeck extends panelUtilities {
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
-        // 2. Update Icon
 
         if (isShowingQuestion) {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility_off.png")).getImage(), 26, 26);
@@ -282,15 +295,12 @@ public class LoadDeck extends panelUtilities {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility.png")).getImage(), 26, 26);
         }
 
-        // 3. Update Counter
         currentCount.setText(String.valueOf(currentIndex + 1));
         progressBar.setMaximum(question.size());
 
-        // 4. Update Progress Bar
         int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
         progressBar.setValue(percentage);
 
-        // 5. Enable/Disable Buttons
         boolean isFirst = (currentIndex == 0);
         boolean isLast = (currentIndex == question.size() - 1);
 
@@ -307,8 +317,29 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.revalidate();
         loadDeckPanel.repaint();
     }
+
+    void shuffleDeck(){
+        ArrayList<Integer> index = new ArrayList<>();
+        for (int i=0; i<question.size(); i++){
+            index.add(i);
+        }
+
+        Collections.shuffle(index);
+
+        ArrayList<String> q = new ArrayList<>();
+        ArrayList<String> a = new ArrayList<>();
+
+        for (int newPos : index) {
+            q.add(question.get(newPos));
+            a.add(answer.get(newPos));
+        }
+
+        question = q;
+        answer = a;
+    }
 }
 
+// --- HELPER CLASSES ---
 
 class ImagePanel extends JPanel {
     private Image img;
@@ -363,11 +394,9 @@ class StyledCardPanel extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // Base/Shadow
         g2.setColor(new Color(160, 160, 160));
         g2.fillRoundRect(0, 0, w, h, cornerRadius, cornerRadius);
 
-        // Face
         g2.setColor(Color.WHITE);
         int innerRadius = Math.max(0, cornerRadius - borderThickness);
         g2.fillRoundRect(borderThickness, borderThickness, w - (borderThickness * 2), h - borderThickness - bottomLipHeight, innerRadius, innerRadius);
@@ -383,7 +412,7 @@ class RoundedButton extends JButton {
     private int iconW, iconH;
     private int gap = 10;
     private boolean iconOnLeft = false;
-    private int shadowHeight = 5; // The depth of the 3D effect
+    private int shadowHeight = 5;
 
     public RoundedButton(String text, int radius) {
         super(text);
@@ -421,46 +450,30 @@ class RoundedButton extends JButton {
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 
-        // 1. Check if the button is currently being pressed
         ButtonModel model = getModel();
         boolean isPressed = model.isPressed() && model.isRollover();
 
         int w = getWidth();
-        int h = getHeight() - shadowHeight; // Actual height of the clickable "face"
+        int h = getHeight() - shadowHeight;
 
-        // 2. Calculate the vertical shift
-        // If pressed, shift everything down by the shadowHeight
         int shiftY = isPressed ? shadowHeight : 0;
 
-        // --- DRAWING ---
-
-        // Draw Shadow (Always visible at the bottom, creating the "track")
-        // We don't shift this, or the button would move entirely.
-        // We only want the face to move.
         g2.setColor(getShadowColor(getBackground()));
         g2.fillRoundRect(0, shadowHeight, w, h, radius, radius);
 
-        // Draw Face (The colorful part)
-        // If pressed, this draws lower (y + shiftY), covering the shadow
         g2.setColor(getBackground());
         g2.fillRoundRect(0, shiftY, w, h, radius, radius);
-
-        // --- TEXT & ICON POSITIONING ---
 
         String text = getText();
         boolean hasText = (text != null && !text.isEmpty());
         FontMetrics fm = g2.getFontMetrics(getFont());
         int textW = hasText ? fm.stringWidth(text) : 0;
 
-        // Calculate total content width to center it
         int totalContentWidth = textW;
         if (iconImage != null) totalContentWidth += iconW;
         if (hasText && iconImage != null) totalContentWidth += gap;
 
         int startX = (w - totalContentWidth) / 2;
-
-        // Calculate Center Y based on the visual "face" height (h), not total height
-        // IMPORTANT: Add 'shiftY' to move text/icon down with the face
         int faceCenterY = (h / 2) + shiftY;
 
         int textY = faceCenterY + (fm.getAscent() / 2) - 2;
@@ -509,6 +522,93 @@ class RoundedProgressBar extends JProgressBar {
             g2.setColor(Color.decode("#79ADDC"));
             g2.fillRoundRect(0, 0, progressWidth, h, arc, arc);
         }
+        g2.dispose();
+    }
+}
+
+class SettingsOverlay extends JPanel {
+    private RoundedButton btnShuffle, btnStudyMode, btnClose;
+    private LoadDeck parent;
+
+    public SettingsOverlay(LoadDeck parent, ActionListener onClose, Font font) {
+        this.parent = parent;
+        setLayout(null);
+        setOpaque(false);
+
+        addMouseListener(new java.awt.event.MouseAdapter() {});
+
+        int windowW = 1280;
+        int windowH = 720;
+        int boxW = 350;
+        int boxH = 220;
+        int boxX = (windowW - boxW) / 2;
+        int boxY = (windowH - boxH) / 2;
+
+        btnClose = new RoundedButton("X", 10);
+        btnClose.setBackground(Color.decode("#F4AFAB"));
+        btnClose.setBounds(boxX + boxW - 40, boxY + 10, 30, 30);
+        btnClose.setFont(font.deriveFont(16f));
+        btnClose.addActionListener(onClose);
+
+        ImageIcon shuffleIcon = new ImageIcon(getClass().getResource("resources/shuffle.png"));
+        btnShuffle = new RoundedButton("Shuffle", 15);
+        btnShuffle.setBackground(Color.decode("#91E586"));
+        btnShuffle.setHdIcon(shuffleIcon.getImage(), 12, 12);
+        btnShuffle.setIconOnLeft(true);
+        btnShuffle.setBounds(boxX + 50, boxY + 60, 250, 45);
+        btnShuffle.setFont(font.deriveFont(20f));
+
+        btnShuffle.addActionListener(e -> {
+            parent.shuffleDeck();
+            parent.currentIndex = 0;
+            parent.isShowingQuestion = true;
+            parent.updateUI();
+            setVisible(false);
+        });
+
+        ImageIcon studyModeIcon = new ImageIcon(getClass().getResource("resources/menu.png"));
+        btnStudyMode = new RoundedButton("Study Mode", 15);
+        btnStudyMode.setBackground(Color.decode("#91E586"));
+        btnStudyMode.setHdIcon(studyModeIcon.getImage(), 18, 18);
+        btnStudyMode.setIconOnLeft(true);
+        btnStudyMode.setBounds(boxX + 50, boxY + 120, 250, 45);
+        btnStudyMode.setFont(font.deriveFont(20f));
+
+        btnStudyMode.addActionListener(e -> {
+            try {
+                // FIX: Updated to include 'filename' so back button works in StudyMode
+                new StudyMode(parent.deckTitle, parent.question, parent.answer);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        add(btnClose);
+        add(btnShuffle);
+        add(btnStudyMode);
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        g2.setColor(new Color(0, 0, 0, 150));
+        g2.fillRect(0, 0, getWidth(), getHeight());
+
+        int boxW = 350;
+        int boxH = 220;
+        int boxX = (getWidth() - boxW) / 2;
+        int boxY = (getHeight() - boxH) / 2;
+
+        g2.setColor(Color.WHITE);
+        g2.fillRoundRect(boxX, boxY, boxW, boxH, 30, 30);
+
+        g2.setColor(new Color(200, 200, 200));
+        g2.setStroke(new BasicStroke(1));
+        g2.drawRoundRect(boxX, boxY, boxW, boxH, 30, 30);
+
         g2.dispose();
     }
 }
