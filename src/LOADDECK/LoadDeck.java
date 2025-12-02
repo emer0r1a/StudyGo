@@ -26,6 +26,7 @@ public class LoadDeck extends panelUtilities {
     private String filename;
     private String deckTitle;
     private StudyGo mainFrame;
+    private int maxCardsAccessed = 0;
 
     // --- UI COMPONENTS ---
     private JPanel loadDeckPanel;
@@ -88,7 +89,10 @@ public class LoadDeck extends panelUtilities {
         btnClose.setBackground(Color.decode("#E68B8C"));
         btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
         btnClose.setBounds(40, 35, 41, 41);
-        btnClose.addActionListener(e -> mainFrame.showHomePanel()); // Go back to home
+        btnClose.addActionListener(e -> {
+            DeckFileManager.updateProgress(filename, maxCardsAccessed + 1);
+            mainFrame.showHomePanel();
+        }); // Go back to home
 
         // --- PROGRESS & COUNTER ---
         progressBar = new RoundedProgressBar();
@@ -158,6 +162,12 @@ public class LoadDeck extends panelUtilities {
                 if (source == btnPreviousIcon) currentIndex = 0;
                 else if (source == btnNextIcon) currentIndex = question.size() - 1;
             }
+
+            if (currentIndex > maxCardsAccessed) {
+                maxCardsAccessed = currentIndex;
+                DeckFileManager.updateProgress(filename, maxCardsAccessed + 1);
+            }
+
             isShowingQuestion = true;
             updateUI();
         };
