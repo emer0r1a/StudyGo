@@ -13,21 +13,77 @@ public class DeckFileManager {
             decksFolder.mkdirs();
         }
     }
-    
-    public static String saveDeck(String title, String subject, ArrayList<FlashcardData> cards) {
-        if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
-            title = "Untitled Deck"; // Fallback
+
+    public static String saveExistingDeck(
+            String title, String subject, ArrayList<FlashcardData> cards, String oldLink
+    ) {
+
+        String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
+
+        if (sanitized.isEmpty()) sanitized = "deck";
+
+        String newLink = sanitized + ".txt";
+
+        File oldFile = new File(decksFolder, oldLink);
+        File newFile = new File(decksFolder, newLink);
+
+        if (!oldLink.equals(newLink) && oldFile.exists()) {
+            oldFile.renameTo(newFile);
         }
 
-        String fileName = title.replace(" ", "-") + ".txt";
-        File file = new File(decksFolder, fileName);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             int totalCards = 0;
             for (FlashcardData card : cards) {
                 if (!card.isEmpty()) totalCards++;
             }
 
+            // Title stays EXACTLY as provided
+            String header = title + "\t" + totalCards + "\t0\t" +
+                    (subject != null && !subject.trim().isEmpty() ? subject : "");
+            writer.write(header);
+            writer.newLine();
+
+            for (FlashcardData card : cards) {
+                if (card.isEmpty()) continue;
+                String f = card.getFront().replace("\n", "<br>");
+                String b = card.getBack().replace("\n", "<br>");
+                writer.write(f + "\t" + b);
+                writer.newLine();
+            }
+
+            return newLink;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public static String saveDeck(String title, String subject, ArrayList<FlashcardData> cards) {
+        if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
+            title = "Untitled Deck"; // Fallback
+        }
+
+        // Sanitize filename ONLY (title stays the same)
+        String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
+
+        if (sanitized.isEmpty()) {
+            sanitized = "deck";
+        }
+
+        String fileName = sanitized + ".txt";
+        File file = new File(decksFolder, fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
+            int totalCards = 0;
+            for (FlashcardData card : cards) {
+                if (!card.isEmpty()) totalCards++;
+            }
+
+            // Title is written EXACTLY as given
             String header = title + "\t" + totalCards + "\t0\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
@@ -35,6 +91,7 @@ public class DeckFileManager {
 
             for (FlashcardData card : cards) {
                 if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) continue;
+
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
                 writer.write(f + "\t" + b);
@@ -251,5 +308,15 @@ public class DeckFileManager {
         }
 
         return false;
+    }
+
+    public static ArrayList<FlashcardData> loadEditDeck(String link, Deck currentDeck) {
+        ArrayList<FlashcardData> cards = new ArrayList<>();
+
+        for (Card c : currentDeck.getCards()) {
+            cards.add(new FlashcardData(c.getQuestion(),c.getAnswer()));
+        }
+
+        return cards;
     }
 }

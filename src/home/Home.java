@@ -58,7 +58,7 @@ public class Home extends panelUtilities {
     private void addGUI() {
         homePanel = new panelUtilities.BackgroundPanel("/resources/home/home-panel.png");
         homePanel.setPreferredSize(new Dimension(1280, 720));
-        homePanel.setBounds(0, 0, 1280, 720);
+        homePanel.setBounds(0,0,1280,720);
 
         // create 'no decks' panel if empty
         showEmptyDeck();
@@ -135,6 +135,26 @@ public class Home extends panelUtilities {
         noResultPanel.setVisible(false);
     }
 
+    public void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
+        if (d == currentlySelectedDeck) {
+            currentlySelectedDeck = null;
+            currentlyToggledDeck = null;
+            currentOriginalIcon = null;
+        }
+
+        decks.remove(d);
+        recentDecks.remove(d);
+
+        if(decks == recentDecks) {
+            addDecks(recentDecks);
+        } else if(decks == resultDeck) {
+            addDecks(resultDeck);
+        }
+
+        deckContainer.revalidate();
+        deckContainer.repaint();
+    }
+
     private void updateEmptyState(ArrayList<Deck> decks, String searchTxt) {
         boolean isPlaceholder = searchBar.getForeground().equals(new Color(153,153,153));
         boolean isSearching = !searchTxt.isEmpty() && !isPlaceholder;
@@ -193,7 +213,9 @@ public class Home extends panelUtilities {
             deckWrapper.add(deckCont);
 
             if (d == currentlySelectedDeck) {
-                resetToggledDeck();
+                deckCont.setIcon(altIcon);
+                currentlyToggledDeck = deckCont;
+                currentOriginalIcon = originalIcon;
             }
 
             final boolean[] isToggled = {false};
@@ -260,28 +282,16 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            if (d == currentlySelectedDeck) {
-                                currentlySelectedDeck = null;
-                                currentlyToggledDeck = null;
-                                currentOriginalIcon = null;
-                            }
+                            removeDeckMethod(d, decks);
+                        }
+                    });
 
-                            String filename = d.getLink();
-                            if (filename != null && !filename.isEmpty()) {
-                                DeckFileManager.deleteDeck(filename);
-                            }
-
-                            decks.remove(d);
-                            recentDecks.remove(d);
-
-                            if(decks == recentDecks) {
-                                addDecks(recentDecks);
-                            } else if(decks == resultDeck) {
-                                addDecks(resultDeck);
-                            }
-
-                            deckContainer.revalidate();
-                            deckContainer.repaint();
+                    editItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println(d.getCards().size());
+                            System.out.println(d.getLink());
+                            mainFrame.showEditPanel(d.getLink(), d, decks);
                         }
                     });
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
@@ -720,5 +730,6 @@ public class Home extends panelUtilities {
     }
 
 }
+
 
 
