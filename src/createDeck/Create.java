@@ -1,6 +1,7 @@
 package createDeck;
 
 import general.*;
+import home.Home;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,8 +36,14 @@ public class Create extends panelUtilities {
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
 
-    public Create(StudyGo mainFrame) {
+    private Deck toBeEdited = null;
+    private String oldLink = "";
+    private ArrayList<Deck> decks = null;
+    private Home homePanel;
+
+    public Create(StudyGo mainFrame, Home homePanel) {
         this.mainFrame = mainFrame;
+        this.homePanel = homePanel;
         createPanel = new JPanel(null);
         loadCustomFont("bold", 16f);
 
@@ -144,13 +151,33 @@ public class Create extends panelUtilities {
     }
 
     public void hideSuccessScreen() {
+        String filename;
         successView.setVisible(false);
 
-        String filename = DeckFileManager.saveDeck(
-                titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
-                subjectField.getText().trim(),
-                cards
-        );
+        if (!oldLink.isEmpty()) {
+            filename = DeckFileManager.saveExistingDeck(
+                    titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
+                    subjectField.getText().trim(),
+                    cards,
+                    oldLink
+            );
+
+            homePanel.removeDeckMethod(toBeEdited, decks);
+
+            if (toBeEdited != null && decks != null) {
+                System.out.println("TEST");
+                decks = null;
+                toBeEdited = null;
+            }
+
+            oldLink = "";
+        } else {
+            filename = DeckFileManager.saveDeck(
+                    titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
+                    subjectField.getText().trim(),
+                    cards
+            );
+        }
 
         if (filename != null) {
             // Load the deck header back from file
@@ -219,6 +246,23 @@ public class Create extends panelUtilities {
         }
         mainDash.updateUIFromData();
         hideDeleteScreen();
+    }
+
+    public void loadToBeEdited(String link, Deck d, ArrayList<Deck> decks) {
+        cards = DeckFileManager.loadEditDeck(link,d);
+
+        oldLink = d.getLink();
+        toBeEdited = d;
+        this.decks = decks;
+
+        titleField.setText(d.getTitle());
+        subjectField.setText(d.getSubject());
+
+        mainDash.updateUIFromData();
+
+        if (titleField.getForeground().equals(Color.RED)) {
+            titleField.setForeground(Color.black);
+        }
     }
 
     public JPanel getPanel() {
