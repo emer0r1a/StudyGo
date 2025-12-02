@@ -17,13 +17,15 @@ public class DeckFileManager {
     public static String saveExistingDeck(
             String title, String subject, ArrayList<FlashcardData> cards, String oldLink
     ) {
-        String newLink = title.replace(" ", "-").replace(".", "-") + ".txt";
+
+        String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
+
+        if (sanitized.isEmpty()) sanitized = "deck";
+
+        String newLink = sanitized + ".txt";
 
         File oldFile = new File(decksFolder, oldLink);
         File newFile = new File(decksFolder, newLink);
-
-        System.out.println(newLink);
-        System.out.println(oldLink);
 
         if (!oldLink.equals(newLink) && oldFile.exists()) {
             oldFile.renameTo(newFile);
@@ -36,6 +38,7 @@ public class DeckFileManager {
                 if (!card.isEmpty()) totalCards++;
             }
 
+            // Title stays EXACTLY as provided
             String header = title + "\t" + totalCards + "\t0\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
@@ -48,7 +51,6 @@ public class DeckFileManager {
                 writer.write(f + "\t" + b);
                 writer.newLine();
             }
-
 
             return newLink;
 
@@ -64,15 +66,24 @@ public class DeckFileManager {
             title = "Untitled Deck"; // Fallback
         }
 
-        String fileName = title.replace(" ", "-") + ".txt";
+        // Sanitize filename ONLY (title stays the same)
+        String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
+
+        if (sanitized.isEmpty()) {
+            sanitized = "deck";
+        }
+
+        String fileName = sanitized + ".txt";
         File file = new File(decksFolder, fileName);
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
             int totalCards = 0;
             for (FlashcardData card : cards) {
                 if (!card.isEmpty()) totalCards++;
             }
 
+            // Title is written EXACTLY as given
             String header = title + "\t" + totalCards + "\t0\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
@@ -80,6 +91,7 @@ public class DeckFileManager {
 
             for (FlashcardData card : cards) {
                 if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) continue;
+
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
                 writer.write(f + "\t" + b);
@@ -93,6 +105,7 @@ public class DeckFileManager {
             return null;
         }
     }
+
 
     // load header(title,size,...)
     public static Deck loadDeckHeader(String filename) {

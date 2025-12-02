@@ -1,6 +1,7 @@
 package createDeck;
 
 import general.*;
+import home.Home;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -35,13 +36,14 @@ public class Create extends panelUtilities {
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
 
-    private boolean deckExists = false;
-
-    private Deck toBeEdited;
+    private Deck toBeEdited = null;
     private String oldLink = "";
+    private ArrayList<Deck> decks = null;
+    private Home homePanel;
 
-    public Create(StudyGo mainFrame) {
+    public Create(StudyGo mainFrame, Home homePanel) {
         this.mainFrame = mainFrame;
+        this.homePanel = homePanel;
         createPanel = new JPanel(null);
         loadCustomFont("bold", 16f);
 
@@ -117,7 +119,6 @@ public class Create extends panelUtilities {
         mainDash.clearInputs();
         mainDash.updateUIFromData();
 
-
         cards.clear();
         cards.add(new FlashcardData("", ""));
         currentIndex = 0;
@@ -147,7 +148,14 @@ public class Create extends panelUtilities {
                     oldLink
             );
 
-            deckExists = false;
+            homePanel.removeDeckMethod(toBeEdited, decks);
+
+            if (toBeEdited != null && decks != null) {
+                System.out.println("TEST");
+                decks = null;
+                toBeEdited = null;
+            }
+
             oldLink = "";
         } else {
             filename = DeckFileManager.saveDeck(
@@ -226,14 +234,12 @@ public class Create extends panelUtilities {
         hideDeleteScreen();
     }
 
-    public void loadToBeEdited(String link, Deck d) {
+    public void loadToBeEdited(String link, Deck d, ArrayList<Deck> decks) {
         cards = DeckFileManager.loadEditDeck(link,d);
 
-        if (oldLink.isEmpty()) {
-            deckExists = true;
-            oldLink = d.getLink();
-            toBeEdited = d;
-        }
+        oldLink = d.getLink();
+        toBeEdited = d;
+        this.decks = decks;
 
         titleField.setText(d.getTitle());
         subjectField.setText(d.getSubject());

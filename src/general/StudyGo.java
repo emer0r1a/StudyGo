@@ -22,7 +22,7 @@ public class StudyGo extends JFrame {
         setLayout(null);
 
         homePanel = new Home(this);
-        createPanel = new Create(this);
+        createPanel = new Create(this, homePanel);
 
         setContentPane(homePanel.getPanel());
 
@@ -45,9 +45,9 @@ public class StudyGo extends JFrame {
         repaint();
     }
 
-    public void showEditPanel(String link, Deck currentDeck) {
+    public void showEditPanel(String link, Deck currentDeck, ArrayList<Deck> decks) {
         setContentPane(createPanel.getPanel());
-        createPanel.loadToBeEdited(link, currentDeck);
+        createPanel.loadToBeEdited(link, currentDeck, decks);
     }
 
     public void addDeckToHome(Deck deck) {

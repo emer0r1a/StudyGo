@@ -1,4 +1,2 @@
-TEST	3	0	dsadasdasd
-asdasdsadsa	sadsa
-dsasad	sadsadsasad
-sdasd	sadsad
+TEST (?)	1	0	SADSASDSDA
+SDASDSA	SADASDSA

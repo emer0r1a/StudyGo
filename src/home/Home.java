@@ -153,7 +153,7 @@ public class Home extends panelUtilities {
         noResultPanel.setVisible(false);
     }
 
-    private void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
+    public void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
         if (d == currentlySelectedDeck) {
             currentlySelectedDeck = null;
             currentlyToggledDeck = null;
@@ -309,8 +309,7 @@ public class Home extends panelUtilities {
                         public void actionPerformed(ActionEvent e) {
                             System.out.println(d.getCards().size());
                             System.out.println(d.getLink());
-                             mainFrame.showEditPanel(d.getLink(), d);
-                             removeDeckMethod(d, decks);
+                            mainFrame.showEditPanel(d.getLink(), d, decks);
                         }
                     });
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
