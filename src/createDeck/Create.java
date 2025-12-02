@@ -225,29 +225,6 @@ public class Create extends panelUtilities {
         return createPanel;
     }
 
-    // --- FILE IO ---
-    private void saveDeckToFile() {
-        String fileName = titleField.getText() + ".txt";
-        fileName = fileName.replace(" ", "-");
-
-        File file = new File(decksFolder, fileName);
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            for (FlashcardData card : cards) {
-                if (card.getFront().trim().isEmpty() && card.getBack().trim().isEmpty()) continue;
-                String f = card.getFront().replace("\n", "<br>");
-                String b = card.getBack().replace("\n", "<br>");
-                writer.write(f + "\t" + b);
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            System.out.println("DATA FOLDER NOT FOUND!");
-            e.printStackTrace();
-        }
-    }
-
     public static class FlashcardData {
         private String front;
         private String back;

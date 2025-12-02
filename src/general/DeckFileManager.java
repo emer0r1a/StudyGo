@@ -191,11 +191,8 @@ public class DeckFileManager {
         File file = new File(decksFolder, filename);
 
         if (file.exists() && file.delete()) {
-            System.out.println("✓ Deleted deck: " + filename);
             return true;
         }
-
-        System.err.println("✗ Failed to delete: " + filename);
         return false;
     }
 
@@ -232,7 +229,7 @@ public class DeckFileManager {
             if (headerLine == null) return false;
 
             String[] parts = headerLine.split("\t");
-            if (parts.length < 4) return false;
+            if (parts.length < 3) return false;
 
             parts[2] = String.valueOf(newCardsAccessed);
             bw.write(String.join("\t", parts));
@@ -250,7 +247,6 @@ public class DeckFileManager {
         }
 
         if (file.delete() && tempFile.renameTo(file)) {
-            System.out.println("✓ Updated progress for: " + filename);
             return true;
         }
 

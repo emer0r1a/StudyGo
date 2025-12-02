@@ -1,7 +1,6 @@
 package LOADDECK;
 
-import general.StudyGo;
-import general.panelUtilities;
+import general.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -235,29 +234,22 @@ public class LoadDeck extends panelUtilities {
     }
 
     private void loadData() throws IOException {
-        File file = new File(decksFolder, filename);
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        deckTitle = br.readLine();
+        Deck deck = DeckFileManager.loadDeckHeader(filename);
 
-        String line;
-        while ((line = br.readLine()) != null) {
-            if (line.trim().isEmpty()) continue;
+        if (deck == null) { return; }
 
-            String[] value = line.split("\t");
-            if (value.length >= 2) {
-                question.add(value[0]);
-                answer.add(value[1]);
-            } else if (value.length == 1) {
-                question.add(value[0]);
-                answer.add(" "); // Fallback for missing answer
-                System.out.println("Fixed broken line: " + value[0]);
-            }
-        }
-        br.close();
+        deckTitle = deck.getTitle();
 
-        if (question.isEmpty()) {
+        ArrayList<Card> cards = DeckFileManager.loadCards(filename);
+
+        if (cards.isEmpty()) {
             question.add("Error");
-            answer.add("File format is incorrect. Use Tabs to separate question and answer.");
+            answer.add("File format is incorrect or no cards found.");
+        } else {
+            for (Card card : cards) {
+                question.add(card.getQuestion());
+                answer.add(card.getAnswer());
+            }
         }
     }
 

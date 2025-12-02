@@ -1,9 +1,6 @@
 package home;
 
-import general.Card;
-import general.Deck;
-import general.StudyGo;
-import general.panelUtilities;
+import general.*;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -31,7 +28,6 @@ public class Home extends panelUtilities {
     private ImageIcon yellowDeck, blueDeck, brightYellowDeck, greenDeck, pinkDeck, dOptions;
     private ImageIcon yellowDeckPicked, blueDeckPicked, brightYellowDeckPicked, greenDeckPicked, pinkDeckPicked;
     ArrayList<Deck> recentDecks;
-    ArrayList<Card> recentCards;
     ArrayList<Deck> resultDeck;
     int deckX = 0, deckY = 0;
     int opX = 132, opY = 20;
@@ -49,7 +45,6 @@ public class Home extends panelUtilities {
 
         recentDecks = new ArrayList<>();
         resultDeck = new ArrayList<>();
-        recentCards = new ArrayList<>();
 
         addGUI();
 
@@ -119,8 +114,17 @@ public class Home extends panelUtilities {
 
     private void loadPreexistingDecks(String[] files) {
         for(String file : files) {
-            loadDeckFromFile("Decks/"+file);
+            Deck deck = DeckFileManager.loadDeckHeader(file);
+
+            if (deck != null) {
+                ArrayList<Card> cards = DeckFileManager.loadCards(file);
+                deck.setCards(cards);
+
+                recentDecks.add(deck);
+            }
         }
+
+        addDecks(recentDecks);
     }
 
     private void showEmptyDeck() {
@@ -284,6 +288,11 @@ public class Home extends panelUtilities {
                                 currentlySelectedDeck = null;
                                 currentlyToggledDeck = null;
                                 currentOriginalIcon = null;
+                            }
+
+                            String filename = d.getLink();
+                            if (filename != null && !filename.isEmpty()) {
+                                DeckFileManager.deleteDeck(filename);
                             }
 
                             decks.remove(d);
@@ -548,8 +557,15 @@ public class Home extends panelUtilities {
 
         // if file has valid format -> load deck from file
         if(open == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = chooseFile.getSelectedFile();
+
+            if (!DeckFileManager.isValidDeckFile(selectedFile)) {
+                errorFilePanel();
+                return;
+            }
+
             isImport = true;
-            loadDeckFromFile(chooseFile.getSelectedFile().getAbsolutePath());
+
             Path source, decksFolder;
             try {
                 source = Paths.get(chooseFile.getSelectedFile().getAbsolutePath());
@@ -559,6 +575,8 @@ public class Home extends panelUtilities {
 
                 Path target = decksFolder.resolve(source.getFileName());
                 Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+                loadDeckFromFile(target.toString());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -660,38 +678,29 @@ public class Home extends panelUtilities {
     }
 
     private void loadDeckFromFile(String path){
-        BufferedReader br;
         try {
-            br = new BufferedReader(new FileReader(path));
-            String line;
+            String filename = new File(path).getName();
+            Deck deck = DeckFileManager.loadDeckHeader(filename);
 
-            if((line = br.readLine()) != null) {
-                String[] lines = line.split("\t");
-                if(Integer.parseInt(lines[2]) > Integer.parseInt(lines[1]))
-                    throw new IllegalArgumentException("Size must be greater than or equal to the cards accessed");
+            if(deck != null) {
+                ArrayList<Card> cards = DeckFileManager.loadCards(filename);
+                deck.setCards(cards);
 
-                Deck d = new Deck(lines[0], Integer.parseInt(lines[1]), Integer.parseInt(lines[2]),lines[3]);
-                if(lines.length > 4 && lines[4] != null && !lines[4].isEmpty()) {
-                    d.setSubject(lines[4]);
+                recentDecks.add(0, deck);
+
+                addDecks(recentDecks);
+
+                if (isImport) {
+                    successAddDeckPanel();
+                    isImport = false;
                 }
-
-                recentDecks.add(0, d);
+            } else {
+                if(isImport) {
+                    errorFilePanel();
+                    isImport = false;
+                }
             }
-
-            // load cards from deck
-            while((line = br.readLine()) != null) {
-                String[] qa = line.split("\t");
-                recentCards.add(new Card(qa[0], qa[1]));
-            }
-
-            addDecks(recentDecks);
-
-            if(isImport) {
-                successAddDeckPanel();
-                isImport = false;
-            }
-            br.close();
-        } catch (IOException | RuntimeException e) {
+        } catch (RuntimeException e) {
             if(isImport) {
                 errorFilePanel();
                 isImport = false;
