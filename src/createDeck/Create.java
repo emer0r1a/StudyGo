@@ -551,6 +551,7 @@ public class Create extends panelUtilities {
            item.setFocusable(false);
            item.setRolloverEnabled(false);
            item.setRequestFocusEnabled(false);
+           item.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
            item.setUI(new javax.swing.plaf.basic.BasicMenuItemUI() {
                @Override
