@@ -15,7 +15,7 @@ public class DeckFileManager {
     }
 
     public static String saveExistingDeck(
-            String title, String subject, ArrayList<FlashcardData> cards, String oldLink
+            String title, String subject, String color, ArrayList<FlashcardData> cards, String oldLink
     ) {
 
         String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
@@ -28,7 +28,9 @@ public class DeckFileManager {
         File newFile = new File(decksFolder, newLink);
 
         if (!oldLink.equals(newLink) && oldFile.exists()) {
-            oldFile.renameTo(newFile);
+            if (!oldFile.renameTo(newFile)) {
+                System.err.println("⚠Rename failed: " + oldFile.getAbsolutePath());
+            }
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
@@ -39,7 +41,7 @@ public class DeckFileManager {
             }
 
             // Title stays EXACTLY as provided
-            String header = title + "\t" + totalCards + "\t0\t" +
+            String header = title + "\t" + totalCards + "\t0\t" + color + "\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
             writer.newLine();
@@ -138,7 +140,6 @@ public class DeckFileManager {
             }
 
             Deck deck = new Deck(title, size, cardsAccessed, color);
-            deck.setSubject(subject);
             deck.setLink(filename);
 
             if (!subject.isEmpty()) {

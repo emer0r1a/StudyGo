@@ -173,7 +173,7 @@ public class Create extends panelUtilities {
         if (!oldLink.isEmpty()) {
             filename = DeckFileManager.saveExistingDeck(
                     titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
-                    subjectField.getText().trim(),
+                    subjectField.getText().trim(), selectedColor,
                     cards,
                     oldLink
             );
