@@ -209,6 +209,7 @@ public class Home extends panelUtilities {
             }
 
             deckCont.setBounds(0, 0, originalIcon.getIconWidth(), originalIcon.getIconHeight());
+            deckCont.setCursor(new Cursor(Cursor.HAND_CURSOR));
             deckWrapper.add(deckCont);
 
             if (d == currentlySelectedDeck) {
@@ -249,6 +250,7 @@ public class Home extends panelUtilities {
             JButton deckOptions = new JButton(dOptions);
             styleButton(deckOptions);
             deckOptions.setBounds(132, 20,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckOptions.setCursor(new Cursor(Cursor.HAND_CURSOR));
             deckCont.add(deckOptions);
 
             deckOptions.addActionListener(new ActionListener() {
@@ -267,6 +269,7 @@ public class Home extends panelUtilities {
                     editItem.setBorderPainted(false);
                     editItem.setBackground(new Color(255,253,250));
                     editItem.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    editItem.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     optionsMenu.add(editItem);
 
                     ImageIcon dd = loadImage("/resources/home/delete.png");
@@ -274,6 +277,7 @@ public class Home extends panelUtilities {
                     deleteItem.setBackground(new Color(255,253,250));
                     deleteItem.setBorderPainted(false);
                     deleteItem.setBorder(new EmptyBorder(5, 5, 5, 5));
+                    deleteItem.setCursor(new Cursor(Cursor.HAND_CURSOR));
                     optionsMenu.add(deleteItem);
 
                     deleteItem.addActionListener(new ActionListener() {
@@ -360,6 +364,7 @@ public class Home extends panelUtilities {
         JLabel searchBarImage = new JLabel(sb);
         searchBarImage.setBounds(321,47,sb.getIconWidth(),sb.getIconHeight());
         searchBarImage.setLayout(null);
+        searchBarImage.setCursor(new Cursor(Cursor.TEXT_CURSOR));
 
         searchBar = new JTextField("Search decks");
         searchBar.setBorder(null);
@@ -504,6 +509,7 @@ public class Home extends panelUtilities {
         newDeckItem.setBorderPainted(false);
         newDeckItem.setBackground(new Color(165,207,245));
         newDeckItem.setBorder(new EmptyBorder(10, 10, 10, 10));
+        newDeckItem.setCursor(new Cursor(Cursor.HAND_CURSOR));
         createDeckMenu.add(newDeckItem);
 
         ImageIcon imf = loadImage("/resources/home/import.png");
@@ -511,6 +517,7 @@ public class Home extends panelUtilities {
         importFileItem.setBackground(new Color(165,207,245));
         importFileItem.setBorderPainted(false);
         importFileItem.setBorder(new EmptyBorder(10, 10, 10, 10));
+        importFileItem.setCursor(new Cursor(Cursor.HAND_CURSOR));
         createDeckMenu.add(importFileItem);
 
         importFileItem.addActionListener(new ActionListener() {
