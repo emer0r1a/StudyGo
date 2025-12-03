@@ -718,6 +718,7 @@ public class Home extends panelUtilities {
             currentlyToggledDeck.revalidate();
             currentlyToggledDeck.repaint();
 
+            currentlySelectedDeck = null;
             currentlyToggledDeck = null;
             currentOriginalIcon = null;
         }
