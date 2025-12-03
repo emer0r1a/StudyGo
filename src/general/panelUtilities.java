@@ -21,6 +21,13 @@ public class panelUtilities {
         return new ImageIcon(image);
     }
 
+    public void styleButton(JButton btn) {
+        btn.setOpaque(false);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setFocusPainted(false);
+    }
+
     public static Font loadCustomFont(String weight, float size) {
         String fontFile = switch (weight.toLowerCase()) {
             case "medium" -> "/resources/fonts/Gabarito-Medium.ttf";
@@ -206,6 +213,13 @@ public class panelUtilities {
                 g2.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
                 g2.dispose();
             }
+        }
+
+        public void styleButton(JButton btn) {
+            btn.setOpaque(false);
+            btn.setBorderPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setFocusPainted(false);
         }
     }
 }

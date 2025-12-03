@@ -707,13 +707,6 @@ public class Home extends panelUtilities {
         rowCtr = 0;
     }
 
-    private void styleButton(JButton btn) {
-        btn.setOpaque(false);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setFocusPainted(false);
-    }
-
     public void addDeck(Deck deck) {
         recentDecks.add(0,deck);
         addDecks(recentDecks);

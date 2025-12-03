@@ -35,11 +35,16 @@ public class Create extends panelUtilities {
     private final SuccessPopup successView;
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
+    private JPopupMenu editColor;
+    private String selectedColor = "";
 
     private Deck toBeEdited = null;
     private String oldLink = "";
     private ArrayList<Deck> decks = null;
     private Home homePanel;
+
+    private ImageIcon defaultColor, pinkColor, blueColor, greenColor, brightYellowColor;
+    private ImageIcon defaultChosen, pinkChosen, blueChosen, greenChosen, brightYellowChosen;
 
     public Create(StudyGo mainFrame, Home homePanel) {
         this.mainFrame = mainFrame;
@@ -47,6 +52,16 @@ public class Create extends panelUtilities {
         createPanel = new JPanel(null);
         loadCustomFont("bold", 16f);
 
+        defaultChosen = loadImage("/resources/createDeck/yellow-color-chosen.png");
+        defaultColor = loadImage("/resources/createDeck/yellow-color.png");
+        blueChosen = loadImage("/resources/createDeck/blue-color-chosen.png");
+        blueColor = loadImage("/resources/createDeck/blue-color.png");
+        greenChosen = loadImage("/resources/createDeck/green-color-chosen.png");
+        greenColor = loadImage("/resources/createDeck/green-color.png");
+        pinkChosen = loadImage("/resources/createDeck/pink-color-chosen.png");
+        pinkColor = loadImage("/resources/createDeck/pink-color.png");
+        brightYellowChosen = loadImage("/resources/createDeck/brightyellow-chosen.png");
+        brightYellowColor = loadImage("/resources/createDeck/brightyellow-color.png");
 
         cards.clear();
         currentIndex = 0;
@@ -406,6 +421,82 @@ public class Create extends panelUtilities {
             });
             add(btnDelete);
 
+            // edit deck color
+            ShadowButton btnEditColor = new ShadowButton("",1108,60,41,41,new Color(121,173,220),
+                    loadImage("/resources/createDeck/color-opt.png"),"regular",12);
+            add(btnEditColor);
+
+            btnEditColor.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    editColor = new JPopupMenu();
+                    editColor.setPopupSize(35,defaultColor.getIconHeight()*6);
+                    editColor.setOpaque(false);
+                    editColor.setBackground(new Color(255,255,255,0));
+                    editColor.setBorderPainted(false);
+
+                    JMenuItem yellowDeck = new JMenuItem(defaultChosen);
+                    styleMenuItem(yellowDeck);
+                    editColor.add(yellowDeck);
+
+                    JMenuItem blueDeck = new JMenuItem(blueColor);
+                    styleMenuItem(blueDeck);
+                    editColor.add(blueDeck);
+
+                    JMenuItem greenDeck = new JMenuItem(greenColor);
+                    styleMenuItem(greenDeck);
+                    editColor.add(greenDeck);
+
+                    JMenuItem brightYellowDeck = new JMenuItem(brightYellowColor);
+                    styleMenuItem(brightYellowDeck);
+                    editColor.add(brightYellowDeck);
+
+                    JMenuItem pinkDeck = new JMenuItem(pinkColor);
+                    styleMenuItem(pinkDeck);
+                    editColor.add(pinkDeck);
+
+                    // TODO: Add methods for each color option's action listener
+
+                    yellowDeck.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            selectedColor = "yellow";
+                        }
+                    });
+
+                    blueDeck.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            selectedColor = "blue";
+                        }
+                    });
+
+                    greenDeck.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            selectedColor = "green";
+                        }
+                    });
+
+                    brightYellowDeck.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            selectedColor = "brightyellow";
+                        }
+                    });
+
+                    pinkDeck.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            selectedColor = "pink";
+                        }
+                    });
+
+
+                    editColor.show(btnEditColor,2, btnEditColor.getHeight()+8);
+                }
+            });
+
             // Bottom Buttons
             int btnY = 560;
 
@@ -452,6 +543,20 @@ public class Create extends panelUtilities {
                 }
             });
             add(btnSave);
+        }
+
+        private void styleMenuItem(JMenuItem item) {
+           item.setBorderPainted(false);
+           item.setBackground(new Color(255,255,255,0));
+           item.setBorder(null);
+           item.setOpaque(false);
+
+           item.setUI(new javax.swing.plaf.basic.BasicMenuItemUI() {
+               @Override
+               protected void paintBackground(Graphics g, JMenuItem menuItem, Color bgColor) {
+                   // remove effects (hover, etc)
+               }
+           });
         }
 
         private void addNavButton(ShadowButton b, int type) {
