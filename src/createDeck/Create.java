@@ -460,8 +460,6 @@ public class Create extends panelUtilities {
                     styleMenuItem(pinkDeck);
                     editColor.add(pinkDeck);
 
-                    // TODO: Add methods for each color option's action listener
-
                     yellowDeck.addActionListener(e -> {
                         if(!selectedColor.equals("yellow")) {
                             selectedColor = "yellow";
