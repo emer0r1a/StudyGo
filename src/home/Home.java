@@ -136,13 +136,9 @@ public class Home extends panelUtilities {
     }
 
     public void removeDeckMethod(Deck d, ArrayList<Deck> decks) {
+        //System.out.println("REMOVE METHOD CALLED");
         if (d == currentlySelectedDeck) {
             resetToggledDeck();
-        }
-
-        String filename = d.getLink();
-        if (filename != null && !filename.isEmpty()) {
-            DeckFileManager.deleteDeck(filename);
         }
 
         decks.remove(d);
@@ -284,6 +280,10 @@ public class Home extends panelUtilities {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             removeDeckMethod(d, decks);
+                            String filename = d.getLink();
+                            if (filename != null && !filename.isEmpty()) {
+                                DeckFileManager.deleteDeck(filename);
+                            }
                         }
                     });
 
