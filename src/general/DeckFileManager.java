@@ -28,9 +28,7 @@ public class DeckFileManager {
         File newFile = new File(decksFolder, newLink);
 
         if (!oldLink.equals(newLink) && oldFile.exists()) {
-            if (!oldFile.renameTo(newFile)) {
-                System.err.println("⚠Rename failed: " + oldFile.getAbsolutePath());
-            }
+            oldFile.renameTo(newFile);
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
