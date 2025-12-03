@@ -73,7 +73,7 @@ public class Create extends panelUtilities {
         }
 
         //  FRAME SETUP
-        createPanel.setBackground(new Color(230, 240, 245));
+        createPanel.setBackground(new Color(239, 248, 253));
 
         // LAYERED PANE SETUP
         JLayeredPane layeredPane = new JLayeredPane();
@@ -426,7 +426,7 @@ public class Create extends panelUtilities {
             add(btnDelete);
 
             // edit deck color
-            ShadowButton btnEditColor = new ShadowButton("",1108,60,41,41,new Color(121,173,220),
+            ShadowButton btnEditColor = new ShadowButton("",1108,55,41,41,new Color(121,173,220),
                     loadImage("/resources/createDeck/color-opt.png"),"regular",12);
             add(btnEditColor);
             btnEditColor.setFocusable(false);
