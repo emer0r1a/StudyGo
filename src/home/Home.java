@@ -488,11 +488,35 @@ public class Home extends panelUtilities {
                     } else {
                         JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
-                } else {
-                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                }  else {
+
+                    SelectDeckPopup warningPopup = new SelectDeckPopup();
+                    homePanel.add(warningPopup);
+                    homePanel.setComponentZOrder(warningPopup, 0);
+                    homePanel.revalidate();
+                    homePanel.repaint();
                 }
             }
         });
+    }
+
+
+    class SelectDeckPopup extends panelUtilities.BasePopup {
+
+        public SelectDeckPopup() {
+            super("/resources/createDeck/recent-panel.png", 489, 286, 312, 188);
+            addImage("/resources/createDeck/warning.png", 625, 315, 40, 40);
+
+            addText("<html><center>Please select a deck first.</center></html>", 18f, 340);
+            addImgButton("/resources/createDeck/close-btn.png", 762, 300, 23, 23, false, e -> {
+                setVisible(false);
+                getParent().remove(this);
+            });
+            addImgButton("/resources/home/gray-ok-btn.png", 595, 407, 91, 35, new Color(100, 100, 100), e -> {
+                setVisible(false);
+                if (getParent() != null) getParent().remove(this);
+            });
+        }
     }
 
     private void openPopupMenu() {

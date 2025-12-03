@@ -703,184 +703,79 @@ public class Create extends panelUtilities {
 
     // --- POPUPS ---
 
-    class DiscardPopup extends JPanel {
+    class DiscardPopup extends panelUtilities.BasePopup {
         public DiscardPopup() {
-            setLayout(null);
-            setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = getJPanel();
-            add(modal);
-            JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
-            lbl.setFont(loadCustomFont("extrabold",20f));
-            lbl.setForeground(Color.BLACK);
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(20, 30, 380, 80);
-            modal.add(lbl);
-            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(230, 130, 130), 0);
+            // 1. Setup Background (Exact coordinates)
+            // x=489, y=286, w=312, h=188
+            super(IMG_PATH_PREFIX + "recent-panel.png", 489, 286, 312, 188);
+
+            // 2. Add Text
+            // Placed near the top of the panel
+            addText("Discard changes?", 20f, 315);
+
+            // 3. Add Buttons (Side by Side)
+            int btnY = 390; // Positioned near bottom
+            int btnW = 110;
+            int btnH = 40;
+
+            // YES Button (Red) -> Performs Discard
+            panelUtilities.ShadowButton btnYes = new panelUtilities.ShadowButton("YES", 520, btnY, btnW, btnH, new Color(230, 130, 130), 0);
             btnYes.setSmooth(true);
             btnYes.addActionListener(e -> performDiscard());
-            modal.add(btnYes);
-            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(144, 238, 144), 0);
+            add(btnYes);
+
+            // NO Button (Green) -> Closes Popup
+            panelUtilities.ShadowButton btnNo = new panelUtilities.ShadowButton("NO", 660, btnY, btnW, btnH, new Color(144, 238, 144), 0);
             btnNo.setSmooth(true);
             btnNo.addActionListener(e -> hideDiscardScreen());
-            modal.add(btnNo);
-        }
-        private JPanel getJPanel() {
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 40;
-                    g2.setColor(new Color(0,0,0, 30));
-                    g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
-                }
-            };
-            modal.setBounds(430, 250, 420, 250);
-            modal.setOpaque(false);
-            return modal;
-        }
-        @Override protected void paintComponent(Graphics g) {
-            g.setColor(new Color(0, 0, 0, 50));
-            g.fillRect(0, 0, getWidth(), getHeight());
+            add(btnNo);
         }
     }
 
-    class DeletePopup extends JPanel {
+    class DeletePopup extends panelUtilities.BasePopup {
         public DeletePopup() {
-            setLayout(null);
-            setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = getJPanel();
-            add(modal);
+            // 1. Setup Background (Exact coordinates)
+            super(IMG_PATH_PREFIX + "recent-panel.png", 489, 286, 312, 188);
 
-            JLabel lbl = new JLabel("<html><center>Are you sure you want to<br>delete this card?</center></html>");
-            lbl.setFont(loadCustomFont("extrabold", 20f));
-            lbl.setForeground(Color.BLACK);
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(20, 30, 380, 80);
-            modal.add(lbl);
+            // 2. Add Text
+            addText("Delete this card?", 20f, 315);
 
-            // YES Button
-            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(144, 238, 144), 0);
+            // 3. Add Buttons (Side by Side)
+            int btnY = 390;
+            int btnW = 110;
+            int btnH = 40;
+
+
+            panelUtilities.ShadowButton btnYes = new panelUtilities.ShadowButton("YES", 520, btnY, btnW, btnH, new Color(144, 238, 144), 0);
             btnYes.setSmooth(true);
             btnYes.addActionListener(e -> performDeleteCard());
-            modal.add(btnYes);
+            add(btnYes);
 
-            // NO Button
-            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(230, 130, 130), 0);
+            // NO Button (Red) -> Closes Popup
+            panelUtilities.ShadowButton btnNo = new panelUtilities.ShadowButton("NO", 660, btnY, btnW, btnH, new Color(230, 130, 130), 0);
             btnNo.setSmooth(true);
             btnNo.addActionListener(e -> hideDeleteScreen());
-            modal.add(btnNo);
-        }
-
-        private JPanel getJPanel() {
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 40;
-
-                    g2.setColor(new Color(0, 0, 0, 30));
-                    g2.fillRoundRect(5, 8, w - 10, h - 15, arc, arc);
-
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w - 10, h - 15, arc, arc);
-
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w - 10, h - 15, arc, arc);
-                }
-            };
-            modal.setBounds(430, 250, 420, 250);
-            modal.setOpaque(false);
-            return modal;
-        }
-
-        @Override protected void paintComponent(Graphics g) {
-            g.setColor(new Color(0, 0, 0, 50));
-            g.fillRect(0, 0, getWidth(), getHeight());
+            add(btnNo);
         }
     }
+    class SuccessPopup extends panelUtilities.BasePopup {
 
-    class SuccessPopup extends JPanel {
         public SuccessPopup() {
-            setLayout(null);
-            setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 30;
-                    g2.setColor(new Color(0,0,0,30));
-                    g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
-                }
-            };
-            modal.setBounds(480, 275, 320, 220);
-            modal.setOpaque(false);
-            add(modal);
+            // 1. Pass the specific X (489) and Y (286) here
+            super(IMG_PATH_PREFIX + "recent-panel.png", 489, 286, 312, 188);
 
-            JLabel icon = new JLabel();
-            URL iconUrl = getClass().getResource(IMG_PATH_PREFIX + "library_add_check.png");
-            if (iconUrl != null) {
-                ImageIcon imgIcon = new ImageIcon(iconUrl);
-                Image img = imgIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-                icon.setIcon(new ImageIcon(img));
-            } else {
-                icon.setText("✓");
-                icon.setFont(new Font("SansSerif", Font.BOLD, 40));
-                icon.setForeground(new Color(76, 175, 80));
-                icon.setHorizontalAlignment(SwingConstants.CENTER);
-            }
-            icon.setBounds(140, 30, 40, 40);
-            modal.add(icon);
+            // 2. Add Buttons (Using your coordinates)
+            // Close Button
+            addImgButton(IMG_PATH_PREFIX + "close-btn.png", 762, 300, 23, 23, false, e -> setVisible(false));
 
-            JButton btnX = new JButton() {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(new Color(235, 120, 120));
-                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                    g2.setColor(Color.WHITE);
-                    g2.setStroke(new BasicStroke(2));
-                    int p = 8;
-                    g2.drawLine(p, p, getWidth()-p, getHeight()-p);
-                    g2.drawLine(getWidth()-p, p, p, getHeight()-p);
-                }
-            };
-            btnX.setBounds(275, 15, 25, 25);
-            btnX.setContentAreaFilled(false);
-            btnX.setBorderPainted(false);
-            btnX.setFocusPainted(false);
-            btnX.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnX.addActionListener(e -> hideSuccessScreen());
-            modal.add(btnX);
+            // OK Button (Group 11) - Shadow enabled
+            addImgButton(IMG_PATH_PREFIX + "Group 11.png", 595, 407, 91, 35, true, e -> hideSuccessScreen());
 
-            JLabel lbl = new JLabel("Deck added successfully.");
-            lbl.setFont(loadCustomFont("extrabold",19f));
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(10, 80, 300, 40);
-            modal.add(lbl);
+            // 3. Icon
+            addImage(IMG_PATH_PREFIX + "library_add_check.png", 625, 315, 40, 40);
 
-            ShadowButton btnOk = new ShadowButton("OK", 100, 140, 120, 40, new Color(130, 225, 130), 0);
-            btnOk.setSmooth(true);
-            btnOk.addActionListener(e -> hideSuccessScreen());
-            modal.add(btnOk);
-        }
-        @Override protected void paintComponent(Graphics g) {
-            g.setColor(new Color(0, 0, 0, 50));
-            g.fillRect(0, 0, getWidth(), getHeight());
+            // 4. Text
+            addText("Deck added successfully.", 15f, 350);
         }
     }
-
 }

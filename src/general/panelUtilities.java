@@ -222,4 +222,127 @@ public class panelUtilities {
             btn.setFocusPainted(false);
         }
     }
+
+    public static class BasePopup extends JPanel {
+        protected Image bgImage;
+        protected int pX, pY, pW, pH;
+
+        public BasePopup(String imagePath, int x, int y, int width, int height) {
+            setLayout(null);
+            setBounds(0, 0, 1280, 720);
+            setOpaque(false);
+            addMouseListener(new MouseAdapter() {});
+
+            this.pX = x;
+            this.pY = y;
+            this.pW = width;
+            this.pH = height;
+
+            panelUtilities utils = new panelUtilities();
+            try {
+                this.bgImage = utils.loadImage(imagePath).getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            } catch (Exception e) { System.err.println("Error loading bg: " + imagePath); }
+        }
+
+        public void addText(String text, float size, int y) {
+            JLabel lbl = new JLabel("<html><center>" + text + "</center></html>");
+            lbl.setFont(loadCustomFont("extrabold", size));
+            lbl.setForeground(new Color(50, 50, 50));
+            lbl.setHorizontalAlignment(SwingConstants.CENTER);
+            lbl.setBounds(pX, y, pW, 60);
+            add(lbl);
+        }
+
+        public void addImage(String path, int x, int y, int w, int h) {
+            JLabel lbl = new JLabel();
+            panelUtilities utils = new panelUtilities();
+            try {
+                Image img = utils.loadImage(path).getImage().getScaledInstance(w, h, Image.SCALE_SMOOTH);
+                lbl.setIcon(new ImageIcon(img));
+            } catch(Exception e) { System.err.println("Missing img: " + path); }
+            lbl.setBounds(x, y, w, h);
+            add(lbl);
+        }
+
+        public void addImgButton(String path, int x, int y, int w, int h, boolean useShadow, java.awt.event.ActionListener action) {
+            Color c = useShadow ? new Color(60, 140, 60) : null;
+            addImgButton(path, x, y, w, h, c, action);
+        }
+
+        public void addImgButton(String path, int x, int y, int w, int h, Color shadowColor, java.awt.event.ActionListener action) {
+            panelUtilities utils = new panelUtilities();
+            ImageIcon icon = null;
+            try {
+
+                int imgH = (shadowColor != null) ? h - 5 : h;
+                Image img = utils.loadImage(path).getImage().getScaledInstance(w, imgH, Image.SCALE_SMOOTH);
+                icon = new ImageIcon(img);
+            } catch (Exception e) { System.err.println("Missing btn: " + path); }
+
+            ImageButton btn = new ImageButton(icon, shadowColor);
+            btn.setBounds(x, y, w, h);
+            btn.addActionListener(action);
+            add(btn);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(new Color(0, 0, 0, 100));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+
+            g2.setColor(Color.WHITE);
+            g2.fillRoundRect(pX, pY, pW, pH, 35, 35);
+
+            if (bgImage != null) g2.drawImage(bgImage, pX, pY, this);
+            super.paintComponent(g);
+        }
+    }
+
+    // --- 2. UPDATED IMAGE BUTTON (With Shadow Position Controls) ---
+    public static class ImageButton extends JButton {
+        private ImageIcon icon;
+        private boolean isPressed = false;
+        private Color shadowColor;
+
+        public ImageButton(ImageIcon icon, Color shadowColor) {
+            this.icon = icon;
+            this.shadowColor = shadowColor;
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override public void mousePressed(MouseEvent e) { isPressed = true; repaint(); }
+                @Override public void mouseReleased(MouseEvent e) { isPressed = false; repaint(); }
+                @Override public void mouseExited(MouseEvent e) { isPressed = false; repaint(); }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int maxShadowHeight = 4;
+            int arc = 35;
+            int yOffset = isPressed ? maxShadowHeight : 0;
+
+            int shadowX = -1;
+
+            int shadowWidth = getWidth();
+
+            if (shadowColor != null && !isPressed) {
+                g2.setColor(shadowColor);
+                g2.fillRoundRect(shadowX, maxShadowHeight, shadowWidth, getHeight() - maxShadowHeight, arc, arc);
+            }
+
+            if (icon != null) {
+                icon.paintIcon(this, g2, 0, yOffset);
+            }
+        }
+    }
 }
