@@ -36,7 +36,8 @@ public class Create extends panelUtilities {
     private final DeletePopup deleteView; // Added Delete Popup
     private JPanel createPanel;
     private JPopupMenu editColor;
-    private String selectedColor = "";
+    private String selectedColor = "yellow";
+    private JMenuItem yellowDeck, pinkDeck, greenDeck, blueDeck, brightYellowDeck;
 
     private Deck toBeEdited = null;
     private String oldLink = "";
@@ -218,6 +219,7 @@ public class Create extends panelUtilities {
         // 1. Reset all input fields to default placeholder/empty state
         //    (This calls the clearInputs method in MainDashboard)
         mainDash.clearInputs();
+        selectedColor = "yellow";
 
         // 2. Clear the static list of flashcards and add a single new empty card.
         cards.clear();
@@ -263,7 +265,7 @@ public class Create extends panelUtilities {
         hideDeleteScreen();
     }
 
-    public void loadToBeEdited(String link, Deck d, ArrayList<Deck> decks) {
+    public void loadToBeEdited(String link, Deck d, String color, ArrayList<Deck> decks) {
         cards = DeckFileManager.loadEditDeck(link,d);
 
         oldLink = d.getLink();
@@ -272,6 +274,8 @@ public class Create extends panelUtilities {
 
         titleField.setText(d.getTitle());
         subjectField.setText(d.getSubject());
+
+        selectedColor = color;
 
         mainDash.updateUIFromData();
 
@@ -425,73 +429,69 @@ public class Create extends panelUtilities {
             ShadowButton btnEditColor = new ShadowButton("",1108,60,41,41,new Color(121,173,220),
                     loadImage("/resources/createDeck/color-opt.png"),"regular",12);
             add(btnEditColor);
+            btnEditColor.setFocusable(false);
 
             btnEditColor.addActionListener(new ActionListener() {
                 @Override
-                public void actionPerformed(ActionEvent e) {
+                public void actionPerformed(ActionEvent v) {
                     editColor = new JPopupMenu();
                     editColor.setPopupSize(35,defaultColor.getIconHeight()*6);
                     editColor.setOpaque(false);
                     editColor.setBackground(new Color(255,255,255,0));
                     editColor.setBorderPainted(false);
 
-                    JMenuItem yellowDeck = new JMenuItem(defaultChosen);
+                    yellowDeck = new JMenuItem(selectedColor.equals("yellow") ? defaultChosen : defaultColor);
                     styleMenuItem(yellowDeck);
                     editColor.add(yellowDeck);
 
-                    JMenuItem blueDeck = new JMenuItem(blueColor);
+                    blueDeck = new JMenuItem(selectedColor.equals("blue") ? blueChosen : blueColor);
                     styleMenuItem(blueDeck);
                     editColor.add(blueDeck);
 
-                    JMenuItem greenDeck = new JMenuItem(greenColor);
+                    greenDeck = new JMenuItem(selectedColor.equals("green") ? greenChosen : greenColor);
                     styleMenuItem(greenDeck);
                     editColor.add(greenDeck);
 
-                    JMenuItem brightYellowDeck = new JMenuItem(brightYellowColor);
+                    brightYellowDeck = new JMenuItem(selectedColor.equals("bright yellow") ? brightYellowChosen : brightYellowColor);
                     styleMenuItem(brightYellowDeck);
                     editColor.add(brightYellowDeck);
 
-                    JMenuItem pinkDeck = new JMenuItem(pinkColor);
+                    pinkDeck = new JMenuItem(selectedColor.equals("pink") ? pinkChosen : pinkColor);
                     styleMenuItem(pinkDeck);
                     editColor.add(pinkDeck);
 
                     // TODO: Add methods for each color option's action listener
 
-                    yellowDeck.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
+                    yellowDeck.addActionListener(e -> {
+                        if(!selectedColor.equals("yellow")) {
                             selectedColor = "yellow";
                         }
                     });
 
-                    blueDeck.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
+                    blueDeck.addActionListener(e -> {
+                        if(!selectedColor.equals("blue")) {
                             selectedColor = "blue";
                         }
                     });
 
-                    greenDeck.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
+
+                    greenDeck.addActionListener(e -> {
+                        if(!selectedColor.equals("green")) {
                             selectedColor = "green";
                         }
                     });
 
-                    brightYellowDeck.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            selectedColor = "brightyellow";
+                    brightYellowDeck.addActionListener(e -> {
+                        if(!selectedColor.equals("bright yellow")) {
+                            selectedColor = "bright yellow";
                         }
                     });
 
-                    pinkDeck.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
+                    pinkDeck.addActionListener(e -> {
+                        if(!selectedColor.equals("pink")) {
                             selectedColor = "pink";
                         }
                     });
-
 
                     editColor.show(btnEditColor,2, btnEditColor.getHeight()+8);
                 }
@@ -550,6 +550,9 @@ public class Create extends panelUtilities {
            item.setBackground(new Color(255,255,255,0));
            item.setBorder(null);
            item.setOpaque(false);
+           item.setFocusable(false);
+           item.setRolloverEnabled(false);
+           item.setRequestFocusEnabled(false);
 
            item.setUI(new javax.swing.plaf.basic.BasicMenuItemUI() {
                @Override
@@ -631,6 +634,7 @@ public class Create extends panelUtilities {
             subjectField.setText("");
             frontArea.setText("");
             backArea.setText("");
+            selectedColor = "yellow";
         }
 
         private ShadowButton createNavButton(String imgName, int x, int y, String alt) {

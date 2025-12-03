@@ -292,7 +292,7 @@ public class Home extends panelUtilities {
                         public void actionPerformed(ActionEvent e) {
                             System.out.println(d.getCards().size());
                             System.out.println(d.getLink());
-                            mainFrame.showEditPanel(d.getLink(), d, decks);
+                            mainFrame.showEditPanel(d.getLink(), d, d.getColor(), decks);
                         }
                     });
                     optionsMenu.show(deckOptions,deckOptions.getWidth()+10,0);
