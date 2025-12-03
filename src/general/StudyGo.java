@@ -34,6 +34,7 @@ public class StudyGo extends JFrame {
     }
 
     public void showHomePanel() {
+        homePanel.refreshDecks();
         setContentPane(homePanel.getPanel());
         revalidate();
         repaint();

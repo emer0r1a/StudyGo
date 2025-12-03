@@ -23,6 +23,8 @@ public class LoadDeck extends panelUtilities {
     int currentIndex = 0;
     boolean isShowingQuestion = true;
 
+    private int cardsAccessed = 0;
+
     // Made these package-private (no 'private' keyword) so SettingsOverlay can see them
     String filename;
     String deckTitle;
@@ -264,6 +266,7 @@ public class LoadDeck extends panelUtilities {
         if (deck == null) { return; }
 
         deckTitle = deck.getTitle();
+        cardsAccessed = deck.getCardsAccessed();
 
         ArrayList<Card> cards = DeckFileManager.loadCards(filename);
 
@@ -275,6 +278,12 @@ public class LoadDeck extends panelUtilities {
                 question.add(card.getQuestion());
                 answer.add(card.getAnswer());
             }
+        }
+
+        if (cardsAccessed > 0) {
+            currentIndex = cardsAccessed-1;
+        } else {
+            currentIndex = 0;
         }
     }
 
@@ -295,6 +304,13 @@ public class LoadDeck extends panelUtilities {
             btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility.png")).getImage(), 26, 26);
         }
 
+        int cardsAccessedNow = currentIndex + 1;
+        if (cardsAccessedNow > cardsAccessed && cardsAccessedNow <= question.size()) {
+            cardsAccessed = cardsAccessedNow;
+            DeckFileManager.updateProgress(filename, cardsAccessed);
+        }
+
+        DeckFileManager.updateProgress(filename, currentIndex + 1);
         currentCount.setText(String.valueOf(currentIndex + 1));
         //progressBar.setMaximum(question.size());
 
@@ -336,6 +352,10 @@ public class LoadDeck extends panelUtilities {
 
         question = q;
         answer = a;
+
+        currentIndex = 0;
+        cardsAccessed = 0;
+        DeckFileManager.updateProgress(filename, 0);
     }
 }
 

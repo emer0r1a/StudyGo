@@ -731,6 +731,22 @@ public class Home extends panelUtilities {
         }
     }
 
+    public void refreshDecks() {
+        recentDecks.clear();
+        resultDeck.clear();
+
+        File directory = new File("Decks");
+        String[] files = directory.list();
+
+        if(files != null && files.length > 0) {
+            loadPreexistingDecks(files);
+        } else {
+            addDecks(recentDecks);
+        }
+
+        deckContainer.revalidate();
+        deckContainer.repaint();
+    }
 }
 
 
