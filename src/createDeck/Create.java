@@ -189,7 +189,7 @@ public class Create extends panelUtilities {
         } else {
             filename = DeckFileManager.saveDeck(
                     titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
-                    subjectField.getText().trim(),
+                    subjectField.getText().trim(), selectedColor,
                     cards
             );
         }

@@ -61,7 +61,7 @@ public class DeckFileManager {
     }
 
 
-    public static String saveDeck(String title, String subject, ArrayList<FlashcardData> cards) {
+    public static String saveDeck(String title, String subject, String color, ArrayList<FlashcardData> cards) {
         if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
             title = "Untitled Deck"; // Fallback
         }
@@ -84,7 +84,7 @@ public class DeckFileManager {
             }
 
             // Title is written EXACTLY as given
-            String header = title + "\t" + totalCards + "\t0\t" +
+            String header = title + "\t" + totalCards + "\t0\t" + color + "\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
             writer.newLine();
@@ -130,13 +130,15 @@ public class DeckFileManager {
             String title = parts[0];
             int size = Integer.parseInt(parts[1]);
             int cardsAccessed = Integer.parseInt(parts[2]);
-            String subject = (parts.length > 3 && !parts[3].isEmpty()) ? parts[3] : "";
+            String color = parts[3];
+            String subject = (parts.length > 4 && !parts[4].isEmpty()) ? parts[4] : "";
 
             if (cardsAccessed > size) {
                 throw new IllegalArgumentException();
             }
 
-            Deck deck = new Deck(title, size, cardsAccessed, "yellow");
+            Deck deck = new Deck(title, size, cardsAccessed, color);
+            deck.setSubject(subject);
             deck.setLink(filename);
 
             if (!subject.isEmpty()) {
