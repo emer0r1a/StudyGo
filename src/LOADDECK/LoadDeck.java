@@ -310,7 +310,6 @@ public class LoadDeck extends panelUtilities {
             DeckFileManager.updateProgress(filename, cardsAccessed);
         }
 
-        DeckFileManager.updateProgress(filename, currentIndex + 1);
         currentCount.setText(String.valueOf(currentIndex + 1));
         //progressBar.setMaximum(question.size());
 
