@@ -38,7 +38,7 @@ public class LoadDeck extends panelUtilities {
     private RoundedProgressBar progressBar;
     private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
     private SettingsOverlay settingsOverlay;
-
+    private String color;
     public LoadDeck(StudyGo mainFrame, String filename) throws IOException, FontFormatException {
         this.mainFrame = mainFrame;
         this.filename = filename;
@@ -54,9 +54,6 @@ public class LoadDeck extends panelUtilities {
         updateUI();
     }
 
-    public int getCurrentIndex() {
-        return currentIndex;
-    }
 
     public JPanel getPanel() {
         return loadDeckPanel;
@@ -81,7 +78,26 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.add(settingsOverlay);
 
         // --- BACKGROUND PANEL ---
-        ImageIcon originalBg = loadImage("/LOADDECK/resources/bg.png");
+        color = color.toLowerCase();
+        ImageIcon originalBg;
+        switch (color){
+            case "blue":
+                originalBg = loadImage("/LOADDECK/resources/bluebg.png");
+                break;
+            case "green":
+                originalBg = loadImage("/LOADDECK/resources/greenbg.png");
+                break;
+            case "pink":
+                originalBg = loadImage("/LOADDECK/resources/pinkbg.png");
+                break;
+            case "yellow":
+                originalBg = loadImage("/LOADDECK/resources/yellowbg.png");
+                break;
+            default:
+                originalBg = loadImage("/LOADDECK/resources/bg.png");
+                break;
+        }
+
         int bgWidth = 1185;
         int bgHeight = 631;
         int x = (1280 - bgWidth) / 2;
@@ -264,7 +280,7 @@ public class LoadDeck extends panelUtilities {
         Deck deck = DeckFileManager.loadDeckHeader(filename);
 
         if (deck == null) { return; }
-
+        color = deck.getColor();
         deckTitle = deck.getTitle();
         cardsAccessed = deck.getCardsAccessed();
 
