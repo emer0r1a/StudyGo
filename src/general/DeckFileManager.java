@@ -15,7 +15,7 @@ public class DeckFileManager {
     }
 
     public static String saveExistingDeck(
-            String title, String subject, String color, ArrayList<FlashcardData> cards, String oldLink
+            String title, String subject, String color, ArrayList<FlashcardData> cards, String oldLink, int orderIndex
     ) {
 
         String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
@@ -28,7 +28,7 @@ public class DeckFileManager {
         File newFile = new File(decksFolder, newLink);
 
         if (!oldLink.equals(newLink) && oldFile.exists()) {
-            oldFile.renameTo(newFile);
+            oldFile.delete();
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(newFile))) {
@@ -39,7 +39,7 @@ public class DeckFileManager {
             }
 
             // Title stays EXACTLY as provided
-            String header = title + "\t" + totalCards + "\t0\t" + color + "\t" +
+            String header = title + "\t" + totalCards + "\t0\t" + color + "\t" + orderIndex + "\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
             writer.newLine();
@@ -48,7 +48,7 @@ public class DeckFileManager {
                 if (card.isEmpty()) continue;
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
-                writer.write(f + "\t" + b);
+                writer.write(f + "\t" + b + "\t0");
                 writer.newLine();
             }
 
@@ -65,6 +65,8 @@ public class DeckFileManager {
         if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
             title = "Untitled Deck"; // Fallback
         }
+
+        incrementAllOrderIndexes();
 
         // Sanitize filename ONLY (title stays the same)
         String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
@@ -84,7 +86,7 @@ public class DeckFileManager {
             }
 
             // Title is written EXACTLY as given
-            String header = title + "\t" + totalCards + "\t0\t" + color + "\t" +
+            String header = title + "\t" + totalCards + "\t0\t" + color + "\t1\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
             writer.newLine();
@@ -94,7 +96,7 @@ public class DeckFileManager {
 
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
-                writer.write(f + "\t" + b);
+                writer.write(f + "\t" + b + "\t0");
                 writer.newLine();
             }
 
@@ -123,7 +125,7 @@ public class DeckFileManager {
 
             String[] parts = headerLine.split("\t");
 
-            if (parts.length < 3) {
+            if (parts.length < 5) {
                 throw new IllegalArgumentException();
             }
 
@@ -131,13 +133,14 @@ public class DeckFileManager {
             int size = Integer.parseInt(parts[1]);
             int cardsAccessed = Integer.parseInt(parts[2]);
             String color = parts[3];
-            String subject = (parts.length > 4 && !parts[4].isEmpty()) ? parts[4] : "";
+            int orderIndex = Integer.parseInt(parts[4]);
+            String subject = (parts.length > 5 && !parts[5].isEmpty()) ? parts[5] : "";
 
             if (cardsAccessed > size) {
                 throw new IllegalArgumentException();
             }
 
-            Deck deck = new Deck(title, size, cardsAccessed, color);
+            Deck deck = new Deck(title, size, cardsAccessed, color, orderIndex);
             deck.setLink(filename);
 
             if (!subject.isEmpty()) {
@@ -169,13 +172,11 @@ public class DeckFileManager {
 
                 String[] parts = line.split("\t");
 
-                if (parts.length >= 2) {
+                if (parts.length >= 3) {
                     String front = parts[0].replace("<br>", "\n");
                     String back = parts[1].replace("<br>", "\n");
-                    cards.add(new Card(front, back));
-                } else if (parts.length == 1) {
-                    String front = parts[0].replace("<br>", "\n");
-                    cards.add(new Card(front, " "));
+                    int isAccessed = Integer.parseInt(parts[2]);
+                    cards.add(new Card(front, back, isAccessed));
                 }
             }
 
@@ -222,7 +223,7 @@ public class DeckFileManager {
             String[] parts = headerLine.split("\t");
 
             // at least title, size, cardsAccessed
-            if (parts.length < 3) {
+            if (parts.length < 5) {
                 return false;
             }
 
@@ -230,8 +231,9 @@ public class DeckFileManager {
             try {
                 int size = Integer.parseInt(parts[1]);
                 int cardsAccessed = Integer.parseInt(parts[2]);
+                int orderIndex = Integer.parseInt(parts[4]);
 
-                if (size < 0 || cardsAccessed < 0 || cardsAccessed > size) {
+                if (size < 0 || cardsAccessed < 0 || cardsAccessed > size || orderIndex < 0) {
                     return false;
                 }
             } catch (NumberFormatException e) {
@@ -287,9 +289,86 @@ public class DeckFileManager {
             if (headerLine == null) return false;
 
             String[] parts = headerLine.split("\t");
-            if (parts.length < 3) return false;
+            if (parts.length < 5) return false;
 
             parts[2] = String.valueOf(newCardsAccessed);
+            bw.write(String.join("\t", parts));
+            bw.newLine();
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                bw.write(line);
+                bw.newLine();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (file.delete() && tempFile.renameTo(file)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean updateCardAccess(String filename, int cardIndex, boolean accessed) {
+        File file = new File(decksFolder, filename);
+        File tempFile = new File(decksFolder, filename + ".tmp");
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file));
+             BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
+
+            String headerLine = br.readLine();
+            if (headerLine == null) return false;
+            bw.write(headerLine);
+            bw.newLine();
+
+            int currentIndex = 0;
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
+                String[] parts = line.split("\t");
+
+                if (currentIndex == cardIndex && parts.length >= 2) {
+                    String updatedLine = parts[0] + "\t" + parts[1] + "\t" + accessed;
+                    bw.write(updatedLine);
+                } else {
+                    bw.write(line);
+                }
+
+                bw.newLine();
+                currentIndex++;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (file.delete() && tempFile.renameTo(file)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static boolean updateOrderIndex(String filename, int newOrderIndex) {
+        File file = new File(decksFolder, filename);
+        File tempFile = new File(decksFolder, filename + ".tmp");
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file));
+             BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
+
+            String headerLine = br.readLine();
+            if (headerLine == null) return false;
+
+            String[] parts = headerLine.split("\t");
+            if (parts.length < 5) return false;
+
+            parts[4] = String.valueOf(newOrderIndex);
             bw.write(String.join("\t", parts));
             bw.newLine();
 
@@ -320,4 +399,53 @@ public class DeckFileManager {
 
         return cards;
     }
+
+    private static void incrementAllOrderIndexes() {
+        String[] filenames = listAllDecks();
+
+        for (String filename : filenames) {
+            Deck deck = loadDeckHeader(filename);
+            if (deck != null) {
+                updateOrderIndex(filename, deck.getOrderIndex() + 1);
+            }
+        }
+    }
+
+    // Add this method to general.DeckFileManager
+
+    public static void decrementOrderIndexes(int deletedOrderIndex) {
+        String[] filenames = listAllDecks();
+
+        for (String filename : filenames) {
+            Deck deck = loadDeckHeader(filename);
+
+            if (deck != null) {
+                int currentOrder = deck.getOrderIndex();
+
+                if (currentOrder > deletedOrderIndex) {
+                    updateOrderIndex(filename, currentOrder - 1);
+                }
+            }
+        }
+    }
+
+    public static void setDeckAsMostRecent(String filename) {
+        Deck deck = loadDeckHeader(filename);
+        if (deck == null) return;
+
+        int currentOrderIndex = deck.getOrderIndex();
+
+        String[] filenames = listAllDecks();
+        for (String fn : filenames) {
+            if (fn.equals(filename)) continue;
+
+            Deck d = loadDeckHeader(fn);
+            if (d != null && d.getOrderIndex() < currentOrderIndex) {
+                updateOrderIndex(fn, d.getOrderIndex() + 1);
+            }
+        }
+
+        updateOrderIndex(filename, 1);
+    }
 }
+

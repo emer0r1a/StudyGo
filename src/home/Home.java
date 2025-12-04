@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class Home extends panelUtilities {
     private JButton createDeck;
@@ -91,6 +92,8 @@ public class Home extends panelUtilities {
     }
 
     private void loadPreexistingDecks(String[] files) {
+        recentDecks.clear();
+
         for(String file : files) {
             Deck deck = DeckFileManager.loadDeckHeader(file);
 
@@ -101,6 +104,8 @@ public class Home extends panelUtilities {
                 recentDecks.add(deck);
             }
         }
+
+        recentDecks.sort(Comparator.comparingInt(Deck::getOrderIndex));
 
         addDecks(recentDecks);
     }
@@ -283,11 +288,14 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            int deletedIndex = d.getOrderIndex();
                             removeDeckMethod(d, decks);
                             String filename = d.getLink();
                             if (filename != null && !filename.isEmpty()) {
                                 DeckFileManager.deleteDeck(filename);
                             }
+                            DeckFileManager.decrementOrderIndexes(deletedIndex);
+                            refreshDecks();
                         }
                     });
 
@@ -477,6 +485,8 @@ public class Home extends panelUtilities {
                     String deckFilePath = currentlySelectedDeck.getLink();
 
                     if (deckFilePath != null && !deckFilePath.isEmpty()) {
+                        DeckFileManager.setDeckAsMostRecent(deckFilePath);
+                        refreshDecks();
                         try {
                             mainFrame.showLoadDeckPanel(deckFilePath);
                         } catch (IOException ex) {
@@ -674,6 +684,7 @@ public class Home extends panelUtilities {
     private void loadDeckFromFile(String path){
         try {
             String filename = new File(path).getName();
+            DeckFileManager.setDeckAsMostRecent(filename);
             Deck deck = DeckFileManager.loadDeckHeader(filename);
 
             if(deck != null) {

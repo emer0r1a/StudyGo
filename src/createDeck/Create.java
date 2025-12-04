@@ -146,20 +146,6 @@ public class Create extends panelUtilities {
         mainFrame.showHomePanel();
     }
 
-    public void loadEditDeck(String link) {
-        File file = new File(decksFolder, link);
-
-        BufferedReader br = null;
-
-        try {
-            br = new BufferedReader(new FileReader(file));
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     // Success/Save Logic
     public void showSuccessScreen() {
         mainDash.saveCurrentInputToMemory();
@@ -170,12 +156,14 @@ public class Create extends panelUtilities {
         String filename;
         successView.setVisible(false);
 
+        int orderIndex = (toBeEdited != null) ? toBeEdited.getOrderIndex() : 0;
         if (!oldLink.isEmpty()) {
             filename = DeckFileManager.saveExistingDeck(
                     titleField.getText().contains("REQUIRED") ? "Untitled Deck" : titleField.getText(),
                     subjectField.getText().trim(), selectedColor,
                     cards,
-                    oldLink
+                    oldLink,
+                    orderIndex
             );
 
             homePanel.removeDeckMethod(toBeEdited, decks);
@@ -196,6 +184,7 @@ public class Create extends panelUtilities {
         }
 
         if (filename != null) {
+            DeckFileManager.setDeckAsMostRecent(filename);
             // Load the deck header back from file
             Deck newDeck = DeckFileManager.loadDeckHeader(filename);
 
@@ -205,7 +194,7 @@ public class Create extends panelUtilities {
                 for (FlashcardData fd : cards) {
                     // Only add if at least one side has text
                     if (!fd.isEmpty()) {
-                        deckCards.add(new Card(fd.getFront(), fd.getBack()));
+                        deckCards.add(new Card(fd.getFront(), fd.getBack(),0));
                     }
                 }
                 newDeck.setCards(deckCards);

@@ -10,12 +10,14 @@ public class Deck {
     String subject = "";
     ArrayList<Card> cards;
     String link;
+    int orderIndex;
 
-    public Deck(String title, int size, int cardsAccessed, String color) {
+    public Deck(String title, int size, int cardsAccessed, String color, int orderIndex) {
         this.title = title;
         this.size = size;
         this.cardsAccessed = cardsAccessed;
         this.color = color;
+        this.orderIndex = orderIndex;
     }
 
     public void setSubject(String subject) {
@@ -51,4 +53,8 @@ public class Deck {
     public String getLink() { return link; }
 
     public void setLink(String link) { this.link = link; }
+
+    public int getOrderIndex() { return orderIndex; }
+
+    public void setOrderIndex(int orderIndex) { this.orderIndex = orderIndex; }
 }
