@@ -369,6 +369,82 @@ public class Create extends panelUtilities {
         private final Image panelBg;
         private final Color PANEL_COLOR = new Color(0xFF, 0xFD, 0xFA);
 
+        private InputMap inputMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        private ActionMap actionMap = this.getActionMap();
+
+        private void createFlashcard() {
+            saveCurrentInputToMemory();
+            cards.add(new FlashcardData("", ""));
+            currentIndex = cards.size() - 1;
+            updateUIFromData();
+            System.out.println("TEST");
+        }
+
+        private void createKeybind() {
+            this.setFocusable(true);
+
+            this.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    Component clicked = SwingUtilities.getDeepestComponentAt(MainDashboard.this, e.getX(), e.getY());
+                    if (clicked != frontArea && clicked != backArea) {
+                        MainDashboard.this.requestFocusInWindow(); // force focus away from text areas
+                    }
+                }
+            });
+
+            // CTRL + N
+            KeyStroke ctrlN = KeyStroke.getKeyStroke(KeyEvent.VK_N, InputEvent.CTRL_DOWN_MASK);
+            inputMap.put(ctrlN, "newAction");
+            actionMap.put("newAction", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    createFlashcard();
+                }
+            });
+
+            // CTRL + LEFT
+            KeyStroke ctrlLeft = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.CTRL_DOWN_MASK);
+            inputMap.put(ctrlLeft, "ctrlPrev");
+            actionMap.put("ctrlPrev", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    navigate(0);
+                }
+            });
+
+            // CTRL + RIGHT
+            KeyStroke ctrlRight = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK);
+            inputMap.put(ctrlRight, "ctrlNext");
+            actionMap.put("ctrlNext", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    navigate(cards.size() - 1);
+                }
+            });
+
+            // LEFT ARROW (NO CTRL)
+            KeyStroke left = KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0);
+            inputMap.put(left, "arrowPrev");
+            actionMap.put("arrowPrev", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    navigate(currentIndex - 1);
+                }
+            });
+
+            // RIGHT ARROW (NO CTRL)
+            KeyStroke right = KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0);
+            inputMap.put(right, "arrowNext");
+            actionMap.put("arrowNext", new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    navigate(currentIndex + 1);
+                }
+            });
+        }
+
+
         public MainDashboard() {
             setLayout(null);
             setOpaque(false);
@@ -400,11 +476,9 @@ public class Create extends panelUtilities {
             // Add Card Button
             JButton btnAdd = createImageButton("plus.png", 1100, 270);
             btnAdd.addActionListener(e -> {
-                saveCurrentInputToMemory(); // Save text before adding
-                cards.add(new FlashcardData("", ""));
-                currentIndex = cards.size() - 1; // Move to new card
-                updateUIFromData();
+                createFlashcard();
             });
+
             add(btnAdd);
 
             // Delete Card Button (UPDATED to use Popup)
@@ -530,6 +604,8 @@ public class Create extends panelUtilities {
                 }
             });
             add(btnSave);
+
+            createKeybind();
         }
 
         private void styleMenuItem(JMenuItem item) {
