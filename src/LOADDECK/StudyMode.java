@@ -9,6 +9,8 @@ import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.util.ArrayList;
 
+import static general.panelUtilities.loadCustomFont;
+
 public class StudyMode extends JFrame {
 
     // --- VARIABLES ---
@@ -29,12 +31,13 @@ public class StudyMode extends JFrame {
     JLabel totalCount; // 2. NEW: Promoted this to global so we can update it
     private RoundedProgressBar progressBar;
     private panelUtilities.ShadowButton btnMissed, btnFlip, btnGotIt, btnMenu;
-
-    public StudyMode(String title, ArrayList<String> q, ArrayList<String> a) {
+    private String color;
+    public StudyMode(String title, ArrayList<String> q, ArrayList<String> a, String color) {
         super("StudyGo - Study Mode");
         this.deckTitle = title;
         this.question = q;
         this.answer = a;
+        this.color = color;
 
         // --- WINDOW SETUP ---
         setSize(1280, 720);
@@ -45,7 +48,26 @@ public class StudyMode extends JFrame {
         setLayout(null);
 
         // --- BACKGROUND PANEL ---
-        ImageIcon originalBg = new ImageIcon(getClass().getResource("resources/bg.png"));
+
+        ImageIcon originalBg;
+        switch (color){
+            case "blue":
+                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bluebg.png"));
+                break;
+            case "green":
+                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/greenbg.png"));
+                break;
+            case "pink":
+                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/pinkbg.png"));
+                break;
+            case "bright yellow":
+                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/yellowbg.png"));
+                break;
+            default:
+                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bg.png"));
+                break;
+        }
+
         int bgWidth = 1185;
         int bgHeight = 631;
         int x = (1280 - bgWidth) / 2;
@@ -56,15 +78,20 @@ public class StudyMode extends JFrame {
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
         // --- HEADER ---
+        int titleWidth = 800;
+
+        int titleX = (bgWidth - titleWidth) / 2;
+
         JLabel titleLabel = new JLabel(deckTitle, SwingConstants.CENTER);
         titleLabel.setForeground(Color.BLACK);
-        titleLabel.setFont(getCustomFont(33.33f));
-        titleLabel.setBounds(526, 40, 400, 45);
+        titleLabel.setFont(loadCustomFont("semibold", 33.33f));
+
+        titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
         ImageIcon closeIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("resources/close.png"))
                         .getImage()
-                        .getScaledInstance(31,31,Image.SCALE_SMOOTH)
+                        .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         );
 
         panelUtilities.ShadowButton btnClose = new panelUtilities.ShadowButton("", 40, 35, 41, 41, Color.decode("#E68B8C"), closeIcon, "", 10f);
@@ -166,7 +193,7 @@ public class StudyMode extends JFrame {
         // 3. Got It
         ImageIcon happyIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("resources/happy.png")).getImage()
-                        .getScaledInstance(16,16,  Image.SCALE_SMOOTH)
+                        .getScaledInstance(18,18,  Image.SCALE_SMOOTH)
         );
         btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
         btnGotIt.setForeground(Color.WHITE);
