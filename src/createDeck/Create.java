@@ -684,6 +684,16 @@ public class Create extends panelUtilities {
             ta.setLineWrap(true);
             ta.setWrapStyleWord(true);
             ta.setBounds(30, 75, 510 -70, 368 -100);
+
+            ta.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if(e.getKeyCode() == KeyEvent.VK_TAB) {
+                        e.consume();
+                    }
+                }
+            });
+
             if(isFront) frontArea = ta; else backArea = ta;
             p.add(ta);
             return p;
