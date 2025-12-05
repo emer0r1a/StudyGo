@@ -288,14 +288,7 @@ public class Home extends panelUtilities {
                     deleteItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            int deletedIndex = d.getOrderIndex();
-                            removeDeckMethod(d, decks);
-                            String filename = d.getLink();
-                            if (filename != null && !filename.isEmpty()) {
-                                DeckFileManager.deleteDeck(filename);
-                            }
-                            DeckFileManager.decrementOrderIndexes(deletedIndex);
-                            refreshDecks();
+                            deletePanel(d, decks);
                         }
                     });
 
@@ -364,6 +357,71 @@ public class Home extends panelUtilities {
 
         deckContainer.revalidate();
         deckContainer.repaint();
+    }
+
+    private void discardDeck(Deck d, ArrayList<Deck> decks) {
+        int deletedIndex = d.getOrderIndex();
+        removeDeckMethod(d, decks);
+        String filename = d.getLink();
+        if (filename != null && !filename.isEmpty()) {
+            DeckFileManager.deleteDeck(filename);
+        }
+        DeckFileManager.decrementOrderIndexes(deletedIndex);
+        refreshDecks();
+    }
+
+    private void deletePanel(Deck d, ArrayList<Deck> decks) {
+        ImageIcon deleteBg = loadImage("/resources/home/discard-deck.png");
+
+        JPanel delPanel = new JPanel(null);
+        delPanel.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
+
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
+        delPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(delPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        ShadowButton delDialog = new ShadowButton("Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/delete-icon.png"),"bold",16);
+        delPanel.add(delDialog);
+
+        delDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                discardDeck(d, decks);
+                homePanel.remove(delPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        ShadowButton cancelDialog = new ShadowButton("Cancel",504,385,118,38,new Color(184,184,184),null,"bold",16);
+        delPanel.add(cancelDialog);
+
+        cancelDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(delPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        JLabel deleteDialog = new JLabel(deleteBg);
+        deleteDialog.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
+        delPanel.add(deleteDialog);
+        delPanel.setOpaque(false);
+
+        homePanel.add(delPanel);
+        homePanel.setComponentZOrder(delPanel,0);
+        homePanel.revalidate();
+        homePanel.repaint();
     }
 
     private void addSearchBar() {
