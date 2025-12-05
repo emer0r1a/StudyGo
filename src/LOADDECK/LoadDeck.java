@@ -54,6 +54,9 @@ public class LoadDeck extends panelUtilities {
         updateUI();
     }
 
+    public String getColor(){
+        return color;
+    }
 
     public JPanel getPanel() {
         return loadDeckPanel;
@@ -65,8 +68,6 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.setLayout(null);
         loadDeckPanel.setBounds(0, 0, 1280, 720);
 
-        // --- FIX 2: SETTINGS OVERLAY ---
-        // Initialize it first
         settingsOverlay = new SettingsOverlay(this, e -> {
             settingsOverlay.setVisible(false);
         }, loadCustomFont("semibold",20f));
@@ -107,11 +108,13 @@ public class LoadDeck extends panelUtilities {
         backgroundPanel.setLayout(null);
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
-        // --- HEADER (Title & Close/Settings) ---
+        int titleWidth = 800;
+        int titleX = (bgWidth - titleWidth) / 2;
         JLabel titleLabel = new JLabel(deckTitle, SwingConstants.CENTER);
         titleLabel.setForeground(Color.BLACK);
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
-        titleLabel.setBounds(390, 40, 400, 45);
+        titleLabel.setBounds(titleX, 40, titleWidth, 45);
+
 
         ImageIcon settingsIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("/LOADDECK/resources/settings.png"))
@@ -347,7 +350,7 @@ public class LoadDeck extends panelUtilities {
         btnPrevious.setBgColor(isFirst ? disabledColor : enabledColor);
         btnPreviousIcon.setBgColor(isFirst ? disabledColor : enabledColor);
 
-        // --- NEXT BUTTON ---
+        // --- NEXT BUTTON --
         btnNext.setEnabled(!isLast);
         btnNextIcon.setEnabled(!isLast);
         // FIX: Use setBgColor for ShadowButton
@@ -530,7 +533,7 @@ class SettingsOverlay extends JPanel {
         btnStudyMode.addActionListener(e -> {
             try {
                 // FIX: Updated to include 'filename' so back button works in StudyMode
-                new StudyMode(parent.deckTitle, parent.question, parent.answer);
+                new StudyMode(parent.deckTitle, parent.question, parent.answer, parent.getColor());
 
             } catch (Exception ex) {
                 ex.printStackTrace();
