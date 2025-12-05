@@ -36,7 +36,7 @@ public class LoadDeck extends panelUtilities {
     private JTextPane textInside;
     JLabel currentCount;
     private RoundedProgressBar progressBar;
-    private RoundedButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
+    private ShadowButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
     private SettingsOverlay settingsOverlay;
     private String color;
     public LoadDeck(StudyGo mainFrame, String filename) throws IOException, FontFormatException {
@@ -90,7 +90,7 @@ public class LoadDeck extends panelUtilities {
             case "pink":
                 originalBg = loadImage("/LOADDECK/resources/pinkbg.png");
                 break;
-            case "yellow":
+            case "bright yellow":
                 originalBg = loadImage("/LOADDECK/resources/yellowbg.png");
                 break;
             default:
@@ -113,11 +113,13 @@ public class LoadDeck extends panelUtilities {
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
         titleLabel.setBounds(390, 40, 400, 45);
 
-        ImageIcon settingsIcon = loadImage("/LOADDECK/resources/settings.png");
-        RoundedButton btnSettings = new RoundedButton("", 10);
-        btnSettings.setBackground(Color.decode("#79ADDC"));
-        btnSettings.setHdIcon(settingsIcon.getImage(), 31, 31);
-        btnSettings.setBounds(1105, 35, 41, 41);
+        ImageIcon settingsIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("/LOADDECK/resources/settings.png"))
+                        .getImage()
+                        .getScaledInstance(24,24,Image.SCALE_SMOOTH)
+        ) ;
+        ShadowButton btnSettings = new ShadowButton("", 1105, 35, 41, 41, Color.decode("#79ADDC"), settingsIcon, "", 10f);
+
 
         // Settings Button Logic: Show overlay and bring to front
         btnSettings.addActionListener(e -> {
@@ -125,12 +127,12 @@ public class LoadDeck extends panelUtilities {
             loadDeckPanel.setComponentZOrder(settingsOverlay, 0); // Bring to front
             loadDeckPanel.repaint();
         });
-
-        ImageIcon closeIcon = loadImage("/LOADDECK/resources/close.png");
-        RoundedButton btnClose = new RoundedButton("", 10);
-        btnClose.setBackground(Color.decode("#E68B8C"));
-        btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
-        btnClose.setBounds(40, 35, 41, 41);
+        ImageIcon closeIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("/LOADDECK/resources/close.png"))
+                        .getImage()
+                    .getScaledInstance(24,24,Image.SCALE_SMOOTH)
+        );
+        ShadowButton btnClose = new ShadowButton("", 40, 35, 41, 41,Color.decode("#E68B8C"), closeIcon, "", 10f );
         btnClose.addActionListener(e -> mainFrame.showHomePanel());
 
         // --- PROGRESS & COUNTER ---
@@ -175,6 +177,9 @@ public class LoadDeck extends panelUtilities {
         textInside.setEditable(false);
         textInside.setOpaque(false);
 
+        textInside.setFocusable(false);
+        textInside.setHighlighter(null);
+
         StyledDocument doc = textInside.getStyledDocument();
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
@@ -190,7 +195,7 @@ public class LoadDeck extends panelUtilities {
 
         // --- NAVIGATION BUTTONS ---
         ActionListener navActionListener = e -> {
-            RoundedButton source = (RoundedButton) e.getSource();
+            ShadowButton source = (ShadowButton) e.getSource();
             String command = source.getText();
 
             if (command.equals("Previous")) {
@@ -205,42 +210,6 @@ public class LoadDeck extends panelUtilities {
             updateUI();
         };
 
-        // 1. Previous Icon
-        btnPreviousIcon = new RoundedButton("", 15);
-        btnPreviousIcon.setBackground(Color.decode("#91E586"));
-        btnPreviousIcon.setHdIcon(loadImage("/LOADDECK/resources/double_arrow_left.png").getImage(), 15, 12);
-        btnPreviousIcon.addActionListener(navActionListener);
-
-        // 2. Previous Text
-        btnPrevious = new RoundedButton("Previous", 15);
-        btnPrevious.setBackground(Color.decode("#91E586"));
-        btnPrevious.setFont(loadCustomFont("semibold", 22f));
-        btnPrevious.setHdIcon(loadImage("/LOADDECK/resources/prev-icon.png").getImage(), 16, 16);
-        btnPrevious.setIconOnLeft(true);
-        btnPrevious.addActionListener(navActionListener);
-
-        // 3. Visibility (Flip)
-        btnVisibility = new RoundedButton("", 15);
-        btnVisibility.setBackground(Color.decode("#F4AFAB"));
-        btnVisibility.addActionListener(e -> {
-            isShowingQuestion = !isShowingQuestion;
-            updateUI();
-        });
-
-        // 4. Next Text
-        btnNext = new RoundedButton("Next", 15);
-        btnNext.setBackground(Color.decode("#91E586"));
-        btnNext.setFont(loadCustomFont("semibold", 22f));
-        btnNext.setHdIcon(loadImage("/LOADDECK/resources/next-icon.png").getImage(), 16, 16);
-        btnNext.addActionListener(navActionListener);
-
-        // 5. Next Icon
-        btnNextIcon = new RoundedButton("", 15);
-        btnNextIcon.setBackground(Color.decode("#91E586"));
-        btnNextIcon.setHdIcon(loadImage("/LOADDECK/resources/double_arrow_right.png").getImage(), 22, 22);
-        btnNextIcon.addActionListener(navActionListener);
-
-        // Button Positioning
         int axisY = 560;
         int gap = 10;
         int bigW = 150;
@@ -249,11 +218,38 @@ public class LoadDeck extends panelUtilities {
         int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
         int startX = (1185 - totalGroupWidth) / 2;
 
-        btnPreviousIcon.setBounds(startX, axisY, smallW, height);
-        btnPrevious.setBounds(startX + smallW + gap, axisY, bigW, height);
-        btnVisibility.setBounds(startX + smallW + gap + bigW + gap, axisY, smallW, height);
-        btnNext.setBounds(startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height);
-        btnNextIcon.setBounds(startX + smallW + gap + bigW + gap + smallW + gap + bigW + gap, axisY, smallW, height);
+
+
+        // 1. Previous Icon
+        ImageIcon prevIcon = loadImage("/LOADDECK/resources/double_arrow_left.png");
+        btnPreviousIcon = new ShadowButton("", startX, axisY, smallW, height, Color.decode("#91E586"), prevIcon, "", 22f);
+        btnPreviousIcon.addActionListener(navActionListener);
+
+        // 2. Previous Text
+        ImageIcon previousIcon = loadImage("/LOADDECK/resources/prev-icon.png");
+        btnPrevious = new ShadowButton("Previous", startX + smallW + gap, axisY, bigW, height, Color.decode("#91E586"),previousIcon, "semibold", 22f);
+        btnPrevious.setIconOnLeft(true);
+        btnPrevious.addActionListener(navActionListener);
+
+        // 3. Visibility (Flip)
+        btnVisibility = new ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"),0);
+        btnVisibility.addActionListener(e -> {
+            isShowingQuestion = !isShowingQuestion;
+            updateUI();
+        });
+
+        // 4. Next Text
+        ImageIcon nxtIcon =loadImage("/LOADDECK/resources/next-icon.png");
+        btnNext = new ShadowButton("Next", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height,Color.decode("#91E586"), nxtIcon, "semibold", 22f );
+        btnNext.addActionListener(navActionListener);
+
+        // 5. Next Icon
+        ImageIcon nextIcon = loadImage("/LOADDECK/resources/double_arrow_right.png");
+        btnNextIcon = new ShadowButton("", startX + smallW + gap + bigW + gap + smallW + gap + bigW + gap, axisY, smallW, height, Color.decode("#91E586"), nextIcon, "", 22f);
+        btnNextIcon.addActionListener(navActionListener);
+
+        // Button Positioning
+
 
         // --- ASSEMBLING THE UI ---
         backgroundPanel.add(stack);
@@ -303,9 +299,10 @@ public class LoadDeck extends panelUtilities {
         }
     }
 
-    void updateUI() {
+    public void updateUI() {
         if (question.isEmpty()) return;
 
+        // 1. Update Text
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -314,12 +311,18 @@ public class LoadDeck extends panelUtilities {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
+        ImageIcon iconImage;
+        // 2. Update Visibility Icon
         if (isShowingQuestion) {
-            btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility_off.png")).getImage(), 26, 26);
+            iconImage = loadImage("/LOADDECK/resources/visibility_off.png");
+            btnVisibility.setIconImage(iconImage);
         } else {
-            btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility.png")).getImage(), 26, 26);
+            iconImage = loadImage("/LOADDECK/resources/visibility.png");
+            btnVisibility.setIconImage(iconImage);
+            //btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("/LOADDECK/resources/visibility.png")).getImage(), 26, 26);
         }
 
+        // 3. Update Progress
         int cardsAccessedNow = currentIndex + 1;
         if (cardsAccessedNow > cardsAccessed && cardsAccessedNow <= question.size()) {
             cardsAccessed = cardsAccessedNow;
@@ -327,23 +330,29 @@ public class LoadDeck extends panelUtilities {
         }
 
         currentCount.setText(String.valueOf(currentIndex + 1));
-        //progressBar.setMaximum(question.size());
-
         int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
         progressBar.setValue(percentage);
 
+        // 4. Update Buttons (Enabled State & Color)
         boolean isFirst = (currentIndex == 0);
         boolean isLast = (currentIndex == question.size() - 1);
 
+        Color disabledColor = Color.decode("#E0E0E0");
+        Color enabledColor = Color.decode("#91E586");
+
+        // --- PREVIOUS BUTTON ---
         btnPrevious.setEnabled(!isFirst);
         btnPreviousIcon.setEnabled(!isFirst);
-        btnPrevious.setBackground(isFirst ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
-        btnPreviousIcon.setBackground(isFirst ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
+        // FIX: Use setBgColor for ShadowButton
+        btnPrevious.setBgColor(isFirst ? disabledColor : enabledColor);
+        btnPreviousIcon.setBgColor(isFirst ? disabledColor : enabledColor);
 
+        // --- NEXT BUTTON ---
         btnNext.setEnabled(!isLast);
         btnNextIcon.setEnabled(!isLast);
-        btnNext.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
-        btnNextIcon.setBackground(isLast ? Color.decode("#E0E0E0") : Color.decode("#91E586"));
+        // FIX: Use setBgColor for ShadowButton
+        btnNext.setBgColor(isLast ? disabledColor : enabledColor);
+        btnNextIcon.setBgColor(isLast ? disabledColor : enabledColor);
 
         loadDeckPanel.revalidate();
         loadDeckPanel.repaint();
@@ -441,99 +450,6 @@ class StyledCardPanel extends JPanel {
     }
 }
 
-class RoundedButton extends JButton {
-    private int radius;
-    private Image iconImage;
-    private int iconW, iconH;
-    private int gap = 10;
-    private boolean iconOnLeft = false;
-    private int shadowHeight = 5;
-
-    public RoundedButton(String text, int radius) {
-        super(text);
-        this.radius = radius;
-        setContentAreaFilled(false);
-        setFocusPainted(false);
-        setBorderPainted(false);
-        setOpaque(false);
-        setForeground(Color.WHITE);
-    }
-
-    public void setHdIcon(Image img, int width, int height) {
-        this.iconImage = img;
-        this.iconW = width;
-        this.iconH = height;
-        repaint();
-    }
-
-    public void setIconOnLeft(boolean onLeft) {
-        this.iconOnLeft = onLeft;
-        repaint();
-    }
-
-    private Color getShadowColor(Color c) {
-        int r = Math.max(0, c.getRed() - 40);
-        int g = Math.max(0, c.getGreen() - 40);
-        int b = Math.max(0, c.getBlue() - 40);
-        return new Color(r, g, b);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-
-        ButtonModel model = getModel();
-        boolean isPressed = model.isPressed() && model.isRollover();
-
-        int w = getWidth();
-        int h = getHeight() - shadowHeight;
-
-        int shiftY = isPressed ? shadowHeight : 0;
-
-        g2.setColor(getShadowColor(getBackground()));
-        g2.fillRoundRect(0, shadowHeight, w, h, radius, radius);
-
-        g2.setColor(getBackground());
-        g2.fillRoundRect(0, shiftY, w, h, radius, radius);
-
-        String text = getText();
-        boolean hasText = (text != null && !text.isEmpty());
-        FontMetrics fm = g2.getFontMetrics(getFont());
-        int textW = hasText ? fm.stringWidth(text) : 0;
-
-        int totalContentWidth = textW;
-        if (iconImage != null) totalContentWidth += iconW;
-        if (hasText && iconImage != null) totalContentWidth += gap;
-
-        int startX = (w - totalContentWidth) / 2;
-        int faceCenterY = (h / 2) + shiftY;
-
-        int textY = faceCenterY + (fm.getAscent() / 2) - 2;
-        int iconY = faceCenterY - (iconH / 2);
-
-        g2.setColor(getForeground());
-        g2.setFont(getFont());
-
-        if (iconOnLeft) {
-            if (iconImage != null) {
-                g2.drawImage(iconImage, startX, iconY, iconW, iconH, this);
-                startX += iconW + gap;
-            }
-            if (hasText) g2.drawString(text, startX, textY);
-        } else {
-            if (hasText) {
-                g2.drawString(text, startX, textY);
-                startX += textW + gap;
-            }
-            if (iconImage != null) g2.drawImage(iconImage, startX, iconY, iconW, iconH, this);
-        }
-
-        g2.dispose();
-    }
-}
 
 class RoundedProgressBar extends JProgressBar {
     public RoundedProgressBar() {
@@ -562,7 +478,7 @@ class RoundedProgressBar extends JProgressBar {
 }
 
 class SettingsOverlay extends JPanel {
-    private RoundedButton btnShuffle, btnStudyMode, btnClose;
+    private panelUtilities.ShadowButton btnShuffle, btnStudyMode, btnClose;
     private LoadDeck parent;
 
     public SettingsOverlay(LoadDeck parent, ActionListener onClose, Font font) {
@@ -579,19 +495,21 @@ class SettingsOverlay extends JPanel {
         int boxX = (windowW - boxW) / 2;
         int boxY = (windowH - boxH) / 2;
 
-        btnClose = new RoundedButton("X", 10);
-        btnClose.setBackground(Color.decode("#F4AFAB"));
-        btnClose.setBounds(boxX + boxW - 40, boxY + 10, 30, 30);
-        btnClose.setFont(font.deriveFont(16f));
+        ImageIcon closeIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/close.png"))
+                        .getImage()
+                        .getScaledInstance(13, 13, Image.SCALE_SMOOTH)
+        );;
+        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), closeIcon, "semibold", 10f );
         btnClose.addActionListener(onClose);
 
-        ImageIcon shuffleIcon = new ImageIcon(getClass().getResource("resources/shuffle.png"));
-        btnShuffle = new RoundedButton("Shuffle", 15);
-        btnShuffle.setBackground(Color.decode("#91E586"));
-        btnShuffle.setHdIcon(shuffleIcon.getImage(), 12, 12);
+        ImageIcon shuffleIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/shuffle.png"))
+                        .getImage()
+                        .getScaledInstance(12, 12, Image.SCALE_SMOOTH)
+        );
+        btnShuffle = new panelUtilities.ShadowButton("Shuffle", boxX + 50, boxY + 60, 250, 45, Color.decode("#91E586"), shuffleIcon, "semibold", 20f);
         btnShuffle.setIconOnLeft(true);
-        btnShuffle.setBounds(boxX + 50, boxY + 60, 250, 45);
-        btnShuffle.setFont(font.deriveFont(20f));
 
         btnShuffle.addActionListener(e -> {
             parent.shuffleDeck();
@@ -601,13 +519,13 @@ class SettingsOverlay extends JPanel {
             setVisible(false);
         });
 
-        ImageIcon studyModeIcon = new ImageIcon(getClass().getResource("resources/menu.png"));
-        btnStudyMode = new RoundedButton("Study Mode", 15);
-        btnStudyMode.setBackground(Color.decode("#91E586"));
-        btnStudyMode.setHdIcon(studyModeIcon.getImage(), 18, 18);
+        ImageIcon studyModeIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/menu.png"))
+                        .getImage()
+                        .getScaledInstance(18, 18, Image.SCALE_SMOOTH)
+                );
+        btnStudyMode = new panelUtilities.ShadowButton("Study Mode", boxX + 50, boxY + 120, 250, 45, Color.decode("#91E586"), studyModeIcon, "semibold", 20f);
         btnStudyMode.setIconOnLeft(true);
-        btnStudyMode.setBounds(boxX + 50, boxY + 120, 250, 45);
-        btnStudyMode.setFont(font.deriveFont(20f));
 
         btnStudyMode.addActionListener(e -> {
             try {
