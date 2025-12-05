@@ -1,5 +1,7 @@
 package LOADDECK;
 
+import general.panelUtilities;
+
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -52,10 +54,7 @@ public class CustomDialog extends JDialog {
         setContentPane(panel);
 
         // --- "X" Close Button ---
-        RoundedButton btnCloseX = new RoundedButton("X", 10);
-        btnCloseX.setBackground(Color.decode("#F4AFAB"));
-        btnCloseX.setBounds(boxX + boxW - 40, boxY + 10, 30, 30);
-        btnCloseX.setFont(getCustomFont(16f));
+        panelUtilities.ShadowButton btnCloseX = new panelUtilities.ShadowButton("X", boxX + boxW - 40, boxY + 10, 30, 30, Color.decode("#F4AFAB"), null, "semibold", 16f);
         btnCloseX.addActionListener(e -> {
             result = JOptionPane.NO_OPTION;
             dispose();
@@ -93,19 +92,13 @@ public class CustomDialog extends JDialog {
 
         if (isConfirm) {
             // YES / NO Buttons
-            RoundedButton btnNo = new RoundedButton("No", 15);
-            btnNo.setBackground(Color.decode("#E68B8C"));
-            btnNo.setBounds(boxX + 50, btnY, 140, 40);
-            btnNo.setFont(getCustomFont(18f));
+            panelUtilities.ShadowButton btnNo = new panelUtilities.ShadowButton("No", boxX + 50, btnY, 140, 40,Color.decode("#E68B8C"), null, "semibold", 18f );
             btnNo.addActionListener(e -> {
                 result = JOptionPane.NO_OPTION;
                 dispose();
             });
 
-            RoundedButton btnYes = new RoundedButton("Yes", 15);
-            btnYes.setBackground(Color.decode("#91E586"));
-            btnYes.setBounds(boxX + 210, btnY, 140, 40);
-            btnYes.setFont(getCustomFont(18f));
+            panelUtilities.ShadowButton btnYes = new panelUtilities.ShadowButton("Yes", boxX + 210, btnY, 140, 40, Color.decode("#91E586"), null, "semibold", 18f );
             btnYes.addActionListener(e -> {
                 result = JOptionPane.YES_OPTION;
                 dispose();
@@ -115,10 +108,7 @@ public class CustomDialog extends JDialog {
             panel.add(btnYes);
         } else {
             // OK Button
-            RoundedButton btnOk = new RoundedButton("Great!", 15);
-            btnOk.setBackground(Color.decode("#79ADDC"));
-            btnOk.setBounds(boxX + 125, btnY, 150, 40);
-            btnOk.setFont(getCustomFont(18f));
+            panelUtilities.ShadowButton btnOk = new panelUtilities.ShadowButton("Great!", boxX + 125, btnY, 150, 40, Color.decode("#79ADDC"), null,  "semibold", 18f );
             btnOk.addActionListener(e -> dispose());
             panel.add(btnOk);
         }
