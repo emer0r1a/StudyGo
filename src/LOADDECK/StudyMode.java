@@ -1,5 +1,7 @@
 package LOADDECK;
 
+import general.panelUtilities;
+
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -26,7 +28,7 @@ public class StudyMode extends JFrame {
     JLabel currentCount;
     JLabel totalCount; // 2. NEW: Promoted this to global so we can update it
     private RoundedProgressBar progressBar;
-    private RoundedButton btnMissed, btnFlip, btnGotIt, btnMenu;
+    private panelUtilities.ShadowButton btnMissed, btnFlip, btnGotIt, btnMenu;
 
     public StudyMode(String title, ArrayList<String> q, ArrayList<String> a) {
         super("StudyGo - Study Mode");
@@ -54,16 +56,18 @@ public class StudyMode extends JFrame {
         backgroundPanel.setBounds(x, y, bgWidth, bgHeight);
 
         // --- HEADER ---
-        JLabel titleLabel = new JLabel(deckTitle);
+        JLabel titleLabel = new JLabel(deckTitle, SwingConstants.CENTER);
         titleLabel.setForeground(Color.BLACK);
         titleLabel.setFont(getCustomFont(33.33f));
         titleLabel.setBounds(526, 40, 400, 45);
 
-        ImageIcon closeIcon = new ImageIcon(getClass().getResource("resources/close.png"));
-        RoundedButton btnClose = new RoundedButton("", 10);
-        btnClose.setBackground(Color.decode("#E68B8C"));
-        btnClose.setHdIcon(closeIcon.getImage(), 31, 31);
-        btnClose.setBounds(40, 35, 41, 41);
+        ImageIcon closeIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/close.png"))
+                        .getImage()
+                        .getScaledInstance(31,31,Image.SCALE_SMOOTH)
+        );
+
+        panelUtilities.ShadowButton btnClose = new panelUtilities.ShadowButton("", 40, 35, 41, 41, Color.decode("#E68B8C"), closeIcon, "", 10f);
         btnClose.addActionListener(e -> dispose());
 
         // --- PROGRESS BAR ---
@@ -123,12 +127,22 @@ public class StudyMode extends JFrame {
 
         // --- BUTTONS ---
 
+        int axisY = 560;
+        int gap = 10;
+        int bigW = 150;
+        int smallW = 50;
+        int height = 45;
+        int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
+        int startX = (1185 - totalGroupWidth) / 2;
+
         // 1. Missed It
-        btnMissed = new RoundedButton("Missed It", 15);
-        btnMissed.setBackground(Color.decode("#FF3B30"));
+        ImageIcon sadIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/sad.png"))
+                        .getImage()
+                        .getScaledInstance(18,18,Image.SCALE_SMOOTH)
+        );
+        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
-        btnMissed.setFont(getCustomFont(20f));
-        btnMissed.setHdIcon(new ImageIcon(getClass().getResource("resources/sad.png")).getImage(), 18, 18);
         btnMissed.setIconOnLeft(true);
         // 3. NEW: Add logic to save missed cards
         btnMissed.addActionListener(e -> {
@@ -138,37 +152,29 @@ public class StudyMode extends JFrame {
         });
 
         // 2. Flip / Eye
-        btnFlip = new RoundedButton("", 15);
-        btnFlip.setBackground(Color.decode("#F4AFAB"));
-        btnFlip.setHdIcon(new ImageIcon(getClass().getResource("resources/visibility.png")).getImage(), 28, 28);
+        ImageIcon visibIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/visibility.png"))
+                        .getImage()
+                        .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
+        );
+        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
         btnFlip.addActionListener(e -> {
             isShowingQuestion = !isShowingQuestion;
             updateCard();
         });
 
         // 3. Got It
-        btnGotIt = new RoundedButton("Got It", 15);
-        btnGotIt.setBackground(Color.decode("#91E586"));
+        ImageIcon happyIcon = new ImageIcon(
+                new ImageIcon(getClass().getResource("resources/happy.png")).getImage()
+                        .getScaledInstance(16,16,  Image.SCALE_SMOOTH)
+        );
+        btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
         btnGotIt.setForeground(Color.WHITE);
-        btnGotIt.setFont(getCustomFont(20f));
-        btnGotIt.setHdIcon(new ImageIcon(getClass().getResource("resources/happy.png")).getImage(), 16, 16);
         btnGotIt.setIconOnLeft(false);
         // 4. Just move to next (don't add to list)
         btnGotIt.addActionListener(e -> nextCard());
 
         // Button Positioning
-        int axisY = 560;
-        int gap = 10;
-        int bigW = 150;
-        int smallW = 50;
-        int height = 45;
-        int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
-        int startX = (1185 - totalGroupWidth) / 2;
-
-        btnMissed.setBounds(startX + smallW + gap, axisY, bigW, height);
-        btnFlip.setBounds(startX + smallW + gap + bigW + gap, axisY, smallW, height);
-        btnGotIt.setBounds(startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height);
-
 
         // --- ASSEMBLING ---
         backgroundPanel.add(stack);
@@ -263,3 +269,4 @@ public class StudyMode extends JFrame {
         }
     }
 }
+
