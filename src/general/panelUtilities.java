@@ -7,6 +7,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Objects;
 
 public class panelUtilities {
@@ -52,22 +53,29 @@ public class panelUtilities {
             return new Font("SansSerif", Font.PLAIN, (int) size);
         }
     }
-
     public static class ShadowButton extends JButton {
 
         private Color bgColor;
         private Color shadowColor;
         private boolean isPressed = false;
 
+        // Integrated functionality
+        private boolean iconOnLeft = false;
         private int iconType = 0;
+
+        public void setIconImage(ImageIcon iconImage) {
+            this.iconImage = iconImage;
+        }
+
         private ImageIcon iconImage = null;
+
+        // --- CONSTRUCTORS ---
 
         public ShadowButton(String text, int x, int y, int w, int h, Color bg, int iconType) {
             super(text);
             this.bgColor = bg;
             this.shadowColor = bg.darker();
             this.iconType = iconType;
-
             initButton(x, y, w, h, "bold", 16f);
         }
 
@@ -76,39 +84,73 @@ public class panelUtilities {
             this.bgColor = bg;
             this.shadowColor = bg.darker();
             this.iconImage = icon;
-
             initButton(x, y, w, h, fontWeight, fontSize);
         }
 
         private void initButton(int x, int y, int w, int h, String fontWeight, float fontSize) {
             setBounds(x, y, w, h);
+
+            // Load Font with Fallback
             setFont(loadCustomFont(fontWeight, fontSize));
+
             setForeground(Color.WHITE);
             setContentAreaFilled(false);
             setBorderPainted(false);
             setFocusPainted(false);
             setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+            // Mouse Listener for 3D Click Effect
             addMouseListener(new MouseAdapter() {
                 @Override
-                public void mousePressed(MouseEvent e) { isPressed = true; repaint(); }
+                public void mousePressed(MouseEvent e) {
+                    // Only animate if the button is enabled
+                    if (isEnabled()) {
+                        isPressed = true;
+                        repaint();
+                    }
+                }
                 @Override
-                public void mouseReleased(MouseEvent e) { isPressed = false; repaint(); }
+                public void mouseReleased(MouseEvent e) {
+                    if (isEnabled()) {
+                        isPressed = false;
+                        repaint();
+                    }
+                }
             });
         }
 
-        public void setBgColor(Color c) {
-            this.bgColor = c;
-            this.shadowColor = c.darker();
+        // --- SETTERS & LOGIC ---
+
+        @Override
+        public void setBackground(Color bg) {
+            super.setBackground(bg); // Updates internal Swing state
+            this.bgColor = bg;       // Updates our custom paint state
+            this.shadowColor = bg.darker();
             repaint();
         }
 
-        public void setShadowColor(Color c) {
-            this.shadowColor = c;
+        // Fix: Ensure setBgColor actually updates the shadow and repaints
+        public void setBgColor(Color color) {
+            setBackground(color);
+        }
+
+        public void setShadowColor(Color color) {
+            this.shadowColor = color;
             repaint();
         }
 
-        public void setSmooth(boolean smooth) { repaint(); }
+        public void setIconOnLeft(boolean onLeft) {
+            this.iconOnLeft = onLeft;
+            repaint();
+        }
+
+        public void setSmooth(boolean b) {
+            // Placeholder to match your interface
+            repaint();
+        }
+
+
+        // --- PAINTING ---
 
         @Override
         protected void paintComponent(Graphics g) {
@@ -117,24 +159,40 @@ public class panelUtilities {
 
             int arc = 35;
             int maxShadowHeight = 5;
-            int yOffset = isPressed ? maxShadowHeight : 0;
 
-            boolean hasDrawnIcon = (iconType != 0);
-            boolean hasImageIcon = (iconImage != null);
+            // 1. Determine Colors
+            Color renderBodyColor;
+            Color renderShadowColor;
 
-            // Shadow
-            if (!isPressed) {
-                g2.setColor(shadowColor);
-                g2.fillRoundRect(0, maxShadowHeight, getWidth(), getHeight() - maxShadowHeight, arc, arc);
+            if (isEnabled()) {
+                renderBodyColor = bgColor;
+                renderShadowColor = shadowColor;
+            } else {
+                renderBodyColor = new Color(224, 224, 224);
+                renderShadowColor = new Color(180, 180, 180);
             }
 
-            // Main Body
-            g2.setColor(bgColor);
+            int yOffset = (isPressed && isEnabled()) ? maxShadowHeight : 0;
+
+            // 2. Draw Shadow & Body
+            if (!isPressed || !isEnabled()) {
+                g2.setColor(renderShadowColor);
+                g2.fillRoundRect(0, maxShadowHeight, getWidth(), getHeight() - maxShadowHeight, arc, arc);
+            }
+            g2.setColor(renderBodyColor);
             g2.fillRoundRect(0, yOffset, getWidth(), getHeight() - maxShadowHeight, arc, arc);
 
-            // Layout Calculations
+            // --- 3. FIX: PRECISE LAYOUT CALCULATIONS ---
+
+            // A. Measure Text
+            String text = getText();
+            boolean hasText = (text != null && !text.isEmpty());
             FontMetrics fm = g2.getFontMetrics();
-            int textW = fm.stringWidth(getText());
+            int textW = hasText ? fm.stringWidth(text) : 0;
+
+            // B. Measure Icon
+            boolean hasDrawnIcon = (iconType != 0);
+            boolean hasImageIcon = (iconImage != null);
 
             int iconW = 0;
             int iconH = 0;
@@ -147,41 +205,60 @@ public class panelUtilities {
                 iconH = 16;
             }
 
-            int gap = (hasDrawnIcon || hasImageIcon) ? 8 : 0;
+            // C. Calculate Gap (Crucial Fix: Only add gap if we have BOTH text and icon)
+            int gap = (hasText && (hasDrawnIcon || hasImageIcon)) ? 8 : 0;
+
+            // D. Calculate Total Width
             int totalContentW = textW + iconW + gap;
 
+            // E. Calculate Starting X (This centers the whole group)
             int startX = (getWidth() - totalContentW) / 2;
-            int textY = ((getHeight() - maxShadowHeight - fm.getHeight()) / 2) + fm.getAscent() + yOffset;
-            int iconY = ((getHeight() - maxShadowHeight - iconH) / 2) + yOffset;
 
-            g2.setColor(getForeground());
+            // F. Calculate Y Positions (Centers vertically in the clickable face area)
+            // We subtract maxShadowHeight from height so we center on the "face", not the shadow
+            int faceHeight = getHeight() - maxShadowHeight;
 
-            if (hasImageIcon) {
-                iconImage.paintIcon(this, g2, startX, iconY);
+            int textY = ((faceHeight - fm.getHeight()) / 2) + fm.getAscent() + yOffset;
+            int iconY = ((faceHeight - iconH) / 2) + yOffset;
+
+            int iconX;
+            int textX;
+
+            if (iconOnLeft) {
+                iconX = startX;
+                textX = startX + iconW + gap;
+            } else {
+                textX = startX;
+                iconX = startX + textW + gap;
             }
 
+            g2.setColor(Color.WHITE);
+
+            // 4. Draw Content
+            if (hasImageIcon) {
+                iconImage.paintIcon(this, g2, iconX, iconY);
+            }
             else if (iconType == 1) { // Trash Icon
                 g2.setStroke(new BasicStroke(2));
-                // Lid
-                g2.drawLine(startX, iconY+4, startX+14, iconY+4);
-                g2.drawLine(startX+4, iconY+4, startX+4, iconY+2);
-                g2.drawLine(startX+10, iconY+4, startX+10, iconY+2);
-                g2.drawLine(startX+4, iconY+2, startX+10, iconY+2);
-                // Bin
-                g2.drawRoundRect(startX+2, iconY+4, 10, 12, 2, 2);
-                // Lines
-                g2.drawLine(startX+5, iconY+7, startX+5, iconY+13);
-                g2.drawLine(startX+9, iconY+7, startX+9, iconY+13);
+                g2.drawLine(iconX, iconY+4, iconX+14, iconY+4);
+                g2.drawLine(iconX+4, iconY+4, iconX+4, iconY+2);
+                g2.drawLine(iconX+10, iconY+4, iconX+10, iconY+2);
+                g2.drawLine(iconX+4, iconY+2, iconX+10, iconY+2);
+                g2.drawRoundRect(iconX+2, iconY+4, 10, 12, 2, 2);
+                g2.drawLine(iconX+5, iconY+7, iconX+5, iconY+13);
+                g2.drawLine(iconX+9, iconY+7, iconX+9, iconY+13);
             }
             else if (iconType == 2) { // Save Icon
-                g2.fillRoundRect(startX, iconY, 14, 14, 2, 2);
-                g2.setColor(bgColor);
-                g2.fillRect(startX+3, iconY+2, 8, 5);
-                g2.fillRect(startX+2, iconY+10, 10, 4);
+                g2.fillRoundRect(iconX, iconY, 14, 14, 2, 2);
+                g2.setColor(renderBodyColor);
+                g2.fillRect(iconX+3, iconY+2, 8, 5);
+                g2.fillRect(iconX+2, iconY+10, 10, 4);
                 g2.setColor(Color.WHITE);
             }
 
-            g2.drawString(getText(), startX + iconW + gap, textY);
+            if (hasText) {
+                g2.drawString(text, textX, textY);
+            }
 
             g2.dispose();
         }
