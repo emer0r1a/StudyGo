@@ -254,7 +254,7 @@ public class Home extends panelUtilities {
             // deck options button -> popup menu
             JButton deckOptions = new JButton(dOptions);
             styleButton(deckOptions);
-            deckOptions.setBounds(132, 20,dOptions.getIconWidth(),dOptions.getIconHeight());
+            deckOptions.setBounds(132, 20,dOptions.getIconWidth()+10,dOptions.getIconHeight()+10);
             deckOptions.setCursor(new Cursor(Cursor.HAND_CURSOR));
             deckCont.add(deckOptions);
 
