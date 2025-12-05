@@ -313,7 +313,7 @@ public class DeckFileManager {
         return false;
     }
 
-    public static boolean updateCardAccess(String filename, int cardIndex, boolean accessed) {
+    public static boolean updateCardAccess(String filename, int cardIndex, int accessed) {
         File file = new File(decksFolder, filename);
         File tempFile = new File(decksFolder, filename + ".tmp");
 
