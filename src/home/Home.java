@@ -532,6 +532,7 @@ public class Home extends panelUtilities {
             @Override
             public void actionPerformed(ActionEvent e) {
                 resetToggledDeck();
+                resetSearchBar();
                 openPopupMenu();
             }
         });
@@ -552,7 +553,8 @@ public class Home extends panelUtilities {
                         } catch (FontFormatException ex) {
                             throw new RuntimeException(ex);
                         }
-                         resetToggledDeck();
+                        resetToggledDeck();
+                        resetSearchBar();
                     } else {
                         JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
@@ -815,6 +817,15 @@ public class Home extends panelUtilities {
 
         deckContainer.revalidate();
         deckContainer.repaint();
+    }
+
+    private void resetSearchBar() {
+        if (!searchBar.getText().equals("Search decks")) {
+            searchBar.setForeground(new Color(153, 153, 153));
+            searchBar.setText("Search decks");
+
+            updateResult("");
+        }
     }
 }
 
