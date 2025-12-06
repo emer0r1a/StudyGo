@@ -17,21 +17,26 @@ public class StudyMode extends JFrame {
     ArrayList<String> question;
     ArrayList<String> answer;
 
-    // 1. NEW: Lists to hold the missed cards
     ArrayList<String> retryQuestions = new ArrayList<>();
     ArrayList<String> retryAnswers = new ArrayList<>();
 
     int currentIndex = 0;
+
+    // Variables to handle the specific counting logic
+    int completedCount = 0;
+    boolean hasFlippedCurrentCard = false;
+
     boolean isShowingQuestion = true;
     String deckTitle;
 
     // --- UI COMPONENTS ---
     private JTextPane textInside;
     JLabel currentCount;
-    JLabel totalCount; // 2. NEW: Promoted this to global so we can update it
+    JLabel totalCount;
     private RoundedProgressBar progressBar;
-    private panelUtilities.ShadowButton btnMissed, btnFlip, btnGotIt, btnMenu;
+    private panelUtilities.ShadowButton btnMissed, btnFlip, btnGotIt;
     private String color;
+
     public StudyMode(String title, ArrayList<String> q, ArrayList<String> a, String color) {
         super("StudyGo - Study Mode");
         this.deckTitle = title;
@@ -48,7 +53,6 @@ public class StudyMode extends JFrame {
         setLayout(null);
 
         // --- BACKGROUND PANEL ---
-
         ImageIcon originalBg;
         switch (color){
             case "blue":
@@ -79,13 +83,11 @@ public class StudyMode extends JFrame {
 
         // --- HEADER ---
         int titleWidth = 800;
-
         int titleX = (bgWidth - titleWidth) / 2;
 
         JLabel titleLabel = new JLabel(deckTitle, SwingConstants.CENTER);
         titleLabel.setForeground(Color.BLACK);
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
-
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
         ImageIcon closeIcon = new ImageIcon(
@@ -107,7 +109,7 @@ public class StudyMode extends JFrame {
         counterPanel.setOpaque(false);
         counterPanel.setBounds(320, 115, 227, 50);
 
-        currentCount = new JLabel("1");
+        currentCount = new JLabel("0");
         currentCount.setForeground(Color.decode("#79ADDC"));
         currentCount.setFont(getCustomFont(33.33f));
 
@@ -153,7 +155,6 @@ public class StudyMode extends JFrame {
         myCard.add(textContainer);
 
         // --- BUTTONS ---
-
         int axisY = 560;
         int gap = 10;
         int bigW = 150;
@@ -171,7 +172,6 @@ public class StudyMode extends JFrame {
         btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
         btnMissed.setIconOnLeft(true);
-        // 3. NEW: Add logic to save missed cards
         btnMissed.addActionListener(e -> {
             retryQuestions.add(question.get(currentIndex));
             retryAnswers.add(answer.get(currentIndex));
@@ -187,6 +187,7 @@ public class StudyMode extends JFrame {
         btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
         btnFlip.addActionListener(e -> {
             isShowingQuestion = !isShowingQuestion;
+            hasFlippedCurrentCard = true;
             updateCard();
         });
 
@@ -198,10 +199,7 @@ public class StudyMode extends JFrame {
         btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
         btnGotIt.setForeground(Color.WHITE);
         btnGotIt.setIconOnLeft(false);
-        // 4. Just move to next (don't add to list)
         btnGotIt.addActionListener(e -> nextCard());
-
-        // Button Positioning
 
         // --- ASSEMBLING ---
         backgroundPanel.add(stack);
@@ -225,52 +223,51 @@ public class StudyMode extends JFrame {
         setVisible(true);
     }
 
-    // 5. NEW: Updated End Logic
     private void nextCard() {
+        if(hasFlippedCurrentCard) {
+            completedCount++;
+        }
+
         if (currentIndex < question.size() - 1) {
             currentIndex++;
-            isShowingQuestion = true;
-            updateCard();
+            isShowingQuestion = true; // This resets it to the "Question" side
+            hasFlippedCurrentCard = false;
+            updateCard(); // This will disable the buttons again
         } else {
-            // --- DECK FINISHED LOGIC ---
-            if (!retryQuestions.isEmpty()) {
+            updateCard();
 
-                // 1. USE CUSTOM DIALOG HERE
+            if (!retryQuestions.isEmpty()) {
                 int response = CustomDialog.showConfirmDialog(this,
                         "You missed " + retryQuestions.size() + " cards.\nReview them now?",
                         "Review Missed Cards");
 
                 if (response == JOptionPane.YES_OPTION) {
-                    // 1. Swap main lists with retry lists
                     question = new ArrayList<>(retryQuestions);
                     answer = new ArrayList<>(retryAnswers);
-
-                    // 2. Clear retry lists for the next round
                     retryQuestions.clear();
                     retryAnswers.clear();
 
-                    // 3. Reset index and UI
                     currentIndex = 0;
+                    completedCount = 0;
+                    hasFlippedCurrentCard = false;
+
                     isShowingQuestion = true;
-
-                    // Update the "Total Count" label to the new size
                     totalCount.setText("/" + question.size());
-
                     updateCard();
                 } else {
-                    // User clicked No
                     dispose();
                 }
             } else {
-                // 2. USE CUSTOM DIALOG HERE
                 CustomDialog.showMessageDialog(this, "Deck Completed! Great Job!");
                 dispose();
             }
         }
     }
+
     private void updateCard() {
         if(question.isEmpty()) return;
 
+        // 1. Handle Text Content
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -279,10 +276,28 @@ public class StudyMode extends JFrame {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
-        currentCount.setText(String.valueOf(currentIndex + 1));
+        // 2. NEW LOGIC: Enable/Disable Buttons based on flip state
+        if (isShowingQuestion) {
+            // Front of card (Question) -> Disable Buttons, turn Gray
+            btnMissed.setEnabled(false);
+            btnMissed.setBackground(Color.decode("#CCCCCC")); // Light Gray
+
+            btnGotIt.setEnabled(false);
+            btnGotIt.setBackground(Color.decode("#CCCCCC")); // Light Gray
+        } else {
+            // Back of card (Answer) -> Enable Buttons, restore Colors
+            btnMissed.setEnabled(true);
+            btnMissed.setBackground(Color.decode("#FF3B30")); // Original Red
+
+            btnGotIt.setEnabled(true);
+            btnGotIt.setBackground(Color.decode("#91E586")); // Original Green
+        }
+
+        // 3. Update Progress Bar and Count
+        currentCount.setText(String.valueOf(completedCount));
 
         if (question.size() > 0) {
-            int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
+            int percentage = (int) (((double) completedCount / question.size()) * 100);
             progressBar.setValue(percentage);
         }
     }
@@ -296,4 +311,3 @@ public class StudyMode extends JFrame {
         }
     }
 }
-
