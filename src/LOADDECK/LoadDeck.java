@@ -12,6 +12,7 @@ import java.util.Collections;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import java.awt.event.ActionEvent;
 
 public class LoadDeck extends panelUtilities {
 
@@ -20,12 +21,16 @@ public class LoadDeck extends panelUtilities {
 
     private File decksFolder = new File("Decks");
     ArrayList<String> answer = new ArrayList<>();
+
+    // NEW: Tracker to see if a specific card index has been counted yet
+    ArrayList<Boolean> flippedTracker = new ArrayList<>();
+
     int currentIndex = 0;
     boolean isShowingQuestion = true;
 
     private int cardsAccessed = 0;
 
-    // Made these package-private (no 'private' keyword) so SettingsOverlay can see them
+    // Made these package-private so SettingsOverlay can see them
     String filename;
     String deckTitle;
 
@@ -39,6 +44,7 @@ public class LoadDeck extends panelUtilities {
     private ShadowButton btnPrevious, btnPreviousIcon, btnNext, btnNextIcon, btnVisibility;
     private SettingsOverlay settingsOverlay;
     private String color;
+
     public LoadDeck(StudyGo mainFrame, String filename) throws IOException, FontFormatException {
         this.mainFrame = mainFrame;
         this.filename = filename;
@@ -75,7 +81,6 @@ public class LoadDeck extends panelUtilities {
         settingsOverlay.setBounds(0, 0, 1280, 720);
         settingsOverlay.setVisible(false);
 
-        // Add it to the panel directly (JPanels don't use getLayeredPane)
         loadDeckPanel.add(settingsOverlay);
 
         // --- BACKGROUND PANEL ---
@@ -115,32 +120,31 @@ public class LoadDeck extends panelUtilities {
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
-
         ImageIcon settingsIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("/LOADDECK/resources/settings.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         ) ;
         ShadowButton btnSettings = new ShadowButton("", 1105, 35, 41, 41, Color.decode("#79ADDC"), settingsIcon, "", 10f);
+        btnSettings.setFocusable(false);
 
-
-        // Settings Button Logic: Show overlay and bring to front
         btnSettings.addActionListener(e -> {
             settingsOverlay.setVisible(true);
-            loadDeckPanel.setComponentZOrder(settingsOverlay, 0); // Bring to front
+            loadDeckPanel.setComponentZOrder(settingsOverlay, 0);
             loadDeckPanel.repaint();
         });
+
         ImageIcon closeIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("/LOADDECK/resources/close.png"))
                         .getImage()
-                    .getScaledInstance(24,24,Image.SCALE_SMOOTH)
+                        .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         );
         ShadowButton btnClose = new ShadowButton("", 40, 35, 41, 41,Color.decode("#E68B8C"), closeIcon, "", 10f );
+        btnClose.setFocusable(false);
         btnClose.addActionListener(e -> mainFrame.showHomePanel());
 
         // --- PROGRESS & COUNTER ---
         progressBar = new RoundedProgressBar();
-        //progressBar.setMaximum(question.size() == 0 ? 1 : question.size());
         progressBar.setValue(0);
         progressBar.setBounds(320, 100, 548, 17);
 
@@ -179,7 +183,6 @@ public class LoadDeck extends panelUtilities {
         textInside.setFont(loadCustomFont("regular", 25f));
         textInside.setEditable(false);
         textInside.setOpaque(false);
-
         textInside.setFocusable(false);
         textInside.setHighlighter(null);
 
@@ -221,38 +224,33 @@ public class LoadDeck extends panelUtilities {
         int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
         int startX = (1185 - totalGroupWidth) / 2;
 
-
-
-        // 1. Previous Icon
         ImageIcon prevIcon = loadImage("/LOADDECK/resources/double_arrow_left.png");
         btnPreviousIcon = new ShadowButton("", startX, axisY, smallW, height, Color.decode("#91E586"), prevIcon, "", 22f);
+        btnPreviousIcon.setFocusable(false);
         btnPreviousIcon.addActionListener(navActionListener);
 
-        // 2. Previous Text
         ImageIcon previousIcon = loadImage("/LOADDECK/resources/prev-icon.png");
         btnPrevious = new ShadowButton("Previous", startX + smallW + gap, axisY, bigW, height, Color.decode("#91E586"),previousIcon, "semibold", 22f);
         btnPrevious.setIconOnLeft(true);
+        btnPrevious.setFocusable(false);
         btnPrevious.addActionListener(navActionListener);
 
-        // 3. Visibility (Flip)
         btnVisibility = new ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"),0);
+        btnVisibility.setFocusable(false);
         btnVisibility.addActionListener(e -> {
             isShowingQuestion = !isShowingQuestion;
             updateUI();
         });
 
-        // 4. Next Text
         ImageIcon nxtIcon =loadImage("/LOADDECK/resources/next-icon.png");
         btnNext = new ShadowButton("Next", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height,Color.decode("#91E586"), nxtIcon, "semibold", 22f );
+        btnNext.setFocusable(false);
         btnNext.addActionListener(navActionListener);
 
-        // 5. Next Icon
         ImageIcon nextIcon = loadImage("/LOADDECK/resources/double_arrow_right.png");
         btnNextIcon = new ShadowButton("", startX + smallW + gap + bigW + gap + smallW + gap + bigW + gap, axisY, smallW, height, Color.decode("#91E586"), nextIcon, "", 22f);
+        btnNextIcon.setFocusable(false);
         btnNextIcon.addActionListener(navActionListener);
-
-        // Button Positioning
-
 
         // --- ASSEMBLING THE UI ---
         backgroundPanel.add(stack);
@@ -273,6 +271,9 @@ public class LoadDeck extends panelUtilities {
         backgroundPanel.add(btnNextIcon);
 
         loadDeckPanel.add(backgroundPanel);
+
+        // CALL THE HOTKEYS METHOD
+        setupHotkeys();
     }
 
     private void loadData() throws IOException {
@@ -285,27 +286,119 @@ public class LoadDeck extends panelUtilities {
 
         ArrayList<Card> cards = DeckFileManager.loadCards(filename);
 
+        // 1. Reset the Tracker List
+        flippedTracker.clear();
+
         if (cards.isEmpty()) {
             question.add("Error");
             answer.add("File format is incorrect or no cards found.");
+            // Add one placeholder to avoid errors
+            flippedTracker.add(false);
         } else {
             for (Card card : cards) {
                 question.add(card.getQuestion());
                 answer.add(card.getAnswer());
+                // 2. Initialize every card as NOT flipped (False)
+                flippedTracker.add(false);
             }
         }
 
-        if (cardsAccessed > 0) {
-            currentIndex = cardsAccessed-1;
-        } else {
-            currentIndex = 0;
+        // 3. Restore previous progress
+        // If the file says we did 5 cards, we assume it was the first 5.
+        // This ensures the counter doesn't reset to 0 when you reload the app.
+        for(int i = 0; i < cardsAccessed && i < flippedTracker.size(); i++) {
+            flippedTracker.set(i, true);
         }
+
+        currentIndex = 0;
+    }
+
+    private void setupHotkeys() {
+        // Get the InputMap and ActionMap from the main panel
+        InputMap inputMap = loadDeckPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = loadDeckPanel.getActionMap();
+
+        // --- 1. RIGHT ARROW -> NEXT CARD ---
+        inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "nextCard");
+        actionMap.put("nextCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentIndex < question.size() - 1) {
+                    currentIndex++;
+                    isShowingQuestion = true;
+                    updateUI();
+                }
+            }
+        });
+
+        // --- 2. LEFT ARROW -> PREVIOUS CARD ---
+        inputMap.put(KeyStroke.getKeyStroke("LEFT"), "prevCard");
+        actionMap.put("prevCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    isShowingQuestion = true;
+                    updateUI();
+                }
+            }
+        });
+
+        // --- 3. SPACEBAR -> FLIP CARD ---
+        inputMap.put(KeyStroke.getKeyStroke("SPACE"), "flipCard");
+        actionMap.put("flipCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isShowingQuestion = !isShowingQuestion;
+                updateUI();
+            }
+        });
+
+        // --- 4. CTRL + RIGHT ARROW -> JUMP TO LAST CARD ---
+        inputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_DOWN_MASK), "lastCard");
+        actionMap.put("lastCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!question.isEmpty()) {
+                    currentIndex = question.size() - 1;
+                    isShowingQuestion = true;
+                    updateUI();
+                }
+            }
+        });
+
+        // --- 5. CTRL + LEFT ARROW -> JUMP TO FIRST CARD ---
+        inputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_DOWN_MASK), "firstCard");
+        actionMap.put("firstCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!question.isEmpty()) {
+                    currentIndex = 0;
+                    isShowingQuestion = true;
+                    updateUI();
+                }
+            }
+        });
+
+        // --- 6. ESCAPE -> CLOSE SETTINGS or GO HOME ---
+        inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), "escapeKey");
+        actionMap.put("escapeKey", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (settingsOverlay.isVisible()) {
+                    settingsOverlay.setVisible(false);
+                }
+                else {
+                    mainFrame.showHomePanel();
+                }
+            }
+        });
     }
 
     public void updateUI() {
         if (question.isEmpty()) return;
 
-        // 1. Update Text
+        // 1. Update Text Content
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -314,46 +407,48 @@ public class LoadDeck extends panelUtilities {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
-        ImageIcon iconImage;
         // 2. Update Visibility Icon
+        ImageIcon iconImage;
         if (isShowingQuestion) {
             iconImage = loadImage("/LOADDECK/resources/visibility_off.png");
             btnVisibility.setIconImage(iconImage);
         } else {
             iconImage = loadImage("/LOADDECK/resources/visibility.png");
             btnVisibility.setIconImage(iconImage);
-            //btnVisibility.setHdIcon(new ImageIcon(getClass().getResource("/LOADDECK/resources/visibility.png")).getImage(), 26, 26);
         }
 
-        // 3. Update Progress
-        int cardsAccessedNow = currentIndex + 1;
-        if (cardsAccessedNow > cardsAccessed && cardsAccessedNow <= question.size()) {
-            cardsAccessed = cardsAccessedNow;
-            DeckFileManager.updateProgress(filename, cardsAccessed);
+        // --- 3. UPDATED PROGRESS & COUNTER LOGIC (NO HASHSET) ---
+        if (!isShowingQuestion) {
+            // Check if this specific card (currentIndex) has been counted yet?
+            if (currentIndex < flippedTracker.size() && !flippedTracker.get(currentIndex)) {
+                // Mark it as flipped
+                flippedTracker.set(currentIndex, true);
+
+                // Increase the official count
+                cardsAccessed++;
+                DeckFileManager.updateProgress(filename, cardsAccessed);
+            }
         }
 
-        currentCount.setText(String.valueOf(currentIndex + 1));
-        int percentage = (int) (((double) (currentIndex + 1) / question.size()) * 100);
+        currentCount.setText(String.valueOf(cardsAccessed));
+        int percentage = (int) (((double) cardsAccessed / question.size()) * 100);
         progressBar.setValue(percentage);
 
-        // 4. Update Buttons (Enabled State & Color)
         boolean isFirst = (currentIndex == 0);
         boolean isLast = (currentIndex == question.size() - 1);
 
         Color disabledColor = Color.decode("#E0E0E0");
         Color enabledColor = Color.decode("#91E586");
 
-        // --- PREVIOUS BUTTON ---
-        btnPrevious.setEnabled(!isFirst);
-        btnPreviousIcon.setEnabled(!isFirst);
-        // FIX: Use setBgColor for ShadowButton
+        // --- PREVIOUS BUTTONS (ALWAYS ENABLED) ---
+        btnPrevious.setEnabled(true);
+        btnPreviousIcon.setEnabled(true);
         btnPrevious.setBgColor(isFirst ? disabledColor : enabledColor);
         btnPreviousIcon.setBgColor(isFirst ? disabledColor : enabledColor);
 
-        // --- NEXT BUTTON --
-        btnNext.setEnabled(!isLast);
-        btnNextIcon.setEnabled(!isLast);
-        // FIX: Use setBgColor for ShadowButton
+        // --- NEXT BUTTONS (ALWAYS ENABLED) ---
+        btnNext.setEnabled(true);
+        btnNextIcon.setEnabled(true);
         btnNext.setBgColor(isLast ? disabledColor : enabledColor);
         btnNextIcon.setBgColor(isLast ? disabledColor : enabledColor);
 
@@ -366,9 +461,7 @@ public class LoadDeck extends panelUtilities {
         for (int i=0; i<question.size(); i++){
             index.add(i);
         }
-
         Collections.shuffle(index);
-
         ArrayList<String> q = new ArrayList<>();
         ArrayList<String> a = new ArrayList<>();
 
@@ -376,12 +469,17 @@ public class LoadDeck extends panelUtilities {
             q.add(question.get(newPos));
             a.add(answer.get(newPos));
         }
-
         question = q;
         answer = a;
-
         currentIndex = 0;
+
+        // Reset progress on Shuffle
         cardsAccessed = 0;
+        flippedTracker.clear();
+        for(int i=0; i<question.size(); i++) {
+            flippedTracker.add(false);
+        }
+
         DeckFileManager.updateProgress(filename, 0);
     }
 }
@@ -493,6 +591,7 @@ class SettingsOverlay extends JPanel {
 
         int windowW = 1280;
         int windowH = 720;
+
         int boxW = 350;
         int boxH = 220;
         int boxX = (windowW - boxW) / 2;
@@ -526,15 +625,13 @@ class SettingsOverlay extends JPanel {
                 new ImageIcon(getClass().getResource("resources/menu.png"))
                         .getImage()
                         .getScaledInstance(18, 18, Image.SCALE_SMOOTH)
-                );
+        );
         btnStudyMode = new panelUtilities.ShadowButton("Study Mode", boxX + 50, boxY + 120, 250, 45, Color.decode("#91E586"), studyModeIcon, "semibold", 20f);
         btnStudyMode.setIconOnLeft(true);
 
         btnStudyMode.addActionListener(e -> {
             try {
-                // FIX: Updated to include 'filename' so back button works in StudyMode
                 new StudyMode(parent.deckTitle, parent.question, parent.answer, parent.getColor());
-
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
