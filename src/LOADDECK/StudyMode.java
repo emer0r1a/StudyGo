@@ -7,6 +7,8 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 import static general.panelUtilities.loadCustomFont;
@@ -97,6 +99,8 @@ public class StudyMode extends JFrame {
         );
 
         panelUtilities.ShadowButton btnClose = new panelUtilities.ShadowButton("", 40, 35, 41, 41, Color.decode("#E68B8C"), closeIcon, "", 10f);
+        // FIX 1: Make Close button non-focusable so Space doesn't trigger it
+        btnClose.setFocusable(false);
         btnClose.addActionListener(e -> dispose());
 
         // --- PROGRESS BAR ---
@@ -139,6 +143,7 @@ public class StudyMode extends JFrame {
         textInside = new JTextPane();
         textInside.setFont(getCustomFont(25f));
         textInside.setEditable(false);
+        textInside.setFocusable(false); // Also make text non-focusable
         textInside.setOpaque(false);
 
         StyledDocument doc = textInside.getStyledDocument();
@@ -172,6 +177,8 @@ public class StudyMode extends JFrame {
         btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
         btnMissed.setIconOnLeft(true);
+        // FIX 2: Make button non-focusable
+        btnMissed.setFocusable(false);
         btnMissed.addActionListener(e -> {
             retryQuestions.add(question.get(currentIndex));
             retryAnswers.add(answer.get(currentIndex));
@@ -185,6 +192,8 @@ public class StudyMode extends JFrame {
                         .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
         );
         btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
+        // FIX 3: Make button non-focusable
+        btnFlip.setFocusable(false);
         btnFlip.addActionListener(e -> {
             isShowingQuestion = !isShowingQuestion;
             hasFlippedCurrentCard = true;
@@ -199,6 +208,8 @@ public class StudyMode extends JFrame {
         btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
         btnGotIt.setForeground(Color.WHITE);
         btnGotIt.setIconOnLeft(false);
+        // FIX 4: Make button non-focusable
+        btnGotIt.setFocusable(false);
         btnGotIt.addActionListener(e -> nextCard());
 
         // --- ASSEMBLING ---
@@ -218,6 +229,45 @@ public class StudyMode extends JFrame {
 
         add(backgroundPanel);
 
+        // --- KEY BINDINGS (SHORTCUTS) ---
+        JRootPane rootPane = this.getRootPane();
+        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = rootPane.getActionMap();
+
+        // 1. SPACE -> FLIP
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "flipCard");
+        actionMap.put("flipCard", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Manually trigger the Flip logic, just in case button is disabled/non-focusable
+                isShowingQuestion = !isShowingQuestion;
+                hasFlippedCurrentCard = true;
+                updateCard();
+            }
+        });
+
+        // 2. RIGHT ARROW -> GOT IT (Only if enabled)
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "gotIt");
+        actionMap.put("gotIt", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (btnGotIt.isEnabled()) {
+                    btnGotIt.doClick();
+                }
+            }
+        });
+
+        // 3. LEFT ARROW -> MISSED IT (Only if enabled)
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "missedIt");
+        actionMap.put("missedIt", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (btnMissed.isEnabled()) {
+                    btnMissed.doClick();
+                }
+            }
+        });
+
         // Initial Update
         updateCard();
         setVisible(true);
@@ -230,9 +280,9 @@ public class StudyMode extends JFrame {
 
         if (currentIndex < question.size() - 1) {
             currentIndex++;
-            isShowingQuestion = true; // This resets it to the "Question" side
+            isShowingQuestion = true;
             hasFlippedCurrentCard = false;
-            updateCard(); // This will disable the buttons again
+            updateCard();
         } else {
             updateCard();
 
@@ -276,21 +326,19 @@ public class StudyMode extends JFrame {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
-        // 2. NEW LOGIC: Enable/Disable Buttons based on flip state
+        // 2. Enable/Disable Buttons based on flip state
         if (isShowingQuestion) {
-            // Front of card (Question) -> Disable Buttons, turn Gray
             btnMissed.setEnabled(false);
-            btnMissed.setBackground(Color.decode("#CCCCCC")); // Light Gray
+            btnMissed.setBackground(Color.decode("#CCCCCC"));
 
             btnGotIt.setEnabled(false);
-            btnGotIt.setBackground(Color.decode("#CCCCCC")); // Light Gray
+            btnGotIt.setBackground(Color.decode("#CCCCCC"));
         } else {
-            // Back of card (Answer) -> Enable Buttons, restore Colors
             btnMissed.setEnabled(true);
-            btnMissed.setBackground(Color.decode("#FF3B30")); // Original Red
+            btnMissed.setBackground(Color.decode("#FF3B30"));
 
             btnGotIt.setEnabled(true);
-            btnGotIt.setBackground(Color.decode("#91E586")); // Original Green
+            btnGotIt.setBackground(Color.decode("#91E586"));
         }
 
         // 3. Update Progress Bar and Count
