@@ -1,5 +1,4 @@
 package createDeck;
-
 import general.*;
 import home.Home;
 
@@ -16,7 +15,7 @@ import java.util.ArrayList;
 
 public class Create extends panelUtilities {
 
-    // Data
+// --- Data & Variables ---
 
     public static ArrayList<FlashcardData> cards = new ArrayList<>();
     public static int currentIndex = 0;
@@ -28,12 +27,11 @@ public class Create extends panelUtilities {
     private RoundedTextField titleField, subjectField;
     private JTextArea frontArea, backArea;
 
-    private final String IMG_PATH_PREFIX   = "/resources/createDeck/";
+    private final String IMG_PATH_PREFIX = "/resources/createDeck/";
 
     private final MainDashboard mainDash;
-    private final DiscardPopup discardView;
-    private final SuccessPopup successView;
-    private final DeletePopup deleteView; // Added Delete Popup
+    private final ReusablePopup popupView;
+
     private JPanel createPanel;
     private JPopupMenu editColor;
     private String selectedColor = "yellow";
@@ -47,10 +45,13 @@ public class Create extends panelUtilities {
     private ImageIcon defaultColor, pinkColor, blueColor, greenColor, brightYellowColor;
     private ImageIcon defaultChosen, pinkChosen, blueChosen, greenChosen, brightYellowChosen;
 
+// --- Constructor ---
+
     public Create(StudyGo mainFrame, Home homePanel) {
         this.mainFrame = mainFrame;
         this.homePanel = homePanel;
         createPanel = new JPanel(null);
+
         loadCustomFont("bold", 16f);
 
         defaultChosen = loadImage("/resources/createDeck/yellow-color-chosen.png");
@@ -64,46 +65,32 @@ public class Create extends panelUtilities {
         brightYellowChosen = loadImage("/resources/createDeck/brightyellow-chosen.png");
         brightYellowColor = loadImage("/resources/createDeck/brightyellow-color.png");
 
+
         cards.clear();
         currentIndex = 0;
-
-        //  at least one card to prevent IndexOutOfBounds
         if (cards.isEmpty()) {
             cards.add(new FlashcardData("", ""));
         }
 
-        //  FRAME SETUP
+        // FRAME SETUP
         createPanel.setBackground(new Color(239, 248, 253));
 
-        // LAYERED PANE SETUP
         JLayeredPane layeredPane = new JLayeredPane();
         layeredPane.setBounds(0, 0, 1280, 720);
         createPanel.add(layeredPane);
 
-        // Main Dashboard
+        // Main Dashboard (Bottom Layer)
         mainDash = new MainDashboard();
         mainDash.setBounds(36, 43, 1193, 633);
         layeredPane.add(mainDash, Integer.valueOf(0));
 
-        // DISCARD POPUP
-        discardView = new DiscardPopup();
-        discardView.setBounds(0, 0, 1280, 720);
-        discardView.setVisible(false);
-        layeredPane.add(discardView, Integer.valueOf(1));
+        // Reusable Popup (Top Layer)
+        popupView = new ReusablePopup();
+        popupView.setBounds(0, 0, 1280, 720);
+        popupView.setVisible(false);
+        layeredPane.add(popupView, Integer.valueOf(10)); // High Z-Index
 
-        // SUCCESS POPUP
-        successView = new SuccessPopup();
-        successView.setBounds(0, 0, 1280, 720);
-        successView.setVisible(false);
-        layeredPane.add(successView, Integer.valueOf(2));
 
-        // DELETE POPUP
-        deleteView = new DeletePopup();
-        deleteView.setBounds(0, 0, 1280, 720);
-        deleteView.setVisible(false);
-        layeredPane.add(deleteView, Integer.valueOf(3));
-
-        // Initialize UI
         mainDash.updateUIFromData();
 
         if (titleField.getText().equals("Deck Title REQUIRED*")) {
@@ -111,16 +98,19 @@ public class Create extends panelUtilities {
         }
     }
 
-    // --- LOGIC METHODS ---
+// --- LOGIC METHODS ---
 
-    // Discard Logic
     public void showDiscardScreen() {
-        discardView.setVisible(true);
         mainDash.setDiscardMode(true);
+        popupView.showConfirmation(
+                "<html><center>Are you sure you want to discard<br>changes?</center></html>",
+                "YES", new Color(230, 130, 130), e -> performDiscard(),
+                "NO", new Color(144, 238, 144), e -> hidePopup()
+        );
     }
 
-    public void hideDiscardScreen() {
-        discardView.setVisible(false);
+    public void hidePopup() {
+        popupView.setVisible(false);
         mainDash.setDiscardMode(false);
     }
 
@@ -129,32 +119,35 @@ public class Create extends panelUtilities {
             cards.remove(currentIndex);
             if (currentIndex >= cards.size() && currentIndex > 0) currentIndex--;
             if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
-            if (cards.isEmpty()) cards.add(new FlashcardData("", "")); // Ensures list is never size 0
+            if (cards.isEmpty()) cards.add(new FlashcardData("", ""));
         }
-
         mainDash.clearInputs();
-        mainDash.updateUIFromData();
-
-
         cards.clear();
         cards.add(new FlashcardData("", ""));
         currentIndex = 0;
-
         mainDash.updateUIFromData();
-
-        hideDiscardScreen();
+        hidePopup();
         mainFrame.showHomePanel();
     }
 
-    // Success/Save Logic
     public void showSuccessScreen() {
         mainDash.saveCurrentInputToMemory();
-        successView.setVisible(true);
+
+        // Pass 2 Actions:
+        // 1. actOk (Green Button) -> Saves and Exits
+        // 2. actClose (X Button) -> Just hides popup (stays on Create screen)
+        popupView.showSuccess(
+                "Deck added successfully.",
+                "OK",
+                new Color(130, 225, 130),
+                e -> finalizeSave(),             // OK Button Action
+                e -> popupView.setVisible(false) // Close X Action
+        );
     }
 
-    public void hideSuccessScreen() {
+    public void finalizeSave() {
         String filename;
-        successView.setVisible(false);
+        popupView.setVisible(false);
 
         int orderIndex = (toBeEdited != null) ? toBeEdited.getOrderIndex() : 0;
         if (!oldLink.isEmpty()) {
@@ -165,15 +158,12 @@ public class Create extends panelUtilities {
                     oldLink,
                     orderIndex
             );
-
             homePanel.removeDeckMethod(toBeEdited, decks);
-
             if (toBeEdited != null && decks != null) {
                 System.out.println("TEST");
                 decks = null;
                 toBeEdited = null;
             }
-
             oldLink = "";
         } else {
             filename = DeckFileManager.saveDeck(
@@ -185,61 +175,41 @@ public class Create extends panelUtilities {
 
         if (filename != null) {
             DeckFileManager.setDeckAsMostRecent(filename);
-            // Load the deck header back from file
             Deck newDeck = DeckFileManager.loadDeckHeader(filename);
-
             if (newDeck != null) {
-                // Convert FlashcardData to Card objects
                 ArrayList<Card> deckCards = new ArrayList<>();
                 for (FlashcardData fd : cards) {
-                    // Only add if at least one side has text
-                    if (!fd.isEmpty()) {
-                        deckCards.add(new Card(fd.getFront(), fd.getBack(),0));
-                    }
+                    if (!fd.isEmpty())
+                        deckCards.add(new Card(fd.getFront(), fd.getBack(), 0));
                 }
                 newDeck.setCards(deckCards);
-
-                // Add to home screen
                 mainFrame.addDeckToHome(newDeck);
             }
         }
-        // --- START: Cleaned-up State Reset ---
 
-        // 1. Reset all input fields to default placeholder/empty state
-        //    (This calls the clearInputs method in MainDashboard)
         mainDash.clearInputs();
         selectedColor = "yellow";
-
-        // 2. Clear the static list of flashcards and add a single new empty card.
         cards.clear();
         cards.add(new FlashcardData("", ""));
-        currentIndex = 0; // Reset index to the first (and only) new card
+        currentIndex = 0;
 
-        // 3. Delete the temporary file ("my_flashcards.txt")
         File tempFile = new File(FILE_NAME);
         if (tempFile.exists()) {
             tempFile.delete();
         }
 
-        // 4. Force the UI (including the counter label) to render the new state (1/1)
         mainDash.updateUIFromData();
-
-        // --- END: Cleaned-up State Reset ---
-
         mainDash.setDiscardMode(false);
-
         mainFrame.showHomePanel();
     }
 
-    // Delete Logic
     public void showDeleteScreen() {
-        // Don't show popup if it's the only empty card
         if (cards.size() == 1 && cards.get(0).isEmpty()) return;
-        deleteView.setVisible(true);
-    }
-
-    public void hideDeleteScreen() {
-        deleteView.setVisible(false);
+        popupView.showConfirmation(
+                "<html><center>Are you sure you want to<br>delete this card?</center></html>",
+                "YES", new Color(144, 238, 144), e -> performDeleteCard(),
+                "NO", new Color(230, 130, 130), e -> hidePopup()
+        );
     }
 
     public void performDeleteCard() {
@@ -247,27 +217,21 @@ public class Create extends panelUtilities {
             cards.remove(currentIndex);
             if (currentIndex >= cards.size()) currentIndex = cards.size() - 1;
         } else {
-            // If it's the last card, just clear the text
             if (!cards.isEmpty()) cards.set(0, new FlashcardData("", ""));
         }
         mainDash.updateUIFromData();
-        hideDeleteScreen();
+        hidePopup();
     }
 
     public void loadToBeEdited(String link, Deck d, String color, ArrayList<Deck> decks) {
-        cards = DeckFileManager.loadEditDeck(link,d);
-
+        cards = DeckFileManager.loadEditDeck(link, d);
         oldLink = d.getLink();
         toBeEdited = d;
         this.decks = decks;
-
         titleField.setText(d.getTitle());
         subjectField.setText(d.getSubject());
-
         selectedColor = color;
-
         mainDash.updateUIFromData();
-
         if (titleField.getForeground().equals(Color.RED)) {
             titleField.setForeground(Color.black);
         }
@@ -280,7 +244,12 @@ public class Create extends panelUtilities {
     public static class FlashcardData {
         private String front;
         private String back;
-        public FlashcardData(String f, String b) { setFront(f); setBack(b); }
+
+        public FlashcardData(String f, String b) {
+            setFront(f);
+            setBack(b);
+        }
+
         public boolean isEmpty() {
             return (getFront() == null || getFront().trim().isEmpty()) && (getBack() == null || getBack().trim().isEmpty());
         }
@@ -302,7 +271,6 @@ public class Create extends panelUtilities {
         }
     }
 
-    // Custom Text Field
     class RoundedTextField extends JTextField {
         private final String placeholder;
         private final int maxChars;
@@ -310,12 +278,10 @@ public class Create extends panelUtilities {
         public RoundedTextField(String ph, int x, int y, int w, int h, int limit) {
             this.placeholder = ph;
             this.maxChars = limit;
-
             setBounds(x, y, w, h);
             setFont(loadCustomFont("semibold", 16f));
             setOpaque(false);
             setBorder(new EmptyBorder(0, 10, 0, 45));
-
             setDocument(new PlainDocument() {
                 @Override
                 public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException {
@@ -325,6 +291,7 @@ public class Create extends panelUtilities {
                         repaint();
                     }
                 }
+
                 @Override
                 public void remove(int offs, int len) throws BadLocationException {
                     super.remove(offs, len);
@@ -337,35 +304,83 @@ public class Create extends panelUtilities {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
             g2.setColor(new Color(250, 250, 250));
-            int arcSize = 15;
-            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arcSize, arcSize);
-
+            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
             g2.setColor(new Color(200, 200, 200));
-            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, arcSize, arcSize);
-
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 15, 15);
             int currentLen = getText().equals(placeholder) ? 0 : getText().length();
             String counter = currentLen + "/" + maxChars;
-
             g2.setColor(Color.GRAY);
-            g2.setFont(loadCustomFont("bold",12f));
-            FontMetrics fm = g2.getFontMetrics();
-            int cx = getWidth() - fm.stringWidth(counter) - 10;
-            int cy = (getHeight() + fm.getAscent()) / 2 - 2;
-            g2.drawString(counter, cx, cy);
-
+            g2.setFont(loadCustomFont("bold", 12f));
+            g2.drawString(counter, getWidth() - g2.getFontMetrics().stringWidth(counter) - 10, (getHeight() + g2.getFontMetrics().getAscent()) / 2 - 2);
             super.paintComponent(g);
             g2.dispose();
         }
     }
 
-    // Main Dashboard
+    // nav button
+    class NavButton extends JButton {
+        private boolean isPressed = false;
+
+        public NavButton(int x, int y) {
+            setBounds(x, y, 60, 45);
+            setContentAreaFilled(false);
+            setBorderPainted(false);
+            setFocusPainted(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (isEnabled()) {
+                        isPressed = true;
+                        repaint();
+                    }
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+
+                    isPressed = false;
+                    repaint();
+                }
+            });
+        }
+
+        public void updateState(ImageIcon icon, boolean enabled) {
+            this.setIcon(icon);
+            this.setEnabled(enabled);
+            this.setDisabledIcon(icon);
+            this.setCursor(new Cursor(enabled ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            // Click animation: shift down 5px
+            int yOffset = isPressed ? 5 : 0;
+            g2.translate(0, yOffset);
+            super.paintComponent(g2);
+            g2.dispose();
+        }
+    }
+
+    // --- MAIN DASHBOARD ---
     class MainDashboard extends JPanel {
         private final JLabel counterLabel;
         private final ShadowButton btnClear;
         private final ShadowButton btnDiscard;
         private final ShadowButton btnSave;
+
+        // Navigation (Using custom NavButton)
+        private final NavButton btnFirst, btnPrev, btnNext, btnLast;
+        private final ImageIcon iconFirst, iconFirstGray;
+        private final ImageIcon iconPrev, iconPrevGray;
+        private final ImageIcon iconNext, iconNextGray;
+        private final ImageIcon iconLast, iconLastGray;
+
         private final Image panelBg;
         private final Color PANEL_COLOR = new Color(0xFF, 0xFD, 0xFA);
 
@@ -377,9 +392,7 @@ public class Create extends panelUtilities {
             cards.add(new FlashcardData("", ""));
             currentIndex = cards.size() - 1;
             updateUIFromData();
-            System.out.println("TEST");
         }
-
         private void createKeybind() {
             this.setFocusable(true);
 
@@ -443,18 +456,32 @@ public class Create extends panelUtilities {
                 }
             });
         }
-
-
         public MainDashboard() {
             setLayout(null);
             setOpaque(false);
 
-            panelBg = loadImage(IMG_PATH_PREFIX + "recent-panel.png").getImage();
 
-            // Inputs
+            Image tempBg = null;
+            try {
+                tempBg = loadImage(IMG_PATH_PREFIX + "recent-panel.png").getImage();
+            } catch (Exception ignored) {
+            }
+            panelBg = tempBg;
+
+            // Load Icons
+            iconFirst = loadIconResized("backward-btn.png");
+            iconPrev = loadIconResized("prev-btn.png");
+            iconNext = loadIconResized("next-btn.png");
+            iconLast = loadIconResized("forward-btn.png");
+
+            iconFirstGray = loadIconResized("gray_backward-btn.png");
+            iconPrevGray = loadIconResized("gray_prev-btn.png");
+            iconNextGray = loadIconResized("gray_next-btn.png");
+            iconLastGray = loadIconResized("gray_forward-btn.png");
+
+            // Title & Subject Fields
             add(createLabel("DECK TITLE", 50, 50));
             titleField = new RoundedTextField("Deck Title REQUIRED*", 50, 80, 499, 50, 40);
-
             titleField.addFocusListener(new FocusAdapter() {
                 public void focusGained(FocusEvent e) {
                     if (titleField.getText().equals("Deck Title REQUIRED*")) { titleField.setText(""); titleField.setForeground(Color.BLACK); }
@@ -469,26 +496,18 @@ public class Create extends panelUtilities {
             subjectField = new RoundedTextField("", 580, 80, 499, 50, 20);
             add(subjectField);
 
-            // Flashcards
+            // Card Panels
             add(createCardPanel("Front", 45, true));
             add(createCardPanel("Back", 575, false));
 
-            // Add Card Button
             JButton btnAdd = createImageButton("plus.png", 1100, 270);
-            btnAdd.addActionListener(e -> {
-                createFlashcard();
-            });
-
+            btnAdd.addActionListener(e -> createFlashcard());
             add(btnAdd);
 
-            // Delete Card Button (UPDATED to use Popup)
             JButton btnDelete = createImageButton("delete.png", 1100, 343);
-            btnDelete.addActionListener(e -> {
-                showDeleteScreen();
-            });
+            btnDelete.addActionListener(e -> showDeleteScreen());
             add(btnDelete);
 
-            // edit deck color
             ShadowButton btnEditColor = new ShadowButton("",1108,55,41,41,new Color(121,173,220),
                     loadImage("/resources/createDeck/color-opt.png"),"regular",12);
             add(btnEditColor);
@@ -558,10 +577,7 @@ public class Create extends panelUtilities {
                 }
             });
 
-            // Bottom Buttons
             int btnY = 560;
-
-            // Clear
             btnClear = new ShadowButton("Clear", 50, btnY, 140, 45, new Color(170, 170, 170), 0);
             btnClear.setShadowColor(new Color(130, 130, 130));
             btnClear.addActionListener(e -> clearInputs());
@@ -573,33 +589,42 @@ public class Create extends panelUtilities {
             counterLabel.setBounds(510, 570, 100, 30);
             add(counterLabel);
 
-            // Navigation
+            // Nav Buttons
             int navX = 430;
-            addNavButton(createNavButton("backward-btn.png", navX-30, btnY, "<<"), 0);
-            addNavButton(createNavButton("prev-btn.png", navX + 40, btnY, "<"), 1);
-            addNavButton(createNavButton("next-btn.png", navX + 160, btnY, ">"), 2);
-            addNavButton(createNavButton("forward-btn.png", navX + 230, btnY, ">>"), 3);
+            btnFirst = new NavButton(navX - 30, btnY);
+            btnFirst.addActionListener(e -> navigate(0));
+            add(btnFirst);
+            btnPrev = new NavButton(navX + 40, btnY);
+            btnPrev.addActionListener(e -> navigate(currentIndex - 1));
+            add(btnPrev);
+            btnNext = new NavButton(navX + 160, btnY);
+            btnNext.addActionListener(e -> navigate(currentIndex + 1));
+            add(btnNext);
+            btnLast = new NavButton(navX + 230, btnY);
+            btnLast.addActionListener(e -> navigate(cards.size() - 1));
+            add(btnLast);
 
-            // Discard
+            // Discard & Save Buttons
             btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), 1);
             btnDiscard.addActionListener(e -> showDiscardScreen());
             add(btnDiscard);
 
-            // Save
+            // --- UPDATED SAVE BUTTON LOGIC ---
             btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), 2);
             btnSave.addActionListener(e -> {
-                // Check if the title field is truly empty
-                if (titleField.getText().trim().isEmpty()) {
-                    // FIX: Manually display the red warning text and set color to RED
+                String titleText = titleField.getText().trim();
+                boolean isTitleInvalid = titleText.isEmpty() || titleText.equals("Deck Title REQUIRED*");
+
+                if (isTitleInvalid) {
                     titleField.setText("Deck Title REQUIRED*");
                     titleField.setForeground(Color.RED);
-
-                    // Prevent saving/showing success screen
                     return;
                 }
 
-                // Proceed only if title is not empty AND card areas have content
-                if (!frontArea.getText().isEmpty() && !backArea.getText().isEmpty()) {
+                String frontText = frontArea.getText().trim();
+                String backText = backArea.getText().trim();
+
+                if (!frontText.isEmpty() && !backText.isEmpty()) {
                     showSuccessScreen();
                 }
             });
@@ -625,69 +650,54 @@ public class Create extends panelUtilities {
                }
            });
         }
-
-        private void addNavButton(ShadowButton b, int type) {
-            if(type == 0) b.addActionListener(e -> navigate(0));
-            if(type == 1) b.addActionListener(e -> navigate(currentIndex - 1));
-            if(type == 2) b.addActionListener(e -> navigate(currentIndex + 1));
-            if(type == 3) b.addActionListener(e -> navigate(cards.size() - 1));
-            add(b);
-        }
-
-        public void setDiscardMode(boolean active) {
-            frontArea.setVisible(!active);
-            backArea.setVisible(!active);
-            repaint();
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            if (panelBg != null) {
-                g2.drawImage(panelBg, 0, 0, getWidth(), getHeight(), this);
-            } else {
-                g2.setColor(PANEL_COLOR);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
-            }
-        }
-
-
-        void saveCurrentInputToMemory() {
-            if (!cards.isEmpty() && currentIndex >= 0 && currentIndex < cards.size()) {
-                FlashcardData c = cards.get(currentIndex);
-                c.setFront(frontArea.getText());
-                c.setBack(backArea.getText());
-            }
-        }
-
         void updateUIFromData() {
-            // Check for the rare case where cards list is truly empty (size 0)
+            // 1. Update Text Fields
             if (cards.isEmpty()) {
-                counterLabel.setText("1/1"); // We treat the empty panel as slot 1/1
+                counterLabel.setText("1/1");
                 frontArea.setText("");
                 backArea.setText("");
             } else if (currentIndex < cards.size()) {
                 FlashcardData c = cards.get(currentIndex);
                 frontArea.setText(c.getFront());
                 backArea.setText(c.getBack());
-                // FIX: Always display the current index (1-based) over the total size (N)
-                // Since cards.size() >= 1, this will correctly show 1/1 for the first card.
                 counterLabel.setText((currentIndex + 1) + "/" + cards.size());
             } else {
-                // Fallback for safety, though it shouldn't be reached after the reset in hideSuccessScreen()
                 counterLabel.setText((cards.size()) + "/" + cards.size());
             }
-        }
 
+            // 2. Logic for Buttons
+            boolean hasCards = !cards.isEmpty();
+            boolean isStart = (currentIndex == 0);
+            boolean isEnd = (currentIndex == cards.size() - 1);
+
+            // --- LEFT ARROWS (First & Prev) ---
+            if (cards.size() <= 1 || (hasCards && isStart)) {
+                // DISABLE: Pass the Gray Icon explicitly
+                btnFirst.updateState(iconFirstGray, false);
+                btnPrev.updateState(iconPrevGray, false);
+            } else {
+                // ENABLE: Pass the Color Icon
+                btnFirst.updateState(iconFirst, true);
+                btnPrev.updateState(iconPrev, true);
+            }
+
+            // --- RIGHT ARROWS (Next & Last) ---
+            if (cards.size() <= 1 || (hasCards && isEnd)) {
+                // DISABLE: Pass the Gray Icon explicitly
+                btnNext.updateState(iconNextGray, false);
+                btnLast.updateState(iconLastGray, false);
+            } else {
+                // ENABLE: Pass the Color Icon
+                btnNext.updateState(iconNext, true);
+                btnLast.updateState(iconLast, true);
+            }
+        }
 
         private void navigate(int index) {
             saveCurrentInputToMemory();
             if (cards.isEmpty()) return;
-
             if (index < 0) index = 0;
             if (index >= cards.size()) index = cards.size() - 1;
-
             currentIndex = index;
             updateUIFromData();
         }
@@ -701,261 +711,282 @@ public class Create extends panelUtilities {
             selectedColor = "yellow";
         }
 
-        private ShadowButton createNavButton(String imgName, int x, int y, String alt) {
-            return new ShadowButton(alt, x, y, 60, 45, new Color(144, 238, 144), 0);
+        private ImageIcon loadIconResized(String name) {
+            try {
+                ImageIcon o = loadImage(IMG_PATH_PREFIX + name);
+                if (o != null) return new ImageIcon(o.getImage().getScaledInstance(60, 45, Image.SCALE_SMOOTH));
+            } catch (Exception e) {
+            }
+            return null;
         }
 
         private JButton createImageButton(String name, int x, int y) {
-            URL url = getClass().getResource(IMG_PATH_PREFIX + name);
-            JButton b = new JButton();
-            if (url != null) {
-                Image img = new ImageIcon(url).getImage();
-                ImageIcon icon = new ImageIcon(img.getScaledInstance(50, 50, Image.SCALE_SMOOTH));
-                b.setIcon(icon);
-            } else {
-                b.setText("?");
+
+            JButton b = new JButton() {
+                private boolean isPressed = false;
+
+                {
+                    addMouseListener(new MouseAdapter() {
+                        @Override
+                        public void mousePressed(MouseEvent e) {
+                            isPressed = true;
+                            repaint();
+                        }
+
+                        @Override
+                        public void mouseReleased(MouseEvent e) {
+                            isPressed = false;
+                            repaint(); // Trigger repaint to show "up" state
+                        }
+
+                        @Override
+                        public void mouseExited(MouseEvent e) {
+                            isPressed = false; // Reset if mouse slides off
+                            repaint();
+                        }
+                    });
+                }
+
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                    if (isPressed) {
+                        g2.translate(0, 5);
+                    }
+
+                    super.paintComponent(g2);
+                    g2.dispose();
+                }
+            };
+
+            try {
+                ImageIcon i = loadImage(IMG_PATH_PREFIX + name);
+                if (i != null) {
+                    b.setIcon(new ImageIcon(i.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH)));
+                } else {
+                    b.setText("?");
+                }
+            } catch (Exception e) {
             }
+
             b.setBounds(x, y, 50, 50);
             b.setContentAreaFilled(false);
             b.setBorderPainted(false);
             b.setFocusPainted(false);
             b.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
             return b;
         }
 
         private JLabel createLabel(String txt, int x, int y) {
             JLabel l = new JLabel(txt);
-            l.setFont(loadCustomFont("bold",18f));
+            l.setFont(loadCustomFont("bold", 18f));
             l.setForeground(new Color(60, 60, 60));
             l.setBounds(x, y, 300, 30);
             return l;
         }
 
+
+        public void setDiscardMode(boolean active) {
+            frontArea.setVisible(!active);
+            backArea.setVisible(!active);
+            repaint();
+        }
+
+        void saveCurrentInputToMemory() {
+            if (!cards.isEmpty() && currentIndex >= 0 && currentIndex < cards.size()) {
+                FlashcardData c = cards.get(currentIndex);
+                c.setFront(frontArea.getText());
+                c.setBack(backArea.getText());
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            if (panelBg != null) g2.drawImage(panelBg, 0, 0, getWidth(), getHeight(), this);
+            else {
+                g2.setColor(PANEL_COLOR);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 40, 40);
+            }
+        }
+
         private JPanel createCardPanel(String title, int x, boolean isFront) {
             JPanel p = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
+                @Override
+                protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g;
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int arc = 45;
-                    int shadowOffset = 8;
                     g2.setColor(new Color(160, 160, 160));
-                    g2.fillRoundRect(5, 5+shadowOffset, 510 -10, 368 -10-shadowOffset, arc, arc);
+                    g2.fillRoundRect(5, 13, 500, 350, 45, 45);
                     g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
+                    g2.fillRoundRect(5, 5, 500, 350, 45, 45);
                     g2.setColor(new Color(200, 200, 200));
                     g2.setStroke(new BasicStroke(3));
-                    g2.drawRoundRect(5, 5, 510 -10, 368 -10-shadowOffset, arc, arc);
+                    g2.drawRoundRect(5, 5, 500, 350, 45, 45);
                 }
             };
             p.setOpaque(false);
             p.setBounds(x, 150, 510, 368);
             JLabel l = new JLabel(title);
-            l.setFont(loadCustomFont("bold",20f));
+            l.setFont(loadCustomFont("bold", 20f));
             l.setForeground(new Color(150, 150, 150));
             l.setBounds(30, 25, 200, 30);
             p.add(l);
             JTextArea ta = new JTextArea();
             ta.setOpaque(false);
-            ta.setFont(loadCustomFont("regular",22f));
+            ta.setFont(loadCustomFont("regular", 22f));
             ta.setLineWrap(true);
             ta.setWrapStyleWord(true);
-            ta.setBounds(30, 75, 510 -70, 368 -100);
-
+            ta.setBounds(30, 75, 440, 268);
             ta.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyPressed(KeyEvent e) {
-                    if(e.getKeyCode() == KeyEvent.VK_TAB) {
-                        e.consume();
-                    }
+                    if (e.getKeyCode() == KeyEvent.VK_TAB) e.consume();
                 }
             });
-
-            if(isFront) frontArea = ta; else backArea = ta;
+            if (isFront) frontArea = ta;
+            else backArea = ta;
             p.add(ta);
             return p;
         }
     }
 
-    // --- POPUPS ---
+    // pop up class
+    class ReusablePopup extends JPanel {
+        private final JLabel messageLabel;
+        private final JLabel iconLabel;
+        private final ShadowButton btnLeft;
+        private final ShadowButton btnRight;
+        private final JButton btnClose;
+        private final JPanel modal;
+        private final ImageIcon panelImage;
+        private final ImageIcon successIcon;
+        private final ImageIcon closeIcon;
 
-    class DiscardPopup extends JPanel {
-        public DiscardPopup() {
+        public ReusablePopup() {
             setLayout(null);
             setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = getJPanel();
-            add(modal);
-            JLabel lbl = new JLabel("<html><center>Are you sure you want to discard<br>flashcards?</center></html>");
-            lbl.setFont(loadCustomFont("extrabold",20f));
-            lbl.setForeground(Color.BLACK);
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(20, 30, 380, 80);
-            modal.add(lbl);
-            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(230, 130, 130), 0);
-            btnYes.setSmooth(true);
-            btnYes.addActionListener(e -> performDiscard());
-            modal.add(btnYes);
-            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(144, 238, 144), 0);
-            btnNo.setSmooth(true);
-            btnNo.addActionListener(e -> hideDiscardScreen());
-            modal.add(btnNo);
-        }
-        private JPanel getJPanel() {
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 40;
-                    g2.setColor(new Color(0,0,0, 30));
-                    g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
-                }
-            };
-            modal.setBounds(430, 250, 420, 250);
-            modal.setOpaque(false);
-            return modal;
-        }
-        @Override protected void paintComponent(Graphics g) {
-            g.setColor(new Color(0, 0, 0, 50));
-            g.fillRect(0, 0, getWidth(), getHeight());
-        }
-    }
-
-    class DeletePopup extends JPanel {
-        public DeletePopup() {
-            setLayout(null);
-            setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = getJPanel();
-            add(modal);
-
-            JLabel lbl = new JLabel("<html><center>Are you sure you want to<br>delete this card?</center></html>");
-            lbl.setFont(loadCustomFont("extrabold", 20f));
-            lbl.setForeground(Color.BLACK);
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(20, 30, 380, 80);
-            modal.add(lbl);
-
-            // YES Button
-            ShadowButton btnYes = new ShadowButton("YES", 30, 140, 170, 50, new Color(144, 238, 144), 0);
-            btnYes.setSmooth(true);
-            btnYes.addActionListener(e -> performDeleteCard());
-            modal.add(btnYes);
-
-            // NO Button
-            ShadowButton btnNo = new ShadowButton("NO", 215, 140, 170, 50, new Color(230, 130, 130), 0);
-            btnNo.setSmooth(true);
-            btnNo.addActionListener(e -> hideDeleteScreen());
-            modal.add(btnNo);
-        }
-
-        private JPanel getJPanel() {
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 40;
-
-                    g2.setColor(new Color(0, 0, 0, 30));
-                    g2.fillRoundRect(5, 8, w - 10, h - 15, arc, arc);
-
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w - 10, h - 15, arc, arc);
-
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w - 10, h - 15, arc, arc);
-                }
-            };
-            modal.setBounds(430, 250, 420, 250);
-            modal.setOpaque(false);
-            return modal;
-        }
-
-        @Override protected void paintComponent(Graphics g) {
-            g.setColor(new Color(0, 0, 0, 50));
-            g.fillRect(0, 0, getWidth(), getHeight());
-        }
-    }
-
-    class SuccessPopup extends JPanel {
-        public SuccessPopup() {
-            setLayout(null);
-            setOpaque(false);
-            addMouseListener(new MouseAdapter() {});
-            JPanel modal = new JPanel(null) {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    int w = getWidth(); int h = getHeight(); int arc = 30;
-                    g2.setColor(new Color(0,0,0,30));
-                    g2.fillRoundRect(5, 8, w-10, h-15, arc, arc);
-                    g2.setColor(Color.WHITE);
-                    g2.fillRoundRect(5, 5, w-10, h-15, arc, arc);
-                    g2.setColor(new Color(200, 200, 200));
-                    g2.setStroke(new BasicStroke(1));
-                    g2.drawRoundRect(5, 5, w-10, h-15, arc, arc);
-                }
-            };
-            modal.setBounds(480, 275, 320, 220);
-            modal.setOpaque(false);
-            add(modal);
-
-            JLabel icon = new JLabel();
-            URL iconUrl = getClass().getResource(IMG_PATH_PREFIX + "library_add_check.png");
-            if (iconUrl != null) {
-                ImageIcon imgIcon = new ImageIcon(iconUrl);
-                Image img = imgIcon.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-                icon.setIcon(new ImageIcon(img));
-            } else {
-                icon.setText("✓");
-                icon.setFont(new Font("SansSerif", Font.BOLD, 40));
-                icon.setForeground(new Color(76, 175, 80));
-                icon.setHorizontalAlignment(SwingConstants.CENTER);
+            ImageIcon tempBg = null, tempSuccess = null, tempClose = null;
+            try {
+                tempBg = loadImage(IMG_PATH_PREFIX + "panel.png");
+                ImageIcon rs = loadImage(IMG_PATH_PREFIX + "library_add_check.png");
+                if (rs != null)
+                    tempSuccess = new ImageIcon(rs.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+                ImageIcon rc = loadImage(IMG_PATH_PREFIX + "close-btn.png");
+                if (rc != null) tempClose = new ImageIcon(rc.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH));
+            } catch (Exception e) {
             }
-            icon.setBounds(140, 30, 40, 40);
-            modal.add(icon);
-
-            JButton btnX = new JButton() {
-                @Override protected void paintComponent(Graphics g) {
-                    Graphics2D g2 = (Graphics2D) g;
-                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(new Color(235, 120, 120));
-                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                    g2.setColor(Color.WHITE);
-                    g2.setStroke(new BasicStroke(2));
-                    int p = 8;
-                    g2.drawLine(p, p, getWidth()-p, getHeight()-p);
-                    g2.drawLine(getWidth()-p, p, p, getHeight()-p);
+            this.panelImage = tempBg;
+            this.successIcon = tempSuccess;
+            this.closeIcon = tempClose;
+            addMouseListener(new MouseAdapter() {
+            });
+            modal = new JPanel(null) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    if (panelImage != null) g.drawImage(panelImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                    else {
+                        g.setColor(Color.WHITE);
+                        g.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                    }
                 }
             };
-            btnX.setBounds(275, 15, 25, 25);
-            btnX.setContentAreaFilled(false);
-            btnX.setBorderPainted(false);
-            btnX.setFocusPainted(false);
-            btnX.setCursor(new Cursor(Cursor.HAND_CURSOR));
-            btnX.addActionListener(e -> hideSuccessScreen());
-            modal.add(btnX);
-
-            JLabel lbl = new JLabel("Deck added successfully.");
-            lbl.setFont(loadCustomFont("extrabold",19f));
-            lbl.setHorizontalAlignment(SwingConstants.CENTER);
-            lbl.setBounds(10, 80, 300, 40);
-            modal.add(lbl);
-
-            ShadowButton btnOk = new ShadowButton("OK", 100, 140, 120, 40, new Color(130, 225, 130), 0);
-            btnOk.setSmooth(true);
-            btnOk.addActionListener(e -> hideSuccessScreen());
-            modal.add(btnOk);
+            modal.setOpaque(false);
+            add(modal);
+            iconLabel = new JLabel();
+            iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            modal.add(iconLabel);
+            messageLabel = new JLabel();
+            messageLabel.setFont(loadCustomFont("extrabold", 20f));
+            messageLabel.setForeground(Color.BLACK);
+            messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            modal.add(messageLabel);
+            btnClose = new JButton("X");
+            btnClose.setFont(new Font("SansSerif", Font.BOLD, 12));
+            btnClose.setForeground(Color.GRAY);
+            btnClose.setContentAreaFilled(false);
+            btnClose.setBorderPainted(false);
+            btnClose.setFocusPainted(false);
+            btnClose.setOpaque(false);
+            btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            modal.add(btnClose);
+            btnLeft = new ShadowButton("", 0, 0, 0, 0, Color.GRAY, 0);
+            btnLeft.setSmooth(true);
+            modal.add(btnLeft);
+            btnRight = new ShadowButton("", 0, 0, 0, 0, Color.GRAY, 0);
+            btnRight.setSmooth(true);
+            modal.add(btnRight);
         }
-        @Override protected void paintComponent(Graphics g) {
+
+        public void showSuccess(String msg, String okText, Color btnColor, ActionListener actOk, ActionListener actClose) {
+            clearListeners();
+            modal.setBounds(480, 275, 320, 220);
+
+            if (successIcon != null)
+                iconLabel.setIcon(successIcon);
+            iconLabel.setBounds(0, 30, 320, 40);
+            iconLabel.setVisible(true);
+
+            if (closeIcon != null) {
+                btnClose.setIcon(closeIcon);
+                btnClose.setText("");
+
+            } else {
+                btnClose.setIcon(null);
+                btnClose.setText("X");
+            }
+            btnClose.setBounds(285, 15, 25, 25);
+            // Use separate close action
+            btnClose.addActionListener(actClose);
+            btnClose.setVisible(true);
+            modal.setComponentZOrder(btnClose, 0);
+            messageLabel.setText(msg);
+            messageLabel.setBounds(10, 80, 300, 40);
+            btnLeft.setText(okText);
+            btnLeft.setBgColor(btnColor);
+            btnLeft.setBounds(85, 140, 150, 50);
+            btnLeft.addActionListener(actOk);
+            btnLeft.setVisible(true);
+            btnRight.setVisible(false);
+            this.setVisible(true);
+            modal.repaint();
+        }
+
+        public void showConfirmation(String msg, String leftText, Color leftColor, ActionListener leftAct, String rightText, Color rightColor, ActionListener rightAct) {
+            clearListeners();
+            modal.setBounds(430, 250, 420, 250);
+            iconLabel.setVisible(false);
+            btnClose.setVisible(false);
+            messageLabel.setText(msg);
+            messageLabel.setBounds(20, 40, 380, 80);
+            btnLeft.setText(leftText);
+            btnLeft.setBgColor(leftColor);
+            btnLeft.setBounds(30, 140, 170, 50);
+            btnLeft.addActionListener(leftAct);
+            btnLeft.setVisible(true);
+            btnRight.setText(rightText);
+            btnRight.setBgColor(rightColor);
+            btnRight.setBounds(215, 140, 170, 50);
+            btnRight.addActionListener(rightAct);
+            btnRight.setVisible(true);
+            this.setVisible(true);
+            modal.repaint();
+        }
+
+        private void clearListeners() {
+            for (ActionListener al : btnLeft.getActionListeners()) btnLeft.removeActionListener(al);
+            for (ActionListener al : btnRight.getActionListeners()) btnRight.removeActionListener(al);
+            for (ActionListener al : btnClose.getActionListeners()) btnClose.removeActionListener(al);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
             g.setColor(new Color(0, 0, 0, 50));
             g.fillRect(0, 0, getWidth(), getHeight());
         }
     }
-
 }

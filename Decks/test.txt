@@ -1,4 +1,4 @@
-test	3	3	blue	2
+test	3	3	blue	5
 hello	world	0
 fdgsdfgdfg	sdfgsddfgsd	0
 sfgsdfgs	dfgsdgdfg	0
