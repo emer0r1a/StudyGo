@@ -1,4 +1,4 @@
-package LOADDECK;
+package loadDeck;
 
 import general.panelUtilities;
 
@@ -58,19 +58,19 @@ public class StudyMode extends JFrame {
         ImageIcon originalBg;
         switch (color){
             case "blue":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bluebg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bluebg.png"));
                 break;
             case "green":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/greenbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/greenbg.png"));
                 break;
             case "pink":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/pinkbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/pinkbg.png"));
                 break;
             case "bright yellow":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/yellowbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/yellowbg.png"));
                 break;
             default:
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bg.png"));
                 break;
         }
 

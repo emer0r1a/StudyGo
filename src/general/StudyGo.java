@@ -1,6 +1,6 @@
 package general;
 
-import LOADDECK.LoadDeck;
+import loadDeck.LoadDeck;
 import createDeck.Create;
 import home.Home;
 
