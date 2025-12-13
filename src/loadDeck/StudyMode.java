@@ -1,4 +1,4 @@
-package LOADDECK;
+package loadDeck;
 
 import general.panelUtilities;
 
@@ -58,19 +58,19 @@ public class StudyMode extends JFrame {
         ImageIcon originalBg;
         switch (color){
             case "blue":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bluebg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bluebg.png"));
                 break;
             case "green":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/greenbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/greenbg.png"));
                 break;
             case "pink":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/pinkbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/pinkbg.png"));
                 break;
             case "bright yellow":
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/yellowbg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/yellowbg.png"));
                 break;
             default:
-                originalBg = new ImageIcon(getClass().getResource("/LOADDECK/resources/bg.png"));
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bg.png"));
                 break;
         }
 
@@ -93,7 +93,7 @@ public class StudyMode extends JFrame {
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
         ImageIcon closeIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/close.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/close.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         );
@@ -115,11 +115,11 @@ public class StudyMode extends JFrame {
 
         currentCount = new JLabel("0");
         currentCount.setForeground(Color.decode("#79ADDC"));
-        currentCount.setFont(getCustomFont(33.33f));
+        currentCount.setFont(loadCustomFont("semibold",33));
 
         totalCount = new JLabel("/" + question.size());
         totalCount.setForeground(Color.decode("#9FA1A6"));
-        totalCount.setFont(getCustomFont(22f));
+        totalCount.setFont(loadCustomFont("semibold",22));
 
         counterPanel.add(currentCount);
         counterPanel.add(totalCount);
@@ -130,7 +130,7 @@ public class StudyMode extends JFrame {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
-        CardPanel stack = new CardPanel("resources/stack.png");
+        CardPanel stack = new CardPanel("/resources/loadDeck/stack.png");
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
         StyledCardPanel myCard = new StyledCardPanel();
@@ -141,7 +141,7 @@ public class StudyMode extends JFrame {
         textContainer.setOpaque(false);
 
         textInside = new JTextPane();
-        textInside.setFont(getCustomFont(25f));
+        textInside.setFont(loadCustomFont("semibold",25));
         textInside.setEditable(false);
         textInside.setFocusable(false); // Also make text non-focusable
         textInside.setOpaque(false);
@@ -170,11 +170,11 @@ public class StudyMode extends JFrame {
 
         // 1. Missed It
         ImageIcon sadIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/sad.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/sad.png"))
                         .getImage()
                         .getScaledInstance(18,18,Image.SCALE_SMOOTH)
         );
-        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
+        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, new Color(230,139,140), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
         btnMissed.setIconOnLeft(true);
         // FIX 2: Make button non-focusable
@@ -187,11 +187,11 @@ public class StudyMode extends JFrame {
 
         // 2. Flip / Eye
         ImageIcon visibIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/visibility.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/visibility.png"))
                         .getImage()
                         .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
         );
-        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
+        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#79ADDC"), visibIcon, "", 20f );
         // FIX 3: Make button non-focusable
         btnFlip.setFocusable(false);
         btnFlip.addActionListener(e -> {
@@ -202,7 +202,7 @@ public class StudyMode extends JFrame {
 
         // 3. Got It
         ImageIcon happyIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/happy.png")).getImage()
+                new ImageIcon(getClass().getResource("/resources/loadDeck/happy.png")).getImage()
                         .getScaledInstance(18,18,  Image.SCALE_SMOOTH)
         );
         btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
@@ -335,7 +335,7 @@ public class StudyMode extends JFrame {
             btnGotIt.setBackground(Color.decode("#CCCCCC"));
         } else {
             btnMissed.setEnabled(true);
-            btnMissed.setBackground(Color.decode("#FF3B30"));
+            btnMissed.setBackground(new Color(230,139,140));
 
             btnGotIt.setEnabled(true);
             btnGotIt.setBackground(Color.decode("#91E586"));
@@ -347,15 +347,6 @@ public class StudyMode extends JFrame {
         if (question.size() > 0) {
             int percentage = (int) (((double) completedCount / question.size()) * 100);
             progressBar.setValue(percentage);
-        }
-    }
-
-    private Font getCustomFont(float size) {
-        try {
-            java.io.InputStream is = getClass().getResourceAsStream("resources/Gabarito-SemiBold.ttf");
-            return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
-        } catch (Exception e) {
-            return new Font("Arial", Font.BOLD, (int)size);
         }
     }
 }

@@ -1,4 +1,4 @@
-package LOADDECK;
+package loadDeck;
 
 import general.*;
 
@@ -88,19 +88,19 @@ public class LoadDeck extends panelUtilities {
         ImageIcon originalBg;
         switch (color){
             case "blue":
-                originalBg = loadImage("/LOADDECK/resources/bluebg.png");
+                originalBg = loadImage("/resources/loadDeck/bluebg.png");
                 break;
             case "green":
-                originalBg = loadImage("/LOADDECK/resources/greenbg.png");
+                originalBg = loadImage("/resources/loadDeck/greenbg.png");
                 break;
             case "pink":
-                originalBg = loadImage("/LOADDECK/resources/pinkbg.png");
+                originalBg = loadImage("/resources/loadDeck/pinkbg.png");
                 break;
             case "bright yellow":
-                originalBg = loadImage("/LOADDECK/resources/yellowbg.png");
+                originalBg = loadImage("/resources/loadDeck/yellowbg.png");
                 break;
             default:
-                originalBg = loadImage("/LOADDECK/resources/bg.png");
+                originalBg = loadImage("/resources/loadDeck/bg.png");
                 break;
         }
 
@@ -121,7 +121,7 @@ public class LoadDeck extends panelUtilities {
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
         ImageIcon settingsIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("/LOADDECK/resources/settings.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/settings.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         ) ;
@@ -135,7 +135,7 @@ public class LoadDeck extends panelUtilities {
         });
 
         ImageIcon closeIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("/LOADDECK/resources/close.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/close.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         );
@@ -169,7 +169,7 @@ public class LoadDeck extends panelUtilities {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
-        CardPanel stack = new CardPanel("/LOADDECK/resources/stack.png");
+        CardPanel stack = new CardPanel("/resources/loadDeck/stack.png");
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
         StyledCardPanel myCard = new StyledCardPanel();
@@ -224,12 +224,12 @@ public class LoadDeck extends panelUtilities {
         int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
         int startX = (1185 - totalGroupWidth) / 2;
 
-        ImageIcon prevIcon = loadImage("/LOADDECK/resources/double_arrow_left.png");
+        ImageIcon prevIcon = loadImage("/resources/loadDeck/double_arrow_left.png");
         btnPreviousIcon = new ShadowButton("", startX, axisY, smallW, height, Color.decode("#91E586"), prevIcon, "", 22f);
         btnPreviousIcon.setFocusable(false);
         btnPreviousIcon.addActionListener(navActionListener);
 
-        ImageIcon previousIcon = loadImage("/LOADDECK/resources/prev-icon.png");
+        ImageIcon previousIcon = loadImage("/resources/loadDeck/prev-icon.png");
         btnPrevious = new ShadowButton("Previous", startX + smallW + gap, axisY, bigW, height, Color.decode("#91E586"),previousIcon, "semibold", 22f);
         btnPrevious.setIconOnLeft(true);
         btnPrevious.setFocusable(false);
@@ -242,12 +242,12 @@ public class LoadDeck extends panelUtilities {
             updateUI();
         });
 
-        ImageIcon nxtIcon =loadImage("/LOADDECK/resources/next-icon.png");
+        ImageIcon nxtIcon =loadImage("/resources/loadDeck/next-icon.png");
         btnNext = new ShadowButton("Next", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height,Color.decode("#91E586"), nxtIcon, "semibold", 22f );
         btnNext.setFocusable(false);
         btnNext.addActionListener(navActionListener);
 
-        ImageIcon nextIcon = loadImage("/LOADDECK/resources/double_arrow_right.png");
+        ImageIcon nextIcon = loadImage("/resources/loadDeck/double_arrow_right.png");
         btnNextIcon = new ShadowButton("", startX + smallW + gap + bigW + gap + smallW + gap + bigW + gap, axisY, smallW, height, Color.decode("#91E586"), nextIcon, "", 22f);
         btnNextIcon.setFocusable(false);
         btnNextIcon.addActionListener(navActionListener);
@@ -410,10 +410,10 @@ public class LoadDeck extends panelUtilities {
         // 2. Update Visibility Icon
         ImageIcon iconImage;
         if (isShowingQuestion) {
-            iconImage = loadImage("/LOADDECK/resources/visibility_off.png");
+            iconImage = loadImage("/resources/loadDeck/visibility_off.png");
             btnVisibility.setIconImage(iconImage);
         } else {
-            iconImage = loadImage("/LOADDECK/resources/visibility.png");
+            iconImage = loadImage("/resources/loadDeck/visibility.png");
             btnVisibility.setIconImage(iconImage);
         }
 
@@ -600,11 +600,11 @@ class SettingsOverlay extends JPanel {
         int boxX = (windowW - boxW) / 2;
         int boxY = (windowH - boxH) / 2;
 
-        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), pUtil.loadImage("/LOADDECK/resources/close.png"), "semibold", 10f );
+        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), pUtil.loadImage("/resources/loadDeck/close.png"), "semibold", 10f );
         btnClose.addActionListener(onClose);
 
         ImageIcon shuffleIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/shuffle.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/shuffle.png"))
                         .getImage()
                         .getScaledInstance(12, 12, Image.SCALE_SMOOTH)
         );
@@ -620,7 +620,7 @@ class SettingsOverlay extends JPanel {
         });
 
         ImageIcon studyModeIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/menu.png"))
+                new ImageIcon(getClass().getResource("/resources/loadDeck/menu.png"))
                         .getImage()
                         .getScaledInstance(18, 18, Image.SCALE_SMOOTH)
         );

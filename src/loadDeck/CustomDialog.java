@@ -1,4 +1,4 @@
-package LOADDECK;
+package loadDeck;
 
 import general.panelUtilities;
 
@@ -8,14 +8,19 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.*;
 
+import static general.panelUtilities.loadCustomFont;
+
 public class CustomDialog extends JDialog {
     private int result = JOptionPane.NO_OPTION;
     private final int RADIUS = 30;
+    private panelUtilities pUtil;
 
     public CustomDialog(JFrame parent, String title, String message, boolean isConfirm) {
         super(parent, true); // Modal
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0)); // Transparent background
+
+        pUtil = new panelUtilities();
 
         // 1. Set to Full Window Size to allow for the dimming overlay
         setSize(1280, 720);
@@ -35,7 +40,7 @@ public class CustomDialog extends JDialog {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
                 // A. Draw Dimmed Background (Full Screen)
-                g2.setColor(new Color(0, 0, 0, 150));
+                g2.setColor(new Color(0, 0, 0, 50));
                 g2.fillRect(0, 0, getWidth(), getHeight());
 
                 // B. Draw White Box (Centered)
@@ -54,7 +59,7 @@ public class CustomDialog extends JDialog {
         setContentPane(panel);
 
         // --- "X" Close Button ---
-        panelUtilities.ShadowButton btnCloseX = new panelUtilities.ShadowButton("X", boxX + boxW - 40, boxY + 10, 30, 30, Color.decode("#F4AFAB"), null, "semibold", 16f);
+        panelUtilities.ShadowButton btnCloseX = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30, Color.decode("#F4AFAB"), pUtil.loadImage("/resources/home/close-icon.png"), "semibold", 16f);
         btnCloseX.addActionListener(e -> {
             result = JOptionPane.NO_OPTION;
             dispose();
@@ -63,15 +68,15 @@ public class CustomDialog extends JDialog {
 
         // --- Title ---
         JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
-        lblTitle.setFont(getCustomFont(22f));
+        lblTitle.setFont(loadCustomFont("semibold",22));
         lblTitle.setForeground(Color.decode("#79ADDC"));
-        lblTitle.setBounds(boxX, boxY + 20, boxW, 30);
+        lblTitle.setBounds(boxX, boxY + 40, boxW, 30);
         panel.add(lblTitle);
 
         // --- Message (UPDATED TO JTextPane FOR CENTERING) ---
         JTextPane txtMessage = new JTextPane();
         txtMessage.setText(message);
-        txtMessage.setFont(getCustomFont(18f));
+        txtMessage.setFont(loadCustomFont("semibold",18));
         txtMessage.setForeground(Color.GRAY);
         txtMessage.setOpaque(false);
         txtMessage.setEditable(false);
@@ -84,7 +89,7 @@ public class CustomDialog extends JDialog {
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
         // Position relative to box
-        txtMessage.setBounds(boxX + 40, boxY + 60, boxW - 80, 70);
+        txtMessage.setBounds(boxX + 40, boxY + 80, boxW - 80, 70);
         panel.add(txtMessage);
 
         // --- Action Buttons ---
@@ -108,7 +113,7 @@ public class CustomDialog extends JDialog {
             panel.add(btnYes);
         } else {
             // OK Button
-            panelUtilities.ShadowButton btnOk = new panelUtilities.ShadowButton("Great!", boxX + 125, btnY, 150, 40, Color.decode("#79ADDC"), null,  "semibold", 18f );
+            panelUtilities.ShadowButton btnOk = new panelUtilities.ShadowButton("OK", boxX + 125, btnY, 150, 40, Color.decode("#8FE68A"), null,  "semibold", 18f );
             btnOk.addActionListener(e -> dispose());
             panel.add(btnOk);
         }
@@ -124,14 +129,5 @@ public class CustomDialog extends JDialog {
     public static void showMessageDialog(JFrame parent, String message) {
         CustomDialog dialog = new CustomDialog(parent, "Notification", message, false);
         dialog.setVisible(true);
-    }
-
-    private Font getCustomFont(float size) {
-        try {
-            java.io.InputStream is = getClass().getResourceAsStream("resources/Gabarito-SemiBold.ttf");
-            return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
-        } catch (Exception e) {
-            return new Font("Arial", Font.BOLD, (int)size);
-        }
     }
 }
