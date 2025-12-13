@@ -1,0 +1,2 @@
+mxmx	1	0	bright yellow	5
+mxm	mxmx	0

@@ -559,7 +559,8 @@ public class Home extends panelUtilities {
                         JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                    //JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                    selectDeckErrorPanel();
                 }
             }
         });
@@ -737,6 +738,103 @@ public class Home extends panelUtilities {
 
         homePanel.add(errorPanel);
         homePanel.setComponentZOrder(errorPanel,0);
+        homePanel.revalidate();
+        homePanel.repaint();
+    }
+
+    private void selectDeckErrorPanel() {
+
+        ImageIcon errorBg = loadImage("/resources/createDeck/error-opening-file (1).png");
+        ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
+        ImageIcon grayOKBtn = loadImage("/resources/home/gray-ok-btn.png");
+
+        JPanel errorPanel = new JPanel(null);
+        errorPanel.setBounds(0, 0, homePanel.getWidth(), homePanel.getHeight());
+
+        JButton closeDialog = new JButton() {
+            private boolean isPressed = false;
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override public void mousePressed(MouseEvent e) { isPressed = true; repaint(); }
+                    @Override public void mouseReleased(MouseEvent e) { isPressed = false; repaint(); }
+                    @Override public void mouseExited(MouseEvent e) { isPressed = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (isPressed) g2.translate(0, 5); // Sink down 5px
+                super.paintComponent(g2);
+                g2.dispose();
+            }
+        };
+
+        closeDialog.setIcon(closeBtn);
+        closeDialog.setBounds(750, 262, closeBtn.getIconWidth() + 2, closeBtn.getIconHeight());
+
+        closeDialog.setContentAreaFilled(false);
+        closeDialog.setBorderPainted(false);
+        closeDialog.setFocusPainted(false);
+        closeDialog.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        errorPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(errorPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        JButton okDialog = new JButton() {
+            private boolean isPressed = false;
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override public void mousePressed(MouseEvent e) { isPressed = true; repaint(); }
+                    @Override public void mouseReleased(MouseEvent e) { isPressed = false; repaint(); }
+                    @Override public void mouseExited(MouseEvent e) { isPressed = false; repaint(); }
+                });
+            }
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                if (isPressed) g2.translate(0, 5); // Sink down 5px
+                super.paintComponent(g2);
+                g2.dispose();
+            }
+        };
+
+        okDialog.setIcon(grayOKBtn);
+        okDialog.setBounds(587, 387, grayOKBtn.getIconWidth(), grayOKBtn.getIconHeight());
+
+        okDialog.setContentAreaFilled(false);
+        okDialog.setBorderPainted(false);
+        okDialog.setFocusPainted(false);
+        okDialog.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        errorPanel.add(okDialog);
+
+        okDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(errorPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+
+        JLabel errorDialog = new JLabel(errorBg);
+        errorDialog.setBounds(0, 0, homePanel.getWidth(), homePanel.getHeight());
+        errorPanel.add(errorDialog);
+        errorPanel.setOpaque(false);
+
+        homePanel.add(errorPanel);
+        homePanel.setComponentZOrder(errorPanel, 0);
         homePanel.revalidate();
         homePanel.repaint();
     }
