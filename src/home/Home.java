@@ -518,7 +518,7 @@ public class Home extends panelUtilities {
 
     private void addButtons() {
         ImageIcon cd = loadImage("/resources/home/plus-icon.png");
-        createDeck = new ShadowButton("Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
+        createDeck = new ShadowButton("  Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
         styleButton(createDeck);
         homePanel.add(createDeck);
 

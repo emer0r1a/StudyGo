@@ -580,12 +580,15 @@ class RoundedProgressBar extends JProgressBar {
 
 class SettingsOverlay extends JPanel {
     private panelUtilities.ShadowButton btnShuffle, btnStudyMode, btnClose;
+    private panelUtilities pUtil;
     private LoadDeck parent;
 
     public SettingsOverlay(LoadDeck parent, ActionListener onClose, Font font) {
         this.parent = parent;
         setLayout(null);
         setOpaque(false);
+
+        pUtil = new panelUtilities();
 
         addMouseListener(new java.awt.event.MouseAdapter() {});
 
@@ -597,12 +600,7 @@ class SettingsOverlay extends JPanel {
         int boxX = (windowW - boxW) / 2;
         int boxY = (windowH - boxH) / 2;
 
-        ImageIcon closeIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("resources/close.png"))
-                        .getImage()
-                        .getScaledInstance(13, 13, Image.SCALE_SMOOTH)
-        );;
-        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), closeIcon, "semibold", 10f );
+        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), pUtil.loadImage("/LOADDECK/resources/close.png"), "semibold", 10f );
         btnClose.addActionListener(onClose);
 
         ImageIcon shuffleIcon = new ImageIcon(
@@ -647,7 +645,7 @@ class SettingsOverlay extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2.setColor(new Color(0, 0, 0, 150));
+        g2.setColor(new Color(0, 0, 0, 50));
         g2.fillRect(0, 0, getWidth(), getHeight());
 
         int boxW = 350;

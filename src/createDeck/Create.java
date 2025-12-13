@@ -10,7 +10,6 @@ import javax.swing.text.PlainDocument;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class Create extends panelUtilities {
@@ -30,7 +29,6 @@ public class Create extends panelUtilities {
     private final String IMG_PATH_PREFIX = "/resources/createDeck/";
 
     private final MainDashboard mainDash;
-    private final ReusablePopup popupView;
 
     private JPanel createPanel;
     private JPopupMenu editColor;
@@ -84,13 +82,6 @@ public class Create extends panelUtilities {
         mainDash.setBounds(36, 43, 1193, 633);
         layeredPane.add(mainDash, Integer.valueOf(0));
 
-        // Reusable Popup (Top Layer)
-        popupView = new ReusablePopup();
-        popupView.setBounds(0, 0, 1280, 720);
-        popupView.setVisible(false);
-        layeredPane.add(popupView, Integer.valueOf(10)); // High Z-Index
-
-
         mainDash.updateUIFromData();
 
         if (titleField.getText().equals("Deck Title REQUIRED*")) {
@@ -102,16 +93,58 @@ public class Create extends panelUtilities {
 
     public void showDiscardScreen() {
         mainDash.setDiscardMode(true);
-        popupView.showConfirmation(
-                "<html><center>Are you sure you want to discard<br>changes?</center></html>",
-                "YES", new Color(230, 130, 130), e -> performDiscard(),
-                "NO", new Color(144, 238, 144), e -> hidePopup()
-        );
-    }
+        ImageIcon deleteBg = loadImage("/resources/createDeck/discard-changes.png");
 
-    public void hidePopup() {
-        popupView.setVisible(false);
-        mainDash.setDiscardMode(false);
+        JPanel delPanel = new JPanel(null);
+        delPanel.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
+        delPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        ShadowButton delDialog = new ShadowButton(" Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/discard-icon.png"),"bold",16);
+        delPanel.add(delDialog);
+
+        delDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainDash.setDiscardMode(false);
+                performDiscard();
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        ShadowButton cancelDialog = new ShadowButton("Cancel",504,385,118,38,new Color(184,184,184),null,"bold",16);
+        delPanel.add(cancelDialog);
+
+        cancelDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        JLabel deleteDialog = new JLabel(deleteBg);
+        deleteDialog.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+        delPanel.add(deleteDialog);
+        delPanel.setOpaque(false);
+
+        createPanel.add(delPanel);
+        createPanel.setComponentZOrder(delPanel,0);
+        createPanel.revalidate();
+        createPanel.repaint();
     }
 
     public void performDiscard() {
@@ -126,28 +159,55 @@ public class Create extends panelUtilities {
         cards.add(new FlashcardData("", ""));
         currentIndex = 0;
         mainDash.updateUIFromData();
-        hidePopup();
         mainFrame.showHomePanel();
     }
 
     public void showSuccessScreen() {
         mainDash.saveCurrentInputToMemory();
 
-        // Pass 2 Actions:
-        // 1. actOk (Green Button) -> Saves and Exits
-        // 2. actClose (X Button) -> Just hides popup (stays on Create screen)
-        popupView.showSuccess(
-                "Deck added successfully.",
-                "OK",
-                new Color(130, 225, 130),
-                e -> finalizeSave(),             // OK Button Action
-                e -> popupView.setVisible(false) // Close X Action
-        );
+        ImageIcon successBg = loadImage("/resources/home/success-opening-file.png");
+
+        JPanel successPanel = new JPanel(null);
+        successPanel.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
+        successPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createPanel.remove(successPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        ShadowButton okDialog = new ShadowButton("OK",572,385,118,38,new Color(143,230,138),null,"bold",16);
+        successPanel.add(okDialog);
+
+        okDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                finalizeSave();
+                createPanel.remove(successPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        JLabel successDialog = new JLabel(successBg);
+        successDialog.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+        successPanel.add(successDialog);
+        successPanel.setOpaque(false);
+
+        createPanel.add(successPanel);
+        createPanel.setComponentZOrder(successPanel,0);
+        createPanel.revalidate();
+        createPanel.repaint();
     }
 
     public void finalizeSave() {
         String filename;
-        popupView.setVisible(false);
 
         int orderIndex = (toBeEdited != null) ? toBeEdited.getOrderIndex() : 0;
         if (!oldLink.isEmpty()) {
@@ -205,11 +265,57 @@ public class Create extends panelUtilities {
 
     public void showDeleteScreen() {
         if (cards.size() == 1 && cards.get(0).isEmpty()) return;
-        popupView.showConfirmation(
-                "<html><center>Are you sure you want to<br>delete this card?</center></html>",
-                "YES", new Color(144, 238, 144), e -> performDeleteCard(),
-                "NO", new Color(230, 130, 130), e -> hidePopup()
-        );
+        ImageIcon deleteBg = loadImage("/resources/createDeck/delete-card.png");
+
+        JPanel delPanel = new JPanel(null);
+        delPanel.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
+        delPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        ShadowButton delDialog = new ShadowButton(" Delete",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/discard-icon.png"),"bold",16);
+        delPanel.add(delDialog);
+
+        delDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                performDeleteCard();
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        ShadowButton cancelDialog = new ShadowButton("Cancel",504,385,118,38,new Color(184,184,184),null,"bold",16);
+        delPanel.add(cancelDialog);
+
+        cancelDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createPanel.remove(delPanel);
+                createPanel.revalidate();
+                createPanel.repaint();
+            }
+        });
+
+        JLabel deleteDialog = new JLabel(deleteBg);
+        deleteDialog.setBounds(0,0,createPanel.getWidth(),createPanel.getHeight());
+        delPanel.add(deleteDialog);
+        delPanel.setOpaque(false);
+
+        createPanel.add(delPanel);
+        createPanel.setComponentZOrder(delPanel,0);
+        createPanel.revalidate();
+        createPanel.repaint();
     }
 
     public void performDeleteCard() {
@@ -220,7 +326,6 @@ public class Create extends panelUtilities {
             if (!cards.isEmpty()) cards.set(0, new FlashcardData("", ""));
         }
         mainDash.updateUIFromData();
-        hidePopup();
     }
 
     public void loadToBeEdited(String link, Deck d, String color, ArrayList<Deck> decks) {
