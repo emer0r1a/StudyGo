@@ -388,7 +388,7 @@ public class Home extends panelUtilities {
             }
         });
 
-        ShadowButton delDialog = new ShadowButton("Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/delete-icon.png"),"bold",16);
+        ShadowButton delDialog = new ShadowButton(" Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/delete-icon.png"),"bold",16);
         delPanel.add(delDialog);
 
         delDialog.addActionListener(new ActionListener() {

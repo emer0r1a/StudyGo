@@ -605,12 +605,12 @@ public class Create extends panelUtilities {
             add(btnLast);
 
             // Discard & Save Buttons
-            btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), 1);
+            btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), loadImage("/resources/createDeck/discard-icon.png"),"bold",16);
             btnDiscard.addActionListener(e -> showDiscardScreen());
             add(btnDiscard);
 
             // --- UPDATED SAVE BUTTON LOGIC ---
-            btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), 2);
+            btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), loadImage("/resources/createDeck/save.png"),"bold",16);
             btnSave.addActionListener(e -> {
                 String titleText = titleField.getText().trim();
                 boolean isTitleInvalid = titleText.isEmpty() || titleText.equals("Deck Title REQUIRED*");
