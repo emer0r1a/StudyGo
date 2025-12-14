@@ -18,19 +18,16 @@ public class LoadDeck extends panelUtilities {
 
     // --- LOGIC VARIABLES ---
     ArrayList<String> question = new ArrayList<>();
-
-    private File decksFolder = new File("Decks");
     ArrayList<String> answer = new ArrayList<>();
 
-    // NEW: Tracker to see if a specific card index has been counted yet
+    // Tracker to see if a specific card index has been counted yet
     ArrayList<Boolean> flippedTracker = new ArrayList<>();
 
     int currentIndex = 0;
     boolean isShowingQuestion = true;
-
     private int cardsAccessed = 0;
 
-    // Made these package-private so SettingsOverlay can see them
+    // Package-private so SettingsOverlay can see them
     String filename;
     String deckTitle;
 
@@ -74,6 +71,17 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.setLayout(null);
         loadDeckPanel.setBounds(0, 0, 1280, 720);
 
+        // --- WINDOW ICON ---
+        try {
+            java.net.URL iconUrl = getClass().getResource("/resources/loadDeck/icon.png");
+            if (iconUrl != null) {
+                Image appIcon = Toolkit.getDefaultToolkit().getImage(iconUrl);
+                mainFrame.setIconImage(appIcon);
+            }
+        } catch (Exception e) {
+            System.out.println("Warning: Window icon not found at /resources/loadDeck/icon.png");
+        }
+
         settingsOverlay = new SettingsOverlay(this, e -> {
             settingsOverlay.setVisible(false);
         }, loadCustomFont("semibold",20f));
@@ -84,23 +92,26 @@ public class LoadDeck extends panelUtilities {
         loadDeckPanel.add(settingsOverlay);
 
         // --- BACKGROUND PANEL ---
+        if (color == null) color = "default";
         color = color.toLowerCase();
         ImageIcon originalBg;
+
+        // UPDATED PATHS HERE
         switch (color){
             case "blue":
-                originalBg = loadImage("/resources/loadDeck/bluebg.png");
+                originalBg = safeLoadImage("/resources/loadDeck/bluebg.png");
                 break;
             case "green":
-                originalBg = loadImage("/resources/loadDeck/greenbg.png");
+                originalBg = safeLoadImage("/resources/loadDeck/greenbg.png");
                 break;
             case "pink":
-                originalBg = loadImage("/resources/loadDeck/pinkbg.png");
+                originalBg = safeLoadImage("/resources/loadDeck/pinkbg.png");
                 break;
             case "bright yellow":
-                originalBg = loadImage("/resources/loadDeck/yellowbg.png");
+                originalBg = safeLoadImage("/resources/loadDeck/yellowbg.png");
                 break;
             default:
-                originalBg = loadImage("/resources/loadDeck/bg.png");
+                originalBg = safeLoadImage("/resources/loadDeck/bg.png");
                 break;
         }
 
@@ -120,11 +131,12 @@ public class LoadDeck extends panelUtilities {
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
+        // UPDATED PATH
         ImageIcon settingsIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("/resources/loadDeck/settings.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
-        ) ;
+        );
         ShadowButton btnSettings = new ShadowButton("", 1105, 35, 41, 41, Color.decode("#79ADDC"), settingsIcon, "", 10f);
         btnSettings.setFocusable(false);
 
@@ -134,6 +146,7 @@ public class LoadDeck extends panelUtilities {
             loadDeckPanel.repaint();
         });
 
+        // UPDATED PATH
         ImageIcon closeIcon = new ImageIcon(
                 new ImageIcon(getClass().getResource("/resources/loadDeck/close.png"))
                         .getImage()
@@ -169,6 +182,7 @@ public class LoadDeck extends panelUtilities {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
+        // UPDATED PATH
         CardPanel stack = new CardPanel("/resources/loadDeck/stack.png");
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
@@ -224,12 +238,13 @@ public class LoadDeck extends panelUtilities {
         int totalGroupWidth = (smallW * 3) + (bigW * 2) + (gap * 4);
         int startX = (1185 - totalGroupWidth) / 2;
 
-        ImageIcon prevIcon = loadImage("/resources/loadDeck/double_arrow_left.png");
+        // UPDATED PATHS
+        ImageIcon prevIcon = safeLoadImage("/resources/loadDeck/double_arrow_left.png");
         btnPreviousIcon = new ShadowButton("", startX, axisY, smallW, height, Color.decode("#91E586"), prevIcon, "", 22f);
         btnPreviousIcon.setFocusable(false);
         btnPreviousIcon.addActionListener(navActionListener);
 
-        ImageIcon previousIcon = loadImage("/resources/loadDeck/prev-icon.png");
+        ImageIcon previousIcon = safeLoadImage("/resources/loadDeck/prev-icon.png");
         btnPrevious = new ShadowButton("Previous", startX + smallW + gap, axisY, bigW, height, Color.decode("#91E586"),previousIcon, "semibold", 22f);
         btnPrevious.setIconOnLeft(true);
         btnPrevious.setFocusable(false);
@@ -242,12 +257,12 @@ public class LoadDeck extends panelUtilities {
             updateUI();
         });
 
-        ImageIcon nxtIcon =loadImage("/resources/loadDeck/next-icon.png");
+        ImageIcon nxtIcon = safeLoadImage("/resources/loadDeck/next-icon.png");
         btnNext = new ShadowButton("Next", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height,Color.decode("#91E586"), nxtIcon, "semibold", 22f );
         btnNext.setFocusable(false);
         btnNext.addActionListener(navActionListener);
 
-        ImageIcon nextIcon = loadImage("/resources/loadDeck/double_arrow_right.png");
+        ImageIcon nextIcon = safeLoadImage("/resources/loadDeck/double_arrow_right.png");
         btnNextIcon = new ShadowButton("", startX + smallW + gap + bigW + gap + smallW + gap + bigW + gap, axisY, smallW, height, Color.decode("#91E586"), nextIcon, "", 22f);
         btnNextIcon.setFocusable(false);
         btnNextIcon.addActionListener(navActionListener);
@@ -276,6 +291,18 @@ public class LoadDeck extends panelUtilities {
         setupHotkeys();
     }
 
+    // --- SAFE IMAGE LOADER (Updated for /resources/loadDeck/) ---
+    private ImageIcon safeLoadImage(String path) {
+        java.net.URL url = getClass().getResource(path);
+
+        if (url == null) {
+            System.err.println("MISSING FILE: " + path);
+            // Return a blank transparent image so the app doesn't crash
+            return new ImageIcon(new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB));
+        }
+        return new ImageIcon(url);
+    }
+
     private void loadData() throws IOException {
         Deck deck = DeckFileManager.loadDeckHeader(filename);
 
@@ -292,20 +319,16 @@ public class LoadDeck extends panelUtilities {
         if (cards.isEmpty()) {
             question.add("Error");
             answer.add("File format is incorrect or no cards found.");
-            // Add one placeholder to avoid errors
             flippedTracker.add(false);
         } else {
             for (Card card : cards) {
                 question.add(card.getQuestion());
                 answer.add(card.getAnswer());
-                // 2. Initialize every card as NOT flipped (False)
                 flippedTracker.add(false);
             }
         }
 
         // 3. Restore previous progress
-        // If the file says we did 5 cards, we assume it was the first 5.
-        // This ensures the counter doesn't reset to 0 when you reload the app.
         for(int i = 0; i < cardsAccessed && i < flippedTracker.size(); i++) {
             flippedTracker.set(i, true);
         }
@@ -314,11 +337,9 @@ public class LoadDeck extends panelUtilities {
     }
 
     private void setupHotkeys() {
-        // Get the InputMap and ActionMap from the main panel
         InputMap inputMap = loadDeckPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = loadDeckPanel.getActionMap();
 
-        // --- 1. RIGHT ARROW -> NEXT CARD ---
         inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "nextCard");
         actionMap.put("nextCard", new AbstractAction() {
             @Override
@@ -331,7 +352,6 @@ public class LoadDeck extends panelUtilities {
             }
         });
 
-        // --- 2. LEFT ARROW -> PREVIOUS CARD ---
         inputMap.put(KeyStroke.getKeyStroke("LEFT"), "prevCard");
         actionMap.put("prevCard", new AbstractAction() {
             @Override
@@ -344,7 +364,6 @@ public class LoadDeck extends panelUtilities {
             }
         });
 
-        // --- 3. SPACEBAR -> FLIP CARD ---
         inputMap.put(KeyStroke.getKeyStroke("SPACE"), "flipCard");
         actionMap.put("flipCard", new AbstractAction() {
             @Override
@@ -354,7 +373,6 @@ public class LoadDeck extends panelUtilities {
             }
         });
 
-        // --- 4. CTRL + RIGHT ARROW -> JUMP TO LAST CARD ---
         inputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_DOWN_MASK), "lastCard");
         actionMap.put("lastCard", new AbstractAction() {
             @Override
@@ -367,7 +385,6 @@ public class LoadDeck extends panelUtilities {
             }
         });
 
-        // --- 5. CTRL + LEFT ARROW -> JUMP TO FIRST CARD ---
         inputMap.put(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_DOWN_MASK), "firstCard");
         actionMap.put("firstCard", new AbstractAction() {
             @Override
@@ -380,7 +397,6 @@ public class LoadDeck extends panelUtilities {
             }
         });
 
-        // --- 6. ESCAPE -> CLOSE SETTINGS or GO HOME ---
         inputMap.put(KeyStroke.getKeyStroke("ESCAPE"), "escapeKey");
         actionMap.put("escapeKey", new AbstractAction() {
             @Override
@@ -398,7 +414,6 @@ public class LoadDeck extends panelUtilities {
     public void updateUI() {
         if (question.isEmpty()) return;
 
-        // 1. Update Text Content
         String content = isShowingQuestion ? question.get(currentIndex) : answer.get(currentIndex);
         textInside.setText(content);
 
@@ -407,24 +422,20 @@ public class LoadDeck extends panelUtilities {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
-        // 2. Update Visibility Icon
         ImageIcon iconImage;
         if (isShowingQuestion) {
-            iconImage = loadImage("/resources/loadDeck/visibility_off.png");
+            // UPDATED PATH
+            iconImage = safeLoadImage("/resources/loadDeck/visibility_off.png");
             btnVisibility.setIconImage(iconImage);
         } else {
-            iconImage = loadImage("/resources/loadDeck/visibility.png");
+            // UPDATED PATH
+            iconImage = safeLoadImage("/resources/loadDeck/visibility.png");
             btnVisibility.setIconImage(iconImage);
         }
 
-        // --- 3. UPDATED PROGRESS & COUNTER LOGIC (NO HASHSET) ---
         if (!isShowingQuestion) {
-            // Check if this specific card (currentIndex) has been counted yet?
             if (currentIndex < flippedTracker.size() && !flippedTracker.get(currentIndex)) {
-                // Mark it as flipped
                 flippedTracker.set(currentIndex, true);
-
-                // Increase the official count
                 cardsAccessed++;
                 DeckFileManager.updateProgress(filename, cardsAccessed);
             }
@@ -440,13 +451,11 @@ public class LoadDeck extends panelUtilities {
         Color disabledColor = Color.decode("#E0E0E0");
         Color enabledColor = Color.decode("#91E586");
 
-        // --- PREVIOUS BUTTONS (ALWAYS ENABLED) ---
         btnPrevious.setEnabled(true);
         btnPreviousIcon.setEnabled(true);
         btnPrevious.setBgColor(isFirst ? disabledColor : enabledColor);
         btnPreviousIcon.setBgColor(isFirst ? disabledColor : enabledColor);
 
-        // --- NEXT BUTTONS (ALWAYS ENABLED) ---
         btnNext.setEnabled(true);
         btnNextIcon.setEnabled(true);
         btnNext.setBgColor(isLast ? disabledColor : enabledColor);
@@ -473,7 +482,6 @@ public class LoadDeck extends panelUtilities {
         answer = a;
         currentIndex = 0;
 
-        // Reset progress on Shuffle
         cardsAccessed = 0;
         flippedTracker.clear();
         for(int i=0; i<question.size(); i++) {
@@ -506,13 +514,23 @@ class ImagePanel extends JPanel {
 class CardPanel extends JPanel {
     private Image img;
     public CardPanel(String path) {
-        this.img = new ImageIcon(getClass().getResource(path)).getImage();
+        // Safe check using the passed path (which is already /resources/loadDeck/...)
+        try {
+            if (getClass().getResource(path) != null) {
+                this.img = new ImageIcon(getClass().getResource(path)).getImage();
+            } else {
+                System.err.println("CardPanel missing image: " + path);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         setOpaque(false);
         setLayout(null);
     }
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        if (img == null) return;
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
@@ -580,15 +598,12 @@ class RoundedProgressBar extends JProgressBar {
 
 class SettingsOverlay extends JPanel {
     private panelUtilities.ShadowButton btnShuffle, btnStudyMode, btnClose;
-    private panelUtilities pUtil;
     private LoadDeck parent;
 
     public SettingsOverlay(LoadDeck parent, ActionListener onClose, Font font) {
         this.parent = parent;
         setLayout(null);
         setOpaque(false);
-
-        pUtil = new panelUtilities();
 
         addMouseListener(new java.awt.event.MouseAdapter() {});
 
@@ -600,14 +615,33 @@ class SettingsOverlay extends JPanel {
         int boxX = (windowW - boxW) / 2;
         int boxY = (windowH - boxH) / 2;
 
-        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), pUtil.loadImage("/resources/loadDeck/close.png"), "semibold", 10f );
+        // --- UPDATED PATHS FOR SETTINGS OVERLAY ---
+
+        ImageIcon closeIcon = null;
+        if (getClass().getResource("/resources/loadDeck/close.png") != null) {
+            closeIcon = new ImageIcon(
+                    new ImageIcon(getClass().getResource("/resources/loadDeck/close.png"))
+                            .getImage()
+                            .getScaledInstance(13, 13, Image.SCALE_SMOOTH)
+            );
+        } else {
+            System.err.println("Missing: /resources/loadDeck/close.png");
+        }
+
+        btnClose = new panelUtilities.ShadowButton("", boxX + boxW - 40, boxY + 10, 30, 30,Color.decode("#F4AFAB"), closeIcon, "semibold", 10f );
         btnClose.addActionListener(onClose);
 
-        ImageIcon shuffleIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("/resources/loadDeck/shuffle.png"))
-                        .getImage()
-                        .getScaledInstance(12, 12, Image.SCALE_SMOOTH)
-        );
+        ImageIcon shuffleIcon = null;
+        if (getClass().getResource("/resources/loadDeck/shuffle.png") != null) {
+            shuffleIcon = new ImageIcon(
+                    new ImageIcon(getClass().getResource("/resources/loadDeck/shuffle.png"))
+                            .getImage()
+                            .getScaledInstance(12, 12, Image.SCALE_SMOOTH)
+            );
+        } else {
+            System.err.println("Missing: /resources/loadDeck/shuffle.png");
+        }
+
         btnShuffle = new panelUtilities.ShadowButton("Shuffle", boxX + 50, boxY + 60, 250, 45, Color.decode("#91E586"), shuffleIcon, "semibold", 20f);
         btnShuffle.setIconOnLeft(true);
 
@@ -619,17 +653,23 @@ class SettingsOverlay extends JPanel {
             setVisible(false);
         });
 
-        ImageIcon studyModeIcon = new ImageIcon(
-                new ImageIcon(getClass().getResource("/resources/loadDeck/menu.png"))
-                        .getImage()
-                        .getScaledInstance(18, 18, Image.SCALE_SMOOTH)
-        );
+        ImageIcon studyModeIcon = null;
+        if (getClass().getResource("/resources/loadDeck/menu.png") != null) {
+            studyModeIcon = new ImageIcon(
+                    new ImageIcon(getClass().getResource("/resources/loadDeck/menu.png"))
+                            .getImage()
+                            .getScaledInstance(18, 18, Image.SCALE_SMOOTH)
+            );
+        } else {
+            System.err.println("Missing: /resources/loadDeck/menu.png");
+        }
+
         btnStudyMode = new panelUtilities.ShadowButton("Study Mode", boxX + 50, boxY + 120, 250, 45, Color.decode("#91E586"), studyModeIcon, "semibold", 20f);
         btnStudyMode.setIconOnLeft(true);
 
         btnStudyMode.addActionListener(e -> {
             try {
-                new StudyMode(parent.deckTitle, parent.question, parent.answer, parent.getColor());
+                new loadDeck.StudyMode(parent.deckTitle, parent.question, parent.answer, parent.getColor());
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -645,7 +685,7 @@ class SettingsOverlay extends JPanel {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        g2.setColor(new Color(0, 0, 0, 50));
+        g2.setColor(new Color(0, 0, 0, 150));
         g2.fillRect(0, 0, getWidth(), getHeight());
 
         int boxW = 350;
