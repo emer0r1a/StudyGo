@@ -50,37 +50,27 @@ public class StudyMode extends JFrame {
         setSize(1280, 720);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        // UPDATED PATH: Window Icon
-        if (getClass().getResource("/resources/loadDeck/logo.png") != null) {
-            Image appIcon = Toolkit.getDefaultToolkit()
-                    .getImage(getClass().getResource("/resources/loadDeck/logo.png"));
-            setIconImage(appIcon);
-        }
-
         setResizable(false);
         getContentPane().setBackground(new Color(239, 248, 253));
         setLayout(null);
 
         // --- BACKGROUND PANEL ---
         ImageIcon originalBg;
-
-        // UPDATED PATHS: Using safeLoadIcon to prevent crashes
         switch (color){
             case "blue":
-                originalBg = safeLoadIcon("/resources/loadDeck/bluebg.png");
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bluebg.png"));
                 break;
             case "green":
-                originalBg = safeLoadIcon("/resources/loadDeck/greenbg.png");
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/greenbg.png"));
                 break;
             case "pink":
-                originalBg = safeLoadIcon("/resources/loadDeck/pinkbg.png");
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/pinkbg.png"));
                 break;
             case "bright yellow":
-                originalBg = safeLoadIcon("/resources/loadDeck/yellowbg.png");
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/yellowbg.png"));
                 break;
             default:
-                originalBg = safeLoadIcon("/resources/loadDeck/bg.png");
+                originalBg = new ImageIcon(getClass().getResource("/resources/loadDeck/bg.png"));
                 break;
         }
 
@@ -102,9 +92,8 @@ public class StudyMode extends JFrame {
         titleLabel.setFont(loadCustomFont("semibold", 33.33f));
         titleLabel.setBounds(titleX, 40, titleWidth, 45);
 
-        // UPDATED PATH
         ImageIcon closeIcon = new ImageIcon(
-                safeLoadIcon("/resources/loadDeck/close.png")
+                new ImageIcon(getClass().getResource("/resources/loadDeck/close.png"))
                         .getImage()
                         .getScaledInstance(24,24,Image.SCALE_SMOOTH)
         );
@@ -126,11 +115,11 @@ public class StudyMode extends JFrame {
 
         currentCount = new JLabel("0");
         currentCount.setForeground(Color.decode("#79ADDC"));
-        currentCount.setFont(getCustomFont(33.33f));
+        currentCount.setFont(loadCustomFont("semibold",33));
 
         totalCount = new JLabel("/" + question.size());
         totalCount.setForeground(Color.decode("#9FA1A6"));
-        totalCount.setFont(getCustomFont(22f));
+        totalCount.setFont(loadCustomFont("semibold",22));
 
         counterPanel.add(currentCount);
         counterPanel.add(totalCount);
@@ -141,7 +130,6 @@ public class StudyMode extends JFrame {
         int cardX = (1185 - cardW) / 2;
         int cardY = (631 - cardH) / 2;
 
-        // UPDATED PATH
         CardPanel stack = new CardPanel("/resources/loadDeck/stack.png");
         stack.setBounds(cardX, cardY + 40, cardW - 5, cardH - 5);
 
@@ -153,7 +141,7 @@ public class StudyMode extends JFrame {
         textContainer.setOpaque(false);
 
         textInside = new JTextPane();
-        textInside.setFont(getCustomFont(25f));
+        textInside.setFont(loadCustomFont("semibold",25));
         textInside.setEditable(false);
         textInside.setFocusable(false); // Also make text non-focusable
         textInside.setOpaque(false);
@@ -181,35 +169,29 @@ public class StudyMode extends JFrame {
         int startX = (1185 - totalGroupWidth) / 2;
 
         // 1. Missed It
-        // UPDATED PATH
         ImageIcon sadIcon = new ImageIcon(
-                safeLoadIcon("/resources/loadDeck/sad.png")
+                new ImageIcon(getClass().getResource("/resources/loadDeck/sad.png"))
                         .getImage()
                         .getScaledInstance(18,18,Image.SCALE_SMOOTH)
         );
-        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
+        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, new Color(230,139,140), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
         btnMissed.setIconOnLeft(true);
         // FIX 2: Make button non-focusable
         btnMissed.setFocusable(false);
         btnMissed.addActionListener(e -> {
-            // START ADDED CODE
-            if (isShowingQuestion) return; // Ignore click if we are viewing the question
-            // END ADDED CODE
-
             retryQuestions.add(question.get(currentIndex));
             retryAnswers.add(answer.get(currentIndex));
             nextCard();
         });
 
         // 2. Flip / Eye
-        // UPDATED PATH
         ImageIcon visibIcon = new ImageIcon(
-                safeLoadIcon("/resources/loadDeck/visibility.png")
+                new ImageIcon(getClass().getResource("/resources/loadDeck/visibility.png"))
                         .getImage()
                         .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
         );
-        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
+        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#79ADDC"), visibIcon, "", 20f );
         // FIX 3: Make button non-focusable
         btnFlip.setFocusable(false);
         btnFlip.addActionListener(e -> {
@@ -219,10 +201,8 @@ public class StudyMode extends JFrame {
         });
 
         // 3. Got It
-        // UPDATED PATH
         ImageIcon happyIcon = new ImageIcon(
-                safeLoadIcon("/resources/loadDeck/happy.png")
-                        .getImage()
+                new ImageIcon(getClass().getResource("/resources/loadDeck/happy.png")).getImage()
                         .getScaledInstance(18,18,  Image.SCALE_SMOOTH)
         );
         btnGotIt = new panelUtilities.ShadowButton("Got It", startX + smallW + gap + bigW + gap + smallW + gap, axisY, bigW, height, Color.decode("#91E586"), happyIcon, "semibold", 20f );
@@ -230,13 +210,7 @@ public class StudyMode extends JFrame {
         btnGotIt.setIconOnLeft(false);
         // FIX 4: Make button non-focusable
         btnGotIt.setFocusable(false);
-        btnGotIt.addActionListener(e -> {
-            // START ADDED CODE
-            if (isShowingQuestion) return; // Ignore click if we are viewing the question
-            // END ADDED CODE
-
-            nextCard();
-        });
+        btnGotIt.addActionListener(e -> nextCard());
 
         // --- ASSEMBLING ---
         backgroundPanel.add(stack);
@@ -272,25 +246,23 @@ public class StudyMode extends JFrame {
             }
         });
 
-        // 2. RIGHT ARROW -> GOT IT
+        // 2. RIGHT ARROW -> GOT IT (Only if enabled)
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "gotIt");
         actionMap.put("gotIt", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Check if we are showing the answer (logic check instead of isEnabled)
-                if (!isShowingQuestion) {
+                if (btnGotIt.isEnabled()) {
                     btnGotIt.doClick();
                 }
             }
         });
 
-        // 3. LEFT ARROW -> MISSED IT
+        // 3. LEFT ARROW -> MISSED IT (Only if enabled)
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "missedIt");
         actionMap.put("missedIt", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Check if we are showing the answer (logic check instead of isEnabled)
-                if (!isShowingQuestion) {
+                if (btnMissed.isEnabled()) {
                     btnMissed.doClick();
                 }
             }
@@ -354,19 +326,20 @@ public class StudyMode extends JFrame {
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
-        // 2. Enable/Disable Buttons (Modified Logic)
+        // 2. Enable/Disable Buttons based on flip state
         if (isShowingQuestion) {
-            // KEEP ENABLED so shadow stays, just change color
+            btnMissed.setEnabled(false);
             btnMissed.setBackground(Color.decode("#CCCCCC"));
+
+            btnGotIt.setEnabled(false);
             btnGotIt.setBackground(Color.decode("#CCCCCC"));
         } else {
-            // Restore colors
-            btnMissed.setBackground(Color.decode("#FF3B30"));
+            btnMissed.setEnabled(true);
+            btnMissed.setBackground(new Color(230,139,140));
+
+            btnGotIt.setEnabled(true);
             btnGotIt.setBackground(Color.decode("#91E586"));
         }
-        // Ensure they are always enabled
-        btnMissed.setEnabled(true);
-        btnGotIt.setEnabled(true);
 
         // 3. Update Progress Bar and Count
         currentCount.setText(String.valueOf(completedCount));
@@ -374,30 +347,6 @@ public class StudyMode extends JFrame {
         if (question.size() > 0) {
             int percentage = (int) (((double) completedCount / question.size()) * 100);
             progressBar.setValue(percentage);
-        }
-    }
-
-    // --- NEW HELPER METHOD TO PREVENT CRASHES ---
-    private ImageIcon safeLoadIcon(String path) {
-        java.net.URL url = getClass().getResource(path);
-        if (url == null) {
-            System.err.println("MISSING IMAGE: " + path);
-            return new ImageIcon(new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB));
-        }
-        return new ImageIcon(url);
-    }
-
-    private Font getCustomFont(float size) {
-        try {
-            // UPDATED PATH: Absolute path for font
-            java.io.InputStream is = getClass().getResourceAsStream("/resources/loadDeck/Gabarito-SemiBold.ttf");
-            if (is == null) {
-                // Fallback if font file is missing
-                return new Font("Arial", Font.BOLD, (int)size);
-            }
-            return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
-        } catch (Exception e) {
-            return new Font("Arial", Font.BOLD, (int)size);
         }
     }
 }
