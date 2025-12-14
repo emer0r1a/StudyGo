@@ -104,8 +104,6 @@ public class Create extends panelUtilities {
         closeDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainDash.setDiscardMode(false);
-
                 createPanel.remove(delPanel);
                 createPanel.revalidate();
                 createPanel.repaint();
@@ -455,11 +453,10 @@ public class Create extends panelUtilities {
             });
         }
 
-        // Inside NavButton class
-        public void updateState(ImageIcon activeIcon, ImageIcon disabledIcon, boolean enabled) {
-            this.setIcon(activeIcon);
-            this.setDisabledIcon(disabledIcon); // Uses your fixed image
+        public void updateState(ImageIcon icon, boolean enabled) {
+            this.setIcon(icon);
             this.setEnabled(enabled);
+            this.setDisabledIcon(icon);
             this.setCursor(new Cursor(enabled ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
             repaint();
         }
@@ -483,7 +480,7 @@ public class Create extends panelUtilities {
         private final ShadowButton btnDiscard;
         private final ShadowButton btnSave;
 
-        // Navigation
+        // Navigation (Using custom NavButton)
         private final NavButton btnFirst, btnPrev, btnNext, btnLast;
         private final ImageIcon iconFirst, iconFirstGray;
         private final ImageIcon iconPrev, iconPrevGray;
@@ -509,10 +506,9 @@ public class Create extends panelUtilities {
                 @Override
                 public void mousePressed(MouseEvent e) {
                     Component clicked = SwingUtilities.getDeepestComponentAt(MainDashboard.this, e.getX(), e.getY());
-                    if (clicked == MainDashboard.this) {
-                        MainDashboard.this.requestFocusInWindow();
+                    if (clicked != frontArea && clicked != backArea) {
+                        MainDashboard.this.requestFocusInWindow(); // force focus away from text areas
                     }
-
                 }
             });
 
@@ -578,13 +574,15 @@ public class Create extends panelUtilities {
             }
             panelBg = tempBg;
 
+            // Load Icons
             iconFirst = loadIconResized("backward-btn.png");
-            iconFirstGray = loadIconResized("gray_backward-btn.png");
             iconPrev = loadIconResized("prev-btn.png");
-            iconPrevGray = loadIconResized("gray_prev-btn.png");
             iconNext = loadIconResized("next-btn.png");
-            iconNextGray = loadIconResized("gray_next-btn.png");
             iconLast = loadIconResized("forward-btn.png");
+
+            iconFirstGray = loadIconResized("gray_backward-btn.png");
+            iconPrevGray = loadIconResized("gray_prev-btn.png");
+            iconNextGray = loadIconResized("gray_next-btn.png");
             iconLastGray = loadIconResized("gray_forward-btn.png");
 
             // Title & Subject Fields
@@ -712,12 +710,12 @@ public class Create extends panelUtilities {
             btnLast.addActionListener(e -> navigate(cards.size() - 1));
             add(btnLast);
 
-            // Discard buttons
+            // Discard & Save Buttons
             btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), loadImage("/resources/createDeck/discard-icon.png"),"bold",16);
             btnDiscard.addActionListener(e -> showDiscardScreen());
             add(btnDiscard);
 
-            // save button
+            // --- UPDATED SAVE BUTTON LOGIC ---
             btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), loadImage("/resources/createDeck/save.png"),"bold",16);
             btnSave.addActionListener(e -> {
                 String titleText = titleField.getText().trim();
@@ -773,27 +771,31 @@ public class Create extends panelUtilities {
                 counterLabel.setText((cards.size()) + "/" + cards.size());
             }
 
-
+            // 2. Logic for Buttons
             boolean hasCards = !cards.isEmpty();
             boolean isStart = (currentIndex == 0);
             boolean isEnd = (currentIndex == cards.size() - 1);
 
-            // left arrows
+            // --- LEFT ARROWS (First & Prev) ---
             if (cards.size() <= 1 || (hasCards && isStart)) {
-                btnFirst.updateState(iconFirst, iconFirstGray, false);
-                btnPrev.updateState(iconPrev, iconPrevGray, false);
+                // DISABLE: Pass the Gray Icon explicitly
+                btnFirst.updateState(iconFirstGray, false);
+                btnPrev.updateState(iconPrevGray, false);
             } else {
-                btnFirst.updateState(iconFirst, iconFirstGray, true);
-                btnPrev.updateState(iconPrev, iconPrevGray, true);
+                // ENABLE: Pass the Color Icon
+                btnFirst.updateState(iconFirst, true);
+                btnPrev.updateState(iconPrev, true);
             }
 
-            // right arrows
+            // --- RIGHT ARROWS (Next & Last) ---
             if (cards.size() <= 1 || (hasCards && isEnd)) {
-                btnNext.updateState(iconNext, iconNextGray, false);
-                btnLast.updateState(iconLast, iconLastGray, false);
+                // DISABLE: Pass the Gray Icon explicitly
+                btnNext.updateState(iconNextGray, false);
+                btnLast.updateState(iconLastGray, false);
             } else {
-                btnNext.updateState(iconNext, iconNextGray, true);
-                btnLast.updateState(iconLast, iconLastGray, true);
+                // ENABLE: Pass the Color Icon
+                btnNext.updateState(iconNext, true);
+                btnLast.updateState(iconLast, true);
             }
         }
 
@@ -840,12 +842,12 @@ public class Create extends panelUtilities {
                         @Override
                         public void mouseReleased(MouseEvent e) {
                             isPressed = false;
-                            repaint();
+                            repaint(); // Trigger repaint to show "up" state
                         }
 
                         @Override
                         public void mouseExited(MouseEvent e) {
-                            isPressed = false;
+                            isPressed = false; // Reset if mouse slides off
                             repaint();
                         }
                     });
@@ -959,4 +961,138 @@ public class Create extends panelUtilities {
         }
     }
 
+    // pop up class
+    class ReusablePopup extends JPanel {
+        private final JLabel messageLabel;
+        private final JLabel iconLabel;
+        private final ShadowButton btnLeft;
+        private final ShadowButton btnRight;
+        private final JButton btnClose;
+        private final JPanel modal;
+        private final ImageIcon panelImage;
+        private final ImageIcon successIcon;
+        private final ImageIcon closeIcon;
+
+        public ReusablePopup() {
+            setLayout(null);
+            setOpaque(false);
+            ImageIcon tempBg = null, tempSuccess = null, tempClose = null;
+            try {
+                tempBg = loadImage(IMG_PATH_PREFIX + "panel.png");
+                ImageIcon rs = loadImage(IMG_PATH_PREFIX + "library_add_check.png");
+                if (rs != null)
+                    tempSuccess = new ImageIcon(rs.getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH));
+                ImageIcon rc = loadImage(IMG_PATH_PREFIX + "close-btn.png");
+                if (rc != null) tempClose = new ImageIcon(rc.getImage().getScaledInstance(20, 20, Image.SCALE_SMOOTH));
+            } catch (Exception e) {
+            }
+            this.panelImage = tempBg;
+            this.successIcon = tempSuccess;
+            this.closeIcon = tempClose;
+            addMouseListener(new MouseAdapter() {
+            });
+            modal = new JPanel(null) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    if (panelImage != null) g.drawImage(panelImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                    else {
+                        g.setColor(Color.WHITE);
+                        g.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                    }
+                }
+            };
+            modal.setOpaque(false);
+            add(modal);
+            iconLabel = new JLabel();
+            iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            modal.add(iconLabel);
+            messageLabel = new JLabel();
+            messageLabel.setFont(loadCustomFont("extrabold", 20f));
+            messageLabel.setForeground(Color.BLACK);
+            messageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            modal.add(messageLabel);
+            btnClose = new JButton("X");
+            btnClose.setFont(new Font("SansSerif", Font.BOLD, 12));
+            btnClose.setForeground(Color.GRAY);
+            btnClose.setContentAreaFilled(false);
+            btnClose.setBorderPainted(false);
+            btnClose.setFocusPainted(false);
+            btnClose.setOpaque(false);
+            btnClose.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            modal.add(btnClose);
+            btnLeft = new ShadowButton("", 0, 0, 0, 0, Color.GRAY, 0);
+            btnLeft.setSmooth(true);
+            modal.add(btnLeft);
+            btnRight = new ShadowButton("", 0, 0, 0, 0, Color.GRAY, 0);
+            btnRight.setSmooth(true);
+            modal.add(btnRight);
+        }
+
+        public void showSuccess(String msg, String okText, Color btnColor, ActionListener actOk, ActionListener actClose) {
+            clearListeners();
+            modal.setBounds(480, 275, 320, 220);
+
+            if (successIcon != null)
+                iconLabel.setIcon(successIcon);
+            iconLabel.setBounds(0, 30, 320, 40);
+            iconLabel.setVisible(true);
+
+            if (closeIcon != null) {
+                btnClose.setIcon(closeIcon);
+                btnClose.setText("");
+
+            } else {
+                btnClose.setIcon(null);
+                btnClose.setText("X");
+            }
+            btnClose.setBounds(285, 15, 25, 25);
+            // Use separate close action
+            btnClose.addActionListener(actClose);
+            btnClose.setVisible(true);
+            modal.setComponentZOrder(btnClose, 0);
+            messageLabel.setText(msg);
+            messageLabel.setBounds(10, 80, 300, 40);
+            btnLeft.setText(okText);
+            btnLeft.setBgColor(btnColor);
+            btnLeft.setBounds(85, 140, 150, 50);
+            btnLeft.addActionListener(actOk);
+            btnLeft.setVisible(true);
+            btnRight.setVisible(false);
+            this.setVisible(true);
+            modal.repaint();
+        }
+
+        public void showConfirmation(String msg, String leftText, Color leftColor, ActionListener leftAct, String rightText, Color rightColor, ActionListener rightAct) {
+            clearListeners();
+            modal.setBounds(430, 250, 420, 250);
+            iconLabel.setVisible(false);
+            btnClose.setVisible(false);
+            messageLabel.setText(msg);
+            messageLabel.setBounds(20, 40, 380, 80);
+            btnLeft.setText(leftText);
+            btnLeft.setBgColor(leftColor);
+            btnLeft.setBounds(30, 140, 170, 50);
+            btnLeft.addActionListener(leftAct);
+            btnLeft.setVisible(true);
+            btnRight.setText(rightText);
+            btnRight.setBgColor(rightColor);
+            btnRight.setBounds(215, 140, 170, 50);
+            btnRight.addActionListener(rightAct);
+            btnRight.setVisible(true);
+            this.setVisible(true);
+            modal.repaint();
+        }
+
+        private void clearListeners() {
+            for (ActionListener al : btnLeft.getActionListeners()) btnLeft.removeActionListener(al);
+            for (ActionListener al : btnRight.getActionListeners()) btnRight.removeActionListener(al);
+            for (ActionListener al : btnClose.getActionListeners()) btnClose.removeActionListener(al);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            g.setColor(new Color(0, 0, 0, 50));
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
 }
