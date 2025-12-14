@@ -15,6 +15,15 @@ public class StudyGo extends JFrame {
 
     private ArrayList<Session> openSessions = new ArrayList<>();
 
+    private static StudyGo instance;
+
+    public static StudyGo getInstance() {
+        if (instance == null) {
+            instance = new StudyGo();
+        }
+        return instance;
+    }
+
     private class Session {
         String filename;
         LoadDeck panel;
@@ -23,7 +32,7 @@ public class StudyGo extends JFrame {
             this.panel = panel;
         }
     }
-    public StudyGo() {
+    private StudyGo() {
         super("StudyGo");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(1280, 720);
@@ -40,7 +49,7 @@ public class StudyGo extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(StudyGo::new);
+        SwingUtilities.invokeLater(StudyGo::getInstance);
     }
 
     public void showHomePanel() {
