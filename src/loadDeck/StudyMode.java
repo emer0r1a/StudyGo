@@ -126,11 +126,11 @@ public class StudyMode extends JFrame {
 
         currentCount = new JLabel("0");
         currentCount.setForeground(Color.decode("#79ADDC"));
-        currentCount.setFont(getCustomFont(33.33f));
+        currentCount.setFont(loadCustomFont("semibold",33));
 
         totalCount = new JLabel("/" + question.size());
         totalCount.setForeground(Color.decode("#9FA1A6"));
-        totalCount.setFont(getCustomFont(22f));
+        totalCount.setFont(loadCustomFont("semibold",22));
 
         counterPanel.add(currentCount);
         counterPanel.add(totalCount);
@@ -153,7 +153,7 @@ public class StudyMode extends JFrame {
         textContainer.setOpaque(false);
 
         textInside = new JTextPane();
-        textInside.setFont(getCustomFont(25f));
+        textInside.setFont(loadCustomFont("semibold",25));
         textInside.setEditable(false);
         textInside.setFocusable(false); // Also make text non-focusable
         textInside.setOpaque(false);
@@ -187,7 +187,7 @@ public class StudyMode extends JFrame {
                         .getImage()
                         .getScaledInstance(18,18,Image.SCALE_SMOOTH)
         );
-        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#FF3B30"), sadIcon, "semibold", 20f);
+        btnMissed = new panelUtilities.ShadowButton("Missed It", startX + smallW + gap, axisY, bigW, height, Color.decode("#E68B8C"), sadIcon, "semibold", 20f);
         btnMissed.setForeground(Color.WHITE);
         btnMissed.setIconOnLeft(true);
         // FIX 2: Make button non-focusable
@@ -209,7 +209,7 @@ public class StudyMode extends JFrame {
                         .getImage()
                         .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
         );
-        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
+        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#79ADDC"), visibIcon, "", 20f );
         // FIX 3: Make button non-focusable
         btnFlip.setFocusable(false);
         btnFlip.addActionListener(e -> {
@@ -316,7 +316,7 @@ public class StudyMode extends JFrame {
 
             if (!retryQuestions.isEmpty()) {
                 int response = CustomDialog.showConfirmDialog(this,
-                        "You missed " + retryQuestions.size() + " cards.\nReview them now?",
+                        "You missed " + retryQuestions.size() + " card(s).\nReview them now?",
                         "Review Missed Cards");
 
                 if (response == JOptionPane.YES_OPTION) {
@@ -361,7 +361,7 @@ public class StudyMode extends JFrame {
             btnGotIt.setBackground(Color.decode("#CCCCCC"));
         } else {
             // Restore colors
-            btnMissed.setBackground(Color.decode("#FF3B30"));
+            btnMissed.setBackground(Color.decode("#E68B8C"));
             btnGotIt.setBackground(Color.decode("#91E586"));
         }
         // Ensure they are always enabled
@@ -385,19 +385,5 @@ public class StudyMode extends JFrame {
             return new ImageIcon(new java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB));
         }
         return new ImageIcon(url);
-    }
-
-    private Font getCustomFont(float size) {
-        try {
-            // UPDATED PATH: Absolute path for font
-            java.io.InputStream is = getClass().getResourceAsStream("/resources/loadDeck/Gabarito-SemiBold.ttf");
-            if (is == null) {
-                // Fallback if font file is missing
-                return new Font("Arial", Font.BOLD, (int)size);
-            }
-            return Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
-        } catch (Exception e) {
-            return new Font("Arial", Font.BOLD, (int)size);
-        }
     }
 }

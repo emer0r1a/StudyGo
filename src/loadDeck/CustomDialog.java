@@ -68,7 +68,7 @@ public class CustomDialog extends JDialog {
 
         // --- Title ---
         JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
-        lblTitle.setFont(loadCustomFont("semibold",22));
+        lblTitle.setFont(loadCustomFont("bold",22));
         lblTitle.setForeground(Color.decode("#79ADDC"));
         lblTitle.setBounds(boxX, boxY + 40, boxW, 30);
         panel.add(lblTitle);
