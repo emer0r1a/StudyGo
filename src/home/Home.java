@@ -61,6 +61,12 @@ public class Home extends panelUtilities {
         homePanel.setPreferredSize(new Dimension(1280, 720));
         homePanel.setBounds(0,0,1280,720);
 
+        if (getClass().getResource("/resources/loadDeck/logo.png") != null) {
+            Image appIcon = Toolkit.getDefaultToolkit()
+                    .getImage(getClass().getResource("/resources/loadDeck/logo.png"));
+            mainFrame.setIconImage(appIcon);
+        }
+
         // create 'no decks' panel if empty
         showEmptyDeck();
         // create 'no results' panel if no decks found

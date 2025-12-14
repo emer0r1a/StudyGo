@@ -130,6 +130,7 @@ public class Create extends panelUtilities {
         cancelDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                mainDash.setDiscardMode(false);
                 createPanel.remove(delPanel);
                 createPanel.revalidate();
                 createPanel.repaint();
