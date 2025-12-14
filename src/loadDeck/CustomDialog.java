@@ -20,8 +20,6 @@ public class CustomDialog extends JDialog {
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0)); // Transparent background
 
-        pUtil = new panelUtilities();
-
         // 1. Set to Full Window Size to allow for the dimming overlay
         setSize(1280, 720);
         setLocationRelativeTo(parent);

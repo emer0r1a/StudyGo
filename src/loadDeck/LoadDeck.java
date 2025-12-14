@@ -65,7 +65,7 @@ public class LoadDeck extends panelUtilities {
         return loadDeckPanel;
     }
 
-    private void addGUI() {
+    protected void addGUI() {
         loadDeckPanel.setBackground(new Color(239, 248, 253));
         loadDeckPanel.setPreferredSize(new Dimension(1280, 720));
         loadDeckPanel.setLayout(null);

@@ -56,7 +56,7 @@ public class Home extends panelUtilities {
         return homePanel;
     }
 
-    private void addGUI() {
+    protected void addGUI() {
         homePanel = new panelUtilities.BackgroundPanel("/resources/home/home-panel.png");
         homePanel.setPreferredSize(new Dimension(1280, 720));
         homePanel.setBounds(0,0,1280,720);

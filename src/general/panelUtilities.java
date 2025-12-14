@@ -10,17 +10,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
-public class panelUtilities {
+public abstract class panelUtilities {
 
-    public ImageIcon loadImage(String ImagePath) {
+    public static ImageIcon loadImage(String ImagePath) {
         BufferedImage image;
         try {
-            image = ImageIO.read(Objects.requireNonNull(getClass().getResourceAsStream(ImagePath)));
+            image = ImageIO.read(Objects.requireNonNull(panelUtilities.class.getResourceAsStream(ImagePath)));
         } catch (IOException e) {
             throw new RuntimeException("Image not found: " + ImagePath, e);
         }
         return new ImageIcon(image);
     }
+
+    protected abstract void addGUI();
 
     public void styleButton(JButton btn) {
         btn.setOpaque(false);
@@ -269,8 +271,7 @@ public class panelUtilities {
 
         public BackgroundPanel(String imgpath) {
             super(null);
-            panelUtilities utils = new panelUtilities();
-            this.bg = utils.loadImage(imgpath).getImage();
+            this.bg = loadImage(imgpath).getImage();
         }
 
         @Override
@@ -290,13 +291,6 @@ public class panelUtilities {
                 g2.drawImage(bg, 0, 0, getWidth(), getHeight(), this);
                 g2.dispose();
             }
-        }
-
-        public void styleButton(JButton btn) {
-            btn.setOpaque(false);
-            btn.setBorderPainted(false);
-            btn.setContentAreaFilled(false);
-            btn.setFocusPainted(false);
         }
     }
 }

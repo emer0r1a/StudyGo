@@ -19,8 +19,6 @@ public class Create extends panelUtilities {
     public static ArrayList<FlashcardData> cards = new ArrayList<>();
     public static int currentIndex = 0;
 
-    private File decksFolder = new File("Decks");
-
     private final String FILE_NAME = "my_flashcards.txt";
     private StudyGo mainFrame;
     private RoundedTextField titleField, subjectField;
@@ -47,6 +45,7 @@ public class Create extends panelUtilities {
 
     public Create(StudyGo mainFrame, Home homePanel) {
         this.mainFrame = mainFrame;
+        mainDash = new MainDashboard();
         this.homePanel = homePanel;
         createPanel = new JPanel(null);
 
@@ -70,23 +69,7 @@ public class Create extends panelUtilities {
             cards.add(new FlashcardData("", ""));
         }
 
-        // FRAME SETUP
-        createPanel.setBackground(new Color(239, 248, 253));
-
-        JLayeredPane layeredPane = new JLayeredPane();
-        layeredPane.setBounds(0, 0, 1280, 720);
-        createPanel.add(layeredPane);
-
-        // Main Dashboard (Bottom Layer)
-        mainDash = new MainDashboard();
-        mainDash.setBounds(36, 43, 1193, 633);
-        layeredPane.add(mainDash, Integer.valueOf(0));
-
-        mainDash.updateUIFromData();
-
-        if (titleField.getText().equals("Deck Title REQUIRED*")) {
-            titleField.setForeground(Color.RED);
-        }
+        addGUI();
     }
 
 // --- LOGIC METHODS ---
@@ -347,6 +330,29 @@ public class Create extends panelUtilities {
 
     public JPanel getPanel() {
         return createPanel;
+    }
+
+    @Override
+    protected void addGUI() {
+        createPanel.removeAll();
+        createPanel.setBackground(new Color(239, 248, 253));
+        createPanel.setLayout(null);
+
+        JLayeredPane layeredPane = new JLayeredPane();
+        layeredPane.setBounds(0, 0, 1280, 720);
+        createPanel.add(layeredPane);
+
+        mainDash.setBounds(36, 43, 1193, 633);
+        layeredPane.add(mainDash, Integer.valueOf(0));
+
+        mainDash.updateUIFromData();
+
+        if (titleField.getText().equals("Deck Title REQUIRED*")) {
+            titleField.setForeground(Color.RED);
+        }
+
+        createPanel.revalidate();
+        createPanel.repaint();
     }
 
     public static class FlashcardData {
