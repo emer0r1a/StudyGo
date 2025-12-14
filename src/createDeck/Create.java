@@ -104,8 +104,6 @@ public class Create extends panelUtilities {
         closeDialog.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainDash.setDiscardMode(false);
-
                 createPanel.remove(delPanel);
                 createPanel.revalidate();
                 createPanel.repaint();
@@ -454,11 +452,10 @@ public class Create extends panelUtilities {
             });
         }
 
-        // Inside NavButton class
-        public void updateState(ImageIcon activeIcon, ImageIcon disabledIcon, boolean enabled) {
-            this.setIcon(activeIcon);
-            this.setDisabledIcon(disabledIcon); // Uses your fixed image
+        public void updateState(ImageIcon icon, boolean enabled) {
+            this.setIcon(icon);
             this.setEnabled(enabled);
+            this.setDisabledIcon(icon);
             this.setCursor(new Cursor(enabled ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
             repaint();
         }
@@ -482,7 +479,7 @@ public class Create extends panelUtilities {
         private final ShadowButton btnDiscard;
         private final ShadowButton btnSave;
 
-        // Navigation
+        // Navigation (Using custom NavButton)
         private final NavButton btnFirst, btnPrev, btnNext, btnLast;
         private final ImageIcon iconFirst, iconFirstGray;
         private final ImageIcon iconPrev, iconPrevGray;
@@ -508,10 +505,9 @@ public class Create extends panelUtilities {
                 @Override
                 public void mousePressed(MouseEvent e) {
                     Component clicked = SwingUtilities.getDeepestComponentAt(MainDashboard.this, e.getX(), e.getY());
-                    if (clicked == MainDashboard.this) {
-                        MainDashboard.this.requestFocusInWindow();
+                    if (clicked != frontArea && clicked != backArea) {
+                        MainDashboard.this.requestFocusInWindow(); // force focus away from text areas
                     }
-
                 }
             });
 
@@ -577,13 +573,15 @@ public class Create extends panelUtilities {
             }
             panelBg = tempBg;
 
+            // Load Icons
             iconFirst = loadIconResized("backward-btn.png");
-            iconFirstGray = loadIconResized("gray_backward-btn.png");
             iconPrev = loadIconResized("prev-btn.png");
-            iconPrevGray = loadIconResized("gray_prev-btn.png");
             iconNext = loadIconResized("next-btn.png");
-            iconNextGray = loadIconResized("gray_next-btn.png");
             iconLast = loadIconResized("forward-btn.png");
+
+            iconFirstGray = loadIconResized("gray_backward-btn.png");
+            iconPrevGray = loadIconResized("gray_prev-btn.png");
+            iconNextGray = loadIconResized("gray_next-btn.png");
             iconLastGray = loadIconResized("gray_forward-btn.png");
 
             // Title & Subject Fields
@@ -711,12 +709,12 @@ public class Create extends panelUtilities {
             btnLast.addActionListener(e -> navigate(cards.size() - 1));
             add(btnLast);
 
-            // Discard buttons
+            // Discard & Save Buttons
             btnDiscard = new ShadowButton("Discard", 810, btnY, 150, 45, new Color(229, 115, 115), loadImage("/resources/createDeck/discard-icon.png"),"bold",16);
             btnDiscard.addActionListener(e -> showDiscardScreen());
             add(btnDiscard);
 
-            // save button
+            // --- UPDATED SAVE BUTTON LOGIC ---
             btnSave = new ShadowButton("Save", 970, btnY, 150, 45, new Color(100, 149, 237), loadImage("/resources/createDeck/save.png"),"bold",16);
             btnSave.addActionListener(e -> {
                 String titleText = titleField.getText().trim();
@@ -772,27 +770,31 @@ public class Create extends panelUtilities {
                 counterLabel.setText((cards.size()) + "/" + cards.size());
             }
 
-
+            // 2. Logic for Buttons
             boolean hasCards = !cards.isEmpty();
             boolean isStart = (currentIndex == 0);
             boolean isEnd = (currentIndex == cards.size() - 1);
 
-            // left arrows
+            // --- LEFT ARROWS (First & Prev) ---
             if (cards.size() <= 1 || (hasCards && isStart)) {
-                btnFirst.updateState(iconFirst, iconFirstGray, false);
-                btnPrev.updateState(iconPrev, iconPrevGray, false);
+                // DISABLE: Pass the Gray Icon explicitly
+                btnFirst.updateState(iconFirstGray, false);
+                btnPrev.updateState(iconPrevGray, false);
             } else {
-                btnFirst.updateState(iconFirst, iconFirstGray, true);
-                btnPrev.updateState(iconPrev, iconPrevGray, true);
+                // ENABLE: Pass the Color Icon
+                btnFirst.updateState(iconFirst, true);
+                btnPrev.updateState(iconPrev, true);
             }
 
-            // right arrows
+            // --- RIGHT ARROWS (Next & Last) ---
             if (cards.size() <= 1 || (hasCards && isEnd)) {
-                btnNext.updateState(iconNext, iconNextGray, false);
-                btnLast.updateState(iconLast, iconLastGray, false);
+                // DISABLE: Pass the Gray Icon explicitly
+                btnNext.updateState(iconNextGray, false);
+                btnLast.updateState(iconLastGray, false);
             } else {
-                btnNext.updateState(iconNext, iconNextGray, true);
-                btnLast.updateState(iconLast, iconLastGray, true);
+                // ENABLE: Pass the Color Icon
+                btnNext.updateState(iconNext, true);
+                btnLast.updateState(iconLast, true);
             }
         }
 
@@ -839,12 +841,12 @@ public class Create extends panelUtilities {
                         @Override
                         public void mouseReleased(MouseEvent e) {
                             isPressed = false;
-                            repaint();
+                            repaint(); // Trigger repaint to show "up" state
                         }
 
                         @Override
                         public void mouseExited(MouseEvent e) {
-                            isPressed = false;
+                            isPressed = false; // Reset if mouse slides off
                             repaint();
                         }
                     });
@@ -1043,7 +1045,7 @@ public class Create extends panelUtilities {
                 btnClose.setText("X");
             }
             btnClose.setBounds(285, 15, 25, 25);
-
+            // Use separate close action
             btnClose.addActionListener(actClose);
             btnClose.setVisible(true);
             modal.setComponentZOrder(btnClose, 0);
