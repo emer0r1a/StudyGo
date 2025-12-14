@@ -61,12 +61,6 @@ public class Home extends panelUtilities {
         homePanel.setPreferredSize(new Dimension(1280, 720));
         homePanel.setBounds(0,0,1280,720);
 
-        if (getClass().getResource("/resources/loadDeck/logo.png") != null) {
-            Image appIcon = Toolkit.getDefaultToolkit()
-                    .getImage(getClass().getResource("/resources/loadDeck/logo.png"));
-            mainFrame.setIconImage(appIcon);
-        }
-
         // create 'no decks' panel if empty
         showEmptyDeck();
         // create 'no results' panel if no decks found
@@ -394,7 +388,7 @@ public class Home extends panelUtilities {
             }
         });
 
-        ShadowButton delDialog = new ShadowButton("Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/delete-icon.png"),"bold",16);
+        ShadowButton delDialog = new ShadowButton(" Discard",642,385,118,38,new Color(230,139,140),loadImage("/resources/home/discard-icon.png"),"bold",16);
         delPanel.add(delDialog);
 
         delDialog.addActionListener(new ActionListener() {
@@ -524,7 +518,7 @@ public class Home extends panelUtilities {
 
     private void addButtons() {
         ImageIcon cd = loadImage("/resources/home/plus-icon.png");
-        createDeck = new ShadowButton("Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
+        createDeck = new ShadowButton("  Create Deck", 840, 47, 182, 50,new Color(121, 173, 220),cd, "bold", 20f);
         styleButton(createDeck);
         homePanel.add(createDeck);
 
@@ -554,9 +548,7 @@ public class Home extends panelUtilities {
                         refreshDecks();
                         try {
                             mainFrame.showLoadDeckPanel(deckFilePath);
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        } catch (FontFormatException ex) {
+                        } catch (IOException | FontFormatException ex) {
                             throw new RuntimeException(ex);
                         }
                         resetToggledDeck();
@@ -565,7 +557,7 @@ public class Home extends panelUtilities {
                         JOptionPane.showMessageDialog(homePanel, "Selected deck has no associated file to load.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 } else {
-                    JOptionPane.showMessageDialog(homePanel, "Please select a deck first.", "Selection Required", JOptionPane.WARNING_MESSAGE);
+                    selectDeckErrorPanel();
                 }
             }
         });
@@ -655,15 +647,11 @@ public class Home extends panelUtilities {
 
     private void successAddDeckPanel() {
         ImageIcon successBg = loadImage("/resources/home/success-opening-file.png");
-        ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
-        ImageIcon greenOKBtn = loadImage("/resources/home/green-ok-btn.png");
 
         JPanel successPanel = new JPanel(null);
         successPanel.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
 
-        JButton closeDialog = new JButton(closeBtn);
-        closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
-        styleButton(closeDialog);
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
         successPanel.add(closeDialog);
 
         closeDialog.addActionListener(new ActionListener() {
@@ -675,9 +663,7 @@ public class Home extends panelUtilities {
             }
         });
 
-        JButton okDialog = new JButton(greenOKBtn);
-        okDialog.setBounds(587,387,greenOKBtn.getIconWidth(),greenOKBtn.getIconHeight());
-        styleButton(okDialog);
+        ShadowButton okDialog = new ShadowButton("OK",572,385,118,38,new Color(143,230,138),null,"bold",16);
         successPanel.add(okDialog);
 
         okDialog.addActionListener(new ActionListener() {
@@ -702,15 +688,11 @@ public class Home extends panelUtilities {
 
     private void errorFilePanel() {
         ImageIcon errorBg = loadImage("/resources/home/error-opening-file.png");
-        ImageIcon closeBtn = loadImage("/resources/home/close-btn.png");
-        ImageIcon grayOKBtn = loadImage("/resources/home/gray-ok-btn.png");
 
         JPanel errorPanel = new JPanel(null);
         errorPanel.setBounds(0,0,homePanel.getWidth(),homePanel.getHeight());
 
-        JButton closeDialog = new JButton(closeBtn);
-        closeDialog.setBounds(750,262,closeBtn.getIconWidth()+2,closeBtn.getIconHeight());
-        styleButton(closeDialog);
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
         errorPanel.add(closeDialog);
 
         closeDialog.addActionListener(new ActionListener() {
@@ -722,9 +704,7 @@ public class Home extends panelUtilities {
             }
         });
 
-        JButton okDialog = new JButton(grayOKBtn);
-        okDialog.setBounds(587,387,grayOKBtn.getIconWidth(),grayOKBtn.getIconHeight());
-        styleButton(okDialog);
+        ShadowButton okDialog = new ShadowButton("OK",572,385,118,38,new Color(184,184,184),null,"bold",16);
         errorPanel.add(okDialog);
 
         okDialog.addActionListener(new ActionListener() {
@@ -743,6 +723,48 @@ public class Home extends panelUtilities {
 
         homePanel.add(errorPanel);
         homePanel.setComponentZOrder(errorPanel,0);
+        homePanel.revalidate();
+        homePanel.repaint();
+    }
+
+    private void selectDeckErrorPanel() {
+
+        ImageIcon errorBg = loadImage("/resources/home/error-loading-deck.png");
+
+        JPanel errorLoadingPanel = new JPanel(null);
+        errorLoadingPanel.setBounds(0, 0, homePanel.getWidth(), homePanel.getHeight());
+
+        ShadowButton closeDialog = new ShadowButton("",745,260,30,30,new Color(230,139,140),loadImage("/resources/home/close-icon.png"),"regular",20);
+        errorLoadingPanel.add(closeDialog);
+
+        closeDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(errorLoadingPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        ShadowButton okDialog = new ShadowButton("OK",572,385,118,38,new Color(184,184,184),null,"bold",16);
+        errorLoadingPanel.add(okDialog);
+
+        okDialog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                homePanel.remove(errorLoadingPanel);
+                homePanel.revalidate();
+                homePanel.repaint();
+            }
+        });
+
+        JLabel errorDialog = new JLabel(errorBg);
+        errorDialog.setBounds(0, 0, homePanel.getWidth(), homePanel.getHeight());
+        errorLoadingPanel.add(errorDialog);
+        errorLoadingPanel.setOpaque(false);
+
+        homePanel.add(errorLoadingPanel);
+        homePanel.setComponentZOrder(errorLoadingPanel, 0);
         homePanel.revalidate();
         homePanel.repaint();
     }
