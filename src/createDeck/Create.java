@@ -12,7 +12,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.ArrayList;
 
-public class Create extends panelUtilities {
+public class Create extends panelUtilities implements NavigablePanel {
 
 // --- Data & Variables ---
 

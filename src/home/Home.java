@@ -18,7 +18,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 
-public class Home extends panelUtilities {
+public class Home extends panelUtilities implements NavigablePanel {
     private JButton createDeck;
     private JButton loadDeck;
     private JTextField searchBar;

@@ -14,7 +14,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import java.awt.event.ActionEvent;
 
-public class LoadDeck extends panelUtilities {
+public class LoadDeck extends panelUtilities implements NavigablePanel {
 
     // --- LOGIC VARIABLES ---
     ArrayList<String> question = new ArrayList<>();
