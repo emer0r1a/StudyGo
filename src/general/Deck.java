@@ -3,14 +3,14 @@ package general;
 import java.util.ArrayList;
 
 public class Deck {
-    String title;
-    int size;
-    int cardsAccessed = 0;
-    String color;
-    String subject = "";
-    ArrayList<Card> cards;
-    String link;
-    int orderIndex;
+    private String title;
+    private int size;
+    private int cardsAccessed = 0;
+    private String color;
+    private String subject = "";
+    private ArrayList<Card> cards;
+    private String link;
+    private int orderIndex;
 
     public Deck(String title, int size, int cardsAccessed, String color, int orderIndex) {
         this.title = title;
