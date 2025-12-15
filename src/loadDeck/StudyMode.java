@@ -209,7 +209,7 @@ public class StudyMode extends JFrame {
                         .getImage()
                         .getScaledInstance(28, 28,  Image.SCALE_SMOOTH)
         );
-        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#79ADDC"), visibIcon, "", 20f );
+        btnFlip = new panelUtilities.ShadowButton("", startX + smallW + gap + bigW + gap, axisY, smallW, height,Color.decode("#F4AFAB"), visibIcon, "", 20f );
         // FIX 3: Make button non-focusable
         btnFlip.setFocusable(false);
         btnFlip.addActionListener(e -> {
@@ -355,12 +355,25 @@ public class StudyMode extends JFrame {
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
         // 2. Enable/Disable Buttons (Modified Logic)
+        ImageIcon iconImage;
         if (isShowingQuestion) {
+            iconImage = new ImageIcon(
+                    new ImageIcon(getClass().getResource("/resources/loadDeck/visibility_off.png"))
+                            .getImage()
+                            .getScaledInstance(24,24,Image.SCALE_SMOOTH)
+            );
+            btnFlip.setIconImage(iconImage);
             // KEEP ENABLED so shadow stays, just change color
             btnMissed.setBackground(Color.decode("#CCCCCC"));
             btnGotIt.setBackground(Color.decode("#CCCCCC"));
         } else {
             // Restore colors
+            iconImage = new ImageIcon(
+                    new ImageIcon(getClass().getResource("/resources/loadDeck/visibility.png"))
+                            .getImage()
+                            .getScaledInstance(24,24,Image.SCALE_SMOOTH)
+            );
+            btnFlip.setIconImage(iconImage);
             btnMissed.setBackground(Color.decode("#E68B8C"));
             btnGotIt.setBackground(Color.decode("#91E586"));
         }
