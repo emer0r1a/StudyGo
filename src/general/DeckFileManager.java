@@ -3,7 +3,6 @@ package general;
 import createDeck.Create.FlashcardData;
 import java.io.*;
 import java.util.ArrayList;
-// sample
 
 public class DeckFileManager {
     private static final File decksFolder = new File("Decks");
@@ -28,6 +27,7 @@ public class DeckFileManager {
         File newFile = new File(decksFolder, newLink);
 
         if (!oldLink.equals(newLink) && oldFile.exists()) {
+            System.err.println("Info: Renaming deck file from '" + oldLink + "' to '" + newLink + "'");
             oldFile.delete();
         }
 
@@ -55,6 +55,7 @@ public class DeckFileManager {
             return newLink;
 
         } catch (IOException e) {
+            System.err.println("Error: Failed to save existing deck '" + title + "': " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -63,12 +64,12 @@ public class DeckFileManager {
 
     public static String saveDeck(String title, String subject, String color, ArrayList<FlashcardData> cards) {
         if (title == null || title.trim().isEmpty() || title.contains("REQUIRED")) {
-            title = "Untitled Deck"; // Fallback
+            System.err.println("Warning: Invalid title provided, using 'Untitled Deck' as fallback");
+            title = "Untitled Deck";
         }
 
         incrementAllOrderIndexes();
 
-        // Sanitize filename ONLY (title stays the same)
         String sanitized = title.replaceAll("[^A-Za-z0-9.-]", "");
 
         if (sanitized.isEmpty()) {
@@ -85,7 +86,6 @@ public class DeckFileManager {
                 if (!card.isEmpty()) totalCards++;
             }
 
-            // Title is written EXACTLY as given
             String header = title + "\t" + totalCards + "\t0\t" + color + "\t1\t" +
                     (subject != null && !subject.trim().isEmpty() ? subject : "");
             writer.write(header);
@@ -103,11 +103,12 @@ public class DeckFileManager {
             return fileName;
 
         } catch (IOException e) {
+            System.err.println("Error: Failed to save deck '" + title + "': " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-    
+
     // load header(title,size,...)
     public static Deck loadDeckHeader(String filename) {
         File file = new File(decksFolder, filename);
@@ -136,8 +137,27 @@ public class DeckFileManager {
             int orderIndex = Integer.parseInt(parts[4]);
             String subject = (parts.length > 5 && !parts[5].isEmpty()) ? parts[5] : "";
 
+            // FIX 1: Count actual cards in file
+            int actualCardCount = 0;
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    actualCardCount++;
+                }
+            }
+
+            // FIX 2: Correct size if mismatch
+            if (actualCardCount != size) {
+                System.err.println("Warning: Deck '" + title + "' header size (" + size +
+                        ") doesn't match actual cards (" + actualCardCount + "). Correcting...");
+                size = actualCardCount;
+            }
+
+            // FIX 3: Ensure cardsAccessed doesn't exceed actual size
             if (cardsAccessed > size) {
-                throw new IllegalArgumentException();
+                System.err.println("Warning: Deck '" + title + "' cardsAccessed (" + cardsAccessed +
+                        ") exceeds size (" + size + "). Resetting to 0.");
+                cardsAccessed = 0;
             }
 
             Deck deck = new Deck(title, size, cardsAccessed, color, orderIndex);
@@ -150,6 +170,7 @@ public class DeckFileManager {
             return deck;
 
         } catch (IOException | IllegalArgumentException e) {
+            System.err.println("Error: Failed to load deck header for '" + filename + "': " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -180,6 +201,7 @@ public class DeckFileManager {
             }
 
         } catch (IOException e) {
+            System.err.println("Error: Failed to load cards from '" + filename + "': " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -207,20 +229,31 @@ public class DeckFileManager {
 
             String[] parts = headerLine.split("\t");
 
-            // at least title, size, cardsAccessed
+            // at least title, size, cardsAccessed, color, orderIndex
             if (parts.length < 5) {
                 return false;
             }
 
-            // Validate numeric fields
+            // Validate numeric fields exist and are parseable
             try {
                 int size = Integer.parseInt(parts[1]);
                 int cardsAccessed = Integer.parseInt(parts[2]);
                 int orderIndex = Integer.parseInt(parts[4]);
 
-                if (size < 0 || cardsAccessed < 0 || cardsAccessed > size || orderIndex < 0) {
+                // Basic validation - allow mismatches to be corrected on load
+                if (size < 0 || cardsAccessed < 0 || orderIndex < 0) {
                     return false;
                 }
+
+                // Check for potential issues and warn (but still allow import)
+                if (cardsAccessed > size) {
+                    System.err.println("Warning: File '" + name + "' has cardsAccessed (" + cardsAccessed +
+                            ") > size (" + size + "). Will be corrected on load.");
+                }
+
+                // Note: We DON'T reject files with mismatches
+                // Those will be auto-corrected in loadDeckHeader()
+
             } catch (NumberFormatException e) {
                 return false;
             }
@@ -236,8 +269,10 @@ public class DeckFileManager {
         File file = new File(decksFolder, filename);
 
         if (file.exists() && file.delete()) {
+            System.err.println("Info: Successfully deleted deck file '" + filename + "'");
             return true;
         }
+        System.err.println("Warning: Failed to delete deck file '" + filename + "'");
         return false;
     }
 
@@ -262,7 +297,6 @@ public class DeckFileManager {
         return filenames;
     }
 
-    // Updates the cardsAccessed count
     public static boolean updateProgress(String filename, int newCardsAccessed) {
         File file = new File(decksFolder, filename);
         File tempFile = new File(decksFolder, filename + ".tmp");
@@ -276,6 +310,14 @@ public class DeckFileManager {
             String[] parts = headerLine.split("\t");
             if (parts.length < 5) return false;
 
+            // FIX 5: Validate cardsAccessed against size
+            int size = Integer.parseInt(parts[1]);
+            if (newCardsAccessed > size) {
+                System.err.println("Warning: Attempted to set cardsAccessed (" + newCardsAccessed +
+                        ") > size (" + size + "). Capping at size.");
+                newCardsAccessed = size;
+            }
+
             parts[2] = String.valueOf(newCardsAccessed);
             bw.write(String.join("\t", parts));
             bw.newLine();
@@ -286,7 +328,8 @@ public class DeckFileManager {
                 bw.newLine();
             }
 
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error: Failed to update progress for '" + filename + "': " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -295,6 +338,7 @@ public class DeckFileManager {
             return true;
         }
 
+        System.err.println("Warning: Failed to replace file after updating progress for '" + filename + "'");
         return false;
     }
 
@@ -306,10 +350,16 @@ public class DeckFileManager {
              BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
 
             String headerLine = br.readLine();
-            if (headerLine == null) return false;
+            if (headerLine == null) {
+                System.err.println("Warning: Cannot update order index - empty file '" + filename + "'");
+                return false;
+            }
 
             String[] parts = headerLine.split("\t");
-            if (parts.length < 5) return false;
+            if (parts.length < 5) {
+                System.err.println("Warning: Cannot update order index - invalid header format in '" + filename + "'");
+                return false;
+            }
 
             parts[4] = String.valueOf(newOrderIndex);
             bw.write(String.join("\t", parts));
@@ -322,6 +372,7 @@ public class DeckFileManager {
             }
 
         } catch (IOException e) {
+            System.err.println("Error: Failed to update order index for '" + filename + "': " + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -330,6 +381,7 @@ public class DeckFileManager {
             return true;
         }
 
+        System.err.println("Warning: Failed to replace file after updating order index for '" + filename + "'");
         return false;
     }
 
@@ -353,8 +405,6 @@ public class DeckFileManager {
             }
         }
     }
-
-    // Add this method to general.DeckFileManager
 
     public static void decrementOrderIndexes(int deletedOrderIndex) {
         String[] filenames = listAllDecks();
@@ -391,4 +441,3 @@ public class DeckFileManager {
         updateOrderIndex(filename, 1);
     }
 }
-

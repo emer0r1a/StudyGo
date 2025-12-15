@@ -1,4 +1,4 @@
-test	3	0	blue	2
-hello	world	0
-fdgsdfgdfg	sdfgsddfgsd	0
-sfgsdfgs	dfgsdgdfg	0
+test	3	0	blue	1
+hello	world
+fdgsdfgdfg	sdfgsddfgsd
+sfgsdfgs	dfgsdgdfg
