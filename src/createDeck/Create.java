@@ -226,7 +226,7 @@ public class Create extends panelUtilities implements NavigablePanel {
                 ArrayList<Card> deckCards = new ArrayList<>();
                 for (FlashcardData fd : cards) {
                     if (!fd.isEmpty())
-                        deckCards.add(new Card(fd.getFront(), fd.getBack(), 0));
+                        deckCards.add(new Card(fd.getFront(), fd.getBack()));
                 }
                 newDeck.setCards(deckCards);
                 mainFrame.addDeckToHome(newDeck);
