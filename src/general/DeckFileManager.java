@@ -48,7 +48,7 @@ public class DeckFileManager {
                 if (card.isEmpty()) continue;
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
-                writer.write(f + "\t" + b + "\t0");
+                writer.write(f + "\t" + b);
                 writer.newLine();
             }
 
@@ -96,7 +96,7 @@ public class DeckFileManager {
 
                 String f = card.getFront().replace("\n", "<br>");
                 String b = card.getBack().replace("\n", "<br>");
-                writer.write(f + "\t" + b + "\t0");
+                writer.write(f + "\t" + b);
                 writer.newLine();
             }
 
@@ -154,7 +154,7 @@ public class DeckFileManager {
             return null;
         }
     }
-    
+
     public static ArrayList<Card> loadCards(String filename) {
         ArrayList<Card> cards = new ArrayList<>();
         File file = new File(decksFolder, filename);
@@ -172,11 +172,10 @@ public class DeckFileManager {
 
                 String[] parts = line.split("\t");
 
-                if (parts.length >= 3) {
+                if (parts.length >= 2) {
                     String front = parts[0].replace("<br>", "\n");
                     String back = parts[1].replace("<br>", "\n");
-                    int isAccessed = Integer.parseInt(parts[2]);
-                    cards.add(new Card(front, back, isAccessed));
+                    cards.add(new Card(front, back));
                 }
             }
 
@@ -185,20 +184,6 @@ public class DeckFileManager {
         }
 
         return cards;
-    }
-
-    // Useful when you need complete deck information
-    public static Deck loadFullDeck(String filename) {
-        Deck deck = loadDeckHeader(filename);
-
-        if (deck == null) {
-            return null;
-        }
-
-        ArrayList<Card> cards = loadCards(filename);
-        deck.setCards(cards);
-
-        return deck;
     }
 
     // Validates if a file is a properly formatted deck file
@@ -299,48 +284,6 @@ public class DeckFileManager {
             while ((line = br.readLine()) != null) {
                 bw.write(line);
                 bw.newLine();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        if (file.delete() && tempFile.renameTo(file)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static boolean updateCardAccess(String filename, int cardIndex, int accessed) {
-        File file = new File(decksFolder, filename);
-        File tempFile = new File(decksFolder, filename + ".tmp");
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file));
-             BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
-
-            String headerLine = br.readLine();
-            if (headerLine == null) return false;
-            bw.write(headerLine);
-            bw.newLine();
-
-            int currentIndex = 0;
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.trim().isEmpty()) continue;
-
-                String[] parts = line.split("\t");
-
-                if (currentIndex == cardIndex && parts.length >= 2) {
-                    String updatedLine = parts[0] + "\t" + parts[1] + "\t" + accessed;
-                    bw.write(updatedLine);
-                } else {
-                    bw.write(line);
-                }
-
-                bw.newLine();
-                currentIndex++;
             }
 
         } catch (IOException e) {
