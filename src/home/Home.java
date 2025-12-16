@@ -303,6 +303,8 @@ public class Home extends panelUtilities implements NavigablePanel {
                         public void actionPerformed(ActionEvent e) {
                             System.out.println(d.getCards().size());
                             System.out.println(d.getLink());
+                            DeckFileManager.setDeckAsMostRecent(d.getLink());
+                            refreshDecks();
                             mainFrame.showEditPanel(d.getLink(), d, d.getColor(), decks);
                         }
                     });
@@ -644,7 +646,11 @@ public class Home extends panelUtilities implements NavigablePanel {
                 Path target = decksFolder.resolve(source.getFileName());
                 Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 
+                String filename = target.getFileName().toString();
+                DeckFileManager.setDeckAsMostRecent(filename);
                 loadDeckFromFile(target.toString());
+                refreshDecks();
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -778,16 +784,11 @@ public class Home extends panelUtilities implements NavigablePanel {
     private void loadDeckFromFile(String path){
         try {
             String filename = new File(path).getName();
-            DeckFileManager.setDeckAsMostRecent(filename);
             Deck deck = DeckFileManager.loadDeckHeader(filename);
 
             if(deck != null) {
                 ArrayList<Card> cards = DeckFileManager.loadCards(filename);
                 deck.setCards(cards);
-
-                recentDecks.add(0, deck);
-
-                addDecks(recentDecks);
 
                 if (isImport) {
                     successAddDeckPanel();
